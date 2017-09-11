@@ -1,0 +1,41 @@
+<filesystem>
+
+    <folder name="Actions">
+        <folder name="Operators">
+            <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
+                <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
+                <attr name="operatorName" stringvalue="OLCI.SnowAlbedo"/>
+                <attr name="displayName" stringvalue="OLCI Snow Albedo"/>
+                <attr name="dialogTitle" stringvalue="OLCI Snow Albedo v1.0"/>
+                <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
+                <attr name="targetProductNameSuffix" stringvalue="_albedo"/>
+                <attr name="ShortDescription" stringvalue="Provides snow albedo from OLCI measurements."/>
+            </file>
+        </folder>
+    </folder>
+
+    <folder name="Menu">
+        <folder name="Optical">
+            <folder name="Thematic Land Processing">
+                <folder name="Sentinel-3 Snow Processors">
+                    <attr name="displayName" stringvalue="Sentinel-3 Snow Processors"/>
+                    <attr name="position" intvalue="311"/>
+                    <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.shadow">
+                        <attr name="originalFile"
+                              stringvalue="Actions/Operators/org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.instance"/>
+                        <attr name="position" intvalue="1"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+
+    <folder name="Services">
+        <folder name="JavaHelp">
+            <file name="helpset.xml" url="helpset.xml">
+                <attr name="position" intvalue="3600"/>
+            </file>
+        </folder>
+    </folder>
+</filesystem>
