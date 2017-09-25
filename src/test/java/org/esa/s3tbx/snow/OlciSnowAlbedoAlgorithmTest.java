@@ -2,6 +2,11 @@ package org.esa.s3tbx.snow;
 
 import org.junit.Test;
 
+import org.apache.commons.math3.fitting.WeightedObservedPoint;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static junit.framework.TestCase.assertEquals;
 
 
@@ -88,5 +93,35 @@ public class OlciSnowAlbedoAlgorithmTest {
         assertEquals(125.0, yi[2]);
         assertEquals(140.0, yi[3]);
         assertEquals(200.0, yi[4]);
+    }
+
+    @Test
+    public void testSigmoidCurveFitting() throws Exception {
+        List<WeightedObservedPoint> points = new ArrayList<WeightedObservedPoint>();
+        points.add(new WeightedObservedPoint(1.0, 400.0, 0.8732));
+        points.add(new WeightedObservedPoint(1.0, 753.0, 0.8451));
+        points.add(new WeightedObservedPoint(1.0, 865.0, 0.8132));
+        points.add(new WeightedObservedPoint(1.0, 1020.0, 0.6673));
+//        final double[] initialGuess = {-2.3, 3.3, 1326.0, 125.3};
+        final double[] initialGuess = {-1.0, 1.0, 1000.0, 100.0};
+
+//        Sigmoid.Parametric sigmoidParametric = new Sigmoid.Parametric();
+//        CurveFitter<ParametricUnivariateFunction> curveFitter = new CurveFitter(new LevenbergMarquardtOptimizer());
+//        curveFitter.addObservedPoint(400.0, 0.8732);
+//        curveFitter.addObservedPoint(753.0, 0.8451);
+//        curveFitter.addObservedPoint(865.0, 0.8132);
+//        curveFitter.addObservedPoint(1020.0, 0.6673);
+//        final double[] fit = curveFitter.fit(sigmoidParametric, initialGuess);
+//        System.out.println(fit.toString());
+
+        SpectralAlbedoFuncFitter curveFitter = new SpectralAlbedoFuncFitter();
+        curveFitter.addObservedPoint(400.0, 0.8732);
+        curveFitter.addObservedPoint(753.0, 0.8451);
+        curveFitter.addObservedPoint(865.0, 0.8132);
+        curveFitter.addObservedPoint(1020.0, 0.6673);
+        final double[] fit = curveFitter.fit(new SpectralAlbedoFuncFitter.SigmoidFunc(), initialGuess);
+
+        System.out.println(fit.toString());
+
     }
 }

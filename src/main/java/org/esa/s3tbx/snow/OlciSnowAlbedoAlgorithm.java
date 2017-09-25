@@ -31,9 +31,23 @@ public class OlciSnowAlbedoAlgorithm {
      */
     static double[] computeSpectralSphericalAlbedos(double[] brr, double sza, double vza, double saa, double vaa) {
         double[] spectralSphericalAlbedos = new double[brr.length];
-        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            spectralSphericalAlbedos[i] = computeSpectralAlbedo(brr[i], sza, vza, saa, vaa);
+
+//        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+//            spectralSphericalAlbedos[i] = computeSpectralAlbedo(brr[i], sza, vza, saa, vaa);
+//        }
+
+        // new approach, AK 20170922:
+        // "An update on the algorithm to retrieve snow spectral albedo using OLCI measurements
+        // over fresh snow layers (no pollution)":
+
+        // visible subrange (400-510nm, 5 bands):
+        final double[] brrVis = new double[5];
+        System.arraycopy(brr, 0, brrVis, 0, 5);
+        double[] spectralSphericalAlbedosTmp = new double[brr.length];
+        for (int i = 0; i < spectralSphericalAlbedosTmp.length; i++) {
+            spectralSphericalAlbedosTmp[i] = computeSpectralAlbedo_2(brr[i], brrVis, sza, vza, saa, vaa);
         }
+
         return spectralSphericalAlbedos;
     }
 
@@ -70,6 +84,26 @@ public class OlciSnowAlbedoAlgorithm {
         // eq. (1):
         return Math.pow(brr / R_0, p);
     }
+
+    static double computeSpectralAlbedo_2(double brr, double[] rBrrVis, double sza, double vza, double saa, double vaa) {
+        // eq. (8):
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        final double mu = Math.cos(vza * MathUtils.DTOR);
+
+        final double k_mu_0 = computeU(mu_0);
+        final double k_mu = computeU(mu);
+
+
+        double brrMin = Double.MAX_VALUE;
+        for (double vis : rBrrVis) {
+            if (vis < brrMin) {
+                brrMin = vis;
+            }
+        }
+        final double x = k_mu_0 * k_mu / brrMin;
+        return  Math.pow(brr/brrMin, 1.0/x);
+    }
+
 
     /**
      * Computes planar from spherical albedos at considered wavelengths.
