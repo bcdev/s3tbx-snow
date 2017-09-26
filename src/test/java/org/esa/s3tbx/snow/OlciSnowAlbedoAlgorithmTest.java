@@ -160,15 +160,15 @@ public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
     public void testSigmoidalCurveFitting() throws Exception {
-        final double[] initialGuess = {-1., 1., 1000., 100.};
-//        final double[] initialGuess = {0., 0., 0., 0.,0., 0., 0., 0.};
+//        final double[] initialGuess = {1., 1., 1., 1.};
+        final double[] initialGuess = {1., 1.};
 
         SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
 
-        curveFitter.addObservedPoint(400., 1.0);
-        curveFitter.addObservedPoint(753., 0.963);
-        curveFitter.addObservedPoint(865., 0.922);
-        curveFitter.addObservedPoint(1020., 0.737);
+        curveFitter.addObservedPoint(0.4, 1.0);
+        curveFitter.addObservedPoint(0.753, 0.963);
+        curveFitter.addObservedPoint(0.865, 0.922);
+        curveFitter.addObservedPoint(1.02, 0.737);
         final double[] fit = curveFitter.fit(initialGuess);
 
         for (int i = 0; i < fit.length; i++) {
