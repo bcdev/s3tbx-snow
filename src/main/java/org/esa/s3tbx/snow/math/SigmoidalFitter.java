@@ -11,10 +11,6 @@ public class SigmoidalFitter extends CurveFitter<SigmoidalFunction.Parametric> {
         super(optimizer);
     }
 
-    public double[] fit(int maxEval, double[] guess) {
-        return this.fit(maxEval, new SigmoidalFunction.Parametric(), guess);
-    }
-
     public double[] fit(double[] guess) {
         return this.fit(new SigmoidalFunction.Parametric(), guess);
     }

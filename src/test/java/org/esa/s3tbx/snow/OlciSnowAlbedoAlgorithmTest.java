@@ -122,8 +122,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
     public void testPolynominal3rdOrderCurveFitting() throws Exception {
-//        final double[] initialGuess = {0., 0., 0., 0.};
-        final double[] initialGuess = {0., 0., 0., 0.,0., 0., 0., 0.};
+        final double[] initialGuess = {0., 0., 0., 0.};
 
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
 
@@ -141,8 +140,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
     public void testPolynominal7thOrderCurveFitting() throws Exception {
-        final double[] initialGuess = {0., 0., 0., 0.};
-//        final double[] initialGuess = {0., 0., 0., 0.,0., 0., 0., 0.};
+        final double[] initialGuess = {0., 0., 0., 0.,0., 0., 0., 0.};
 
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
 
