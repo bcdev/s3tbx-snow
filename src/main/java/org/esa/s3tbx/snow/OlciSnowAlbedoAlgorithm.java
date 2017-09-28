@@ -2,15 +2,18 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
+import org.esa.s3tbx.snow.math.SigmoidalFitter;
+import org.esa.s3tbx.snow.math.SigmoidalFunction;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
  * Snow Albedo Algorithm for OLCI following A. Kokhanovsky (EUMETSAT).
- * <p>
+ * <p/>
  * References:
  * - [TN1] Snow planar broadband albedo determination from spectral OLCI snow spherical albedo measurements. (2017)
  * - [TN2] Snow spectral albedo determination using OLCI measurement. (2017)
- * <p>
+ * <p/>
  * todo: extract magic numbers as constants
  *
  * @author olafd
@@ -26,8 +29,7 @@ public class OlciSnowAlbedoAlgorithm {
      * @param vza - view zenith angle
      * @param saa - sun azimuth angle
      * @param vaa - view azimuth angle
-     *
-     * @return  array of snow spectral albedos
+     * @return array of snow spectral albedos
      */
     static double[] computeSpectralSphericalAlbedos(double[] brr, double sza, double vza, double saa, double vaa) {
         double[] spectralSphericalAlbedos = new double[brr.length];
@@ -36,6 +38,8 @@ public class OlciSnowAlbedoAlgorithm {
 //            spectralSphericalAlbedos[i] = computeSpectralAlbedo(brr[i], sza, vza, saa, vaa);
 //        }
 
+        // ****************************************************************************************
+
         // new approach, AK 20170922:
         // "An update on the algorithm to retrieve snow spectral albedo using OLCI measurements
         // over fresh snow layers (no pollution)":
@@ -43,10 +47,32 @@ public class OlciSnowAlbedoAlgorithm {
         // visible subrange (400-510nm, 5 bands):
         final double[] brrVis = new double[5];
         System.arraycopy(brr, 0, brrVis, 0, 5);
-        double[] spectralSphericalAlbedosTmp = new double[brr.length];
-        for (int i = 0; i < spectralSphericalAlbedosTmp.length; i++) {
-            spectralSphericalAlbedosTmp[i] = computeSpectralAlbedo_2(brr[i], brrVis, sza, vza, saa, vaa);
+        double[] spectralSphericalAlbedosTmp = new double[4];
+
+        // step 1): Use Eq. (2) at channels: 1( 400nm), 12 (753.75nm), 17(865nm), and 21 (1020nm)
+        spectralSphericalAlbedosTmp[0] = computeSpectralAlbedo_2(brr[0], brrVis, sza, vza);
+        spectralSphericalAlbedosTmp[1] = computeSpectralAlbedo_2(brr[11], brrVis, sza, vza);
+        spectralSphericalAlbedosTmp[2] = computeSpectralAlbedo_2(brr[16], brrVis, sza, vza);
+        spectralSphericalAlbedosTmp[3] = computeSpectralAlbedo_2(brr[20], brrVis, sza, vza);
+
+        // step 2): Fit the derived values of albedo
+        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
+
+        curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosTmp[0]);
+        curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosTmp[1]);
+        curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosTmp[2]);
+        curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosTmp[3]);
+        double[] initialGuess = {1., 1.};
+        double[] fit = curveFitter.fit(initialGuess, 2);
+
+        // use eq. (3) simplified to 2 parameters:
+        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
+//            spectralSphericalAlbedos[i] = 1.0 / (1.0 + Math.exp(fit[0]*wvl[i] + fit[1));
+            spectralSphericalAlbedos[i] = new SigmoidalFunction(2).value(wvl, fit);
         }
+
+        // *****************************************************************************************
 
         return spectralSphericalAlbedos;
     }
@@ -60,8 +86,7 @@ public class OlciSnowAlbedoAlgorithm {
      * @param vza - view zenith angle
      * @param saa - sun azimuth angle
      * @param vaa - view azimuth angle
-     *
-     * @return  the snow spectral albedo value
+     * @return the snow spectral albedo value
      */
     static double computeSpectralAlbedo(double brr, double sza, double vza, double saa, double vaa) {
         // eq. (8):
@@ -85,23 +110,37 @@ public class OlciSnowAlbedoAlgorithm {
         return Math.pow(brr / R_0, p);
     }
 
-    static double computeSpectralAlbedo_2(double brr, double[] rBrrVis, double sza, double vza, double saa, double vaa) {
-        // eq. (8):
+    /**
+     * New algorithm from 'alex_sept_22_2017.pdf':
+     *
+     * @param brr
+     * @param brrVis
+     * @param sza
+     * @param vza
+     * @return
+     */
+    static double computeSpectralAlbedo_2(double brr, double[] brrVis, double sza, double vza) {
+        // eq. (1):
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
 
-        final double k_mu_0 = computeU(mu_0);
-        final double k_mu = computeU(mu);
+        final double k_mu_0 = computeK(mu_0);
+        final double k_mu = computeK(mu);
 
-
-        double brrMin = Double.MAX_VALUE;
-        for (double vis : rBrrVis) {
-            if (vis < brrMin) {
-                brrMin = vis;
+        // get R_v for eq. (2):
+        double brrMax = Double.MIN_VALUE;
+        for (double vis : brrVis) {
+            if (vis > brrMax) {
+                brrMax = vis;
             }
         }
-        final double x = k_mu_0 * k_mu / brrMin;
-        return  Math.pow(brr/brrMin, 1.0/x);
+
+        // eq. (2):
+        final double x = k_mu_0 * k_mu / brrMax;
+
+        final double spectralAlbedo = Math.pow(brr / brrMax, 1.0 / x);
+
+        return spectralAlbedo;
     }
 
 
@@ -110,9 +149,8 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'snow_albedo_algorithm_1.docx' (AK, 20170519).
      *
      * @param sphericalAlbedos - the spherical albedos at considered wavelengths
-     * @param sza - sun zenith angle
-     *
-     * @return  array of planar albedos
+     * @param sza              - sun zenith angle
+     * @return array of planar albedos
      */
     static double[] computePlanarFromSphericalAlbedos(double[] sphericalAlbedos, double sza) {
         double[] planarAlbedos = new double[sphericalAlbedos.length];
@@ -127,9 +165,8 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'snow_albedo_algorithm_1.docx' (AK, 20170519)
      *
      * @param sphericaAlbedo - the spherical albedo value
-     * @param sza - sun zenith angle
-     *
-     * @return  theplanar albedo value
+     * @param sza            - sun zenith angle
+     * @return theplanar albedo value
      */
     static double computePlanarFromSphericalAlbedo(double sphericaAlbedo,
                                                    double sza) {
@@ -143,9 +180,8 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
      * @param sphericalSpectralAlbedos - the spherical spectral albedos at considered wavelengths.
-     * @param brr21 - Rayleigh corrected reflectance at band 21 (1020nm)
-     *
-     * @return  SphericalBroadbandAlbedo object holding b_1, b_2 integrals and grain diameter.
+     * @param brr21                    - Rayleigh corrected reflectance at band 21 (1020nm)
+     * @return SphericalBroadbandAlbedo object holding b_1, b_2 integrals and grain diameter.
      */
     static SphericalBroadbandAlbedo computeSphericalBroadbandAlbedoTerms(double[] sphericalSpectralAlbedos, double brr21) {
         SphericalBroadbandAlbedo sbba = new SphericalBroadbandAlbedo();
@@ -162,7 +198,6 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
      * @param brr21 - Rayleigh corrected reflectance at band 21 (1020nm)
-     *
      * @return the snow grain diameter in microns
      */
     static double computeGrainDiameter(double brr21) {
@@ -180,22 +215,21 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
      * @param spectralAlbedos - the spectral albedos at considered wavelengths.
-     *
      * @return r_b1
      */
     static double integrateR_b1(double[] spectralAlbedos) {
         double r_b1 = 0.0;
         // interpolate input spectralAlbedos (14 OLCI wavelengths) to full grid 300-1020nm (53 wavelengths)
-        final double[] wvlFull = OlciSnowAlbedoConstants.WAVELENGTH_GRID_FULL;
-        final double[] wvlOlci = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI;
+        final double[] wvlFull = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED;
+        final double[] wvlOlci = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_PARTIAL;
         // we need to extrapolate array to 300nm on the lower side:
-        double[] spectralAlbedos15 = new double[spectralAlbedos.length+1];
+        double[] spectralAlbedos15 = new double[spectralAlbedos.length + 1];
         spectralAlbedos15[0] = spectralAlbedos[0];
         System.arraycopy(spectralAlbedos, 0, spectralAlbedos15, 1, spectralAlbedos.length);
         final double[] spectralAlbedosInterpolated = interpolateSpectralAlbedos(wvlOlci, spectralAlbedos15, wvlFull);
         // integration: eq. (A.1) with f_lambda from Table (A.2)
-        for (int i = 0; i < OlciSnowAlbedoConstants.WAVELENGTH_GRID_FULL.length; i++) {
-            r_b1 += spectralAlbedosInterpolated[i] * OlciSnowAlbedoConstants.F_LAMBDA_FULL[i];
+        for (int i = 0; i < OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED.length; i++) {
+            r_b1 += spectralAlbedosInterpolated[i] * OlciSnowAlbedoConstants.F_LAMBDA_EXTENDED[i];
         }
         return r_b1;
     }
@@ -204,10 +238,9 @@ public class OlciSnowAlbedoAlgorithm {
      * Interpolates array of spectral albedos (here: 14 OLCI) to coarser grid (here 53 wavelengths 300-1020nm).
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
-     * @param x - array of x values (OLCI wavelengths)
-     * @param y - array of spectral albedos at OLCI wavelengths
+     * @param x  - array of x values (OLCI wavelengths)
+     * @param y  - array of spectral albedos at OLCI wavelengths
      * @param xi - array of 53 wavelengths 300-1200nm
-     *
      * @return array of spectral albedos at 53 wavelengths 300-1200nm
      */
     static double[] interpolateSpectralAlbedos(double[] x, double[] y, double[] xi) {
@@ -226,7 +259,6 @@ public class OlciSnowAlbedoAlgorithm {
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
      * @param d - the snow grain diameter.
-     *
      * @return r_b2
      */
     static double integrateR_b2(double d) {
@@ -239,6 +271,10 @@ public class OlciSnowAlbedoAlgorithm {
 
     private static double computeU(double mu) {
         return 3.0 * (1.0 + 2.0 * mu) / 7.0;
+    }
+
+    private static double computeK(double mu) {
+        return 3.0 * (1.0 + 3.0 * mu) / 7.0;
     }
 
     /**

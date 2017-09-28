@@ -4,14 +4,25 @@ import org.apache.commons.math3.fitting.CurveFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.MultivariateVectorOptimizer;
 
 /**
- * Created by Olaf on 26.09.2017.
+ * Implements Apache commons curve fitting for Sigmoidal type function
+ *
+ * @author olafd
+ *
  */
-public class SigmoidalFitter extends CurveFitter<SigmoidalFunction.Parametric> {
+public class SigmoidalFitter extends CurveFitter<SigmoidalFunction> {
     public SigmoidalFitter(MultivariateVectorOptimizer optimizer) {
         super(optimizer);
     }
 
-    public double[] fit(double[] guess) {
-        return this.fit(new SigmoidalFunction.Parametric(), guess);
+    /**
+     * Provides fitting parameters for sigmoidal fit
+     *
+     * @param guess - initial guess of parameter array
+     * @param numParms - number of parameters, i.e. 2 or 4
+     *
+     * @return parameter array
+     */
+    public double[] fit(double[] guess, int numParms) {
+        return this.fit(new SigmoidalFunction(numParms), guess);
     }
 }

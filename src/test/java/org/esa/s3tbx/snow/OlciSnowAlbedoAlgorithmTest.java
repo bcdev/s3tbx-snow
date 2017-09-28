@@ -1,17 +1,11 @@
 package org.esa.s3tbx.snow;
 
-import org.apache.commons.math3.fitting.*;
+import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
-import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 
 public class OlciSnowAlbedoAlgorithmTest {
@@ -99,12 +93,12 @@ public class OlciSnowAlbedoAlgorithmTest {
         assertEquals(200.0, yi[4]);
     }
 
-    @Test
-    @Ignore
-    public void testPolynominalCurveFitting() throws Exception {
-        // this works only for apache commons-math3-3.6.1 !!
-
-        // fit to third-order polynom
+    // this works only for apache commons-math3-3.6.1 !!
+//    @Test
+//    public void testPolynominalCurveFitting() throws Exception {
+//
+//
+//        // fit to third-order polynom
 //        PolynomialCurveFitter curveFitter = PolynomialCurveFitter.create(3);
 //        final WeightedObservedPoints obs = new WeightedObservedPoints();
 //
@@ -117,12 +111,12 @@ public class OlciSnowAlbedoAlgorithmTest {
 //        for (int i = 0; i < curveFit.length; i++) {
 //            System.out.printf("%d,%s%n", i, curveFit[i]);
 //        }
-        assertTrue(true);
-    }
+//        assertTrue(true);
+//    }
 
     @Test
-    public void testPolynominal3rdOrderCurveFitting() throws Exception {
-        final double[] initialGuess = {0., 0., 0., 0.};
+    public void testPolynominalCurveFitting() throws Exception {
+        double[] initialGuess = {0., 0., 0., 0.};
 
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
 
@@ -130,36 +124,22 @@ public class OlciSnowAlbedoAlgorithmTest {
         curveFitter.addObservedPoint(0.753, 0.963);
         curveFitter.addObservedPoint(0.865, 0.922);
         curveFitter.addObservedPoint(1.02, 0.737);
-        final double[] fit = curveFitter.fit(initialGuess);
+        double[] fit = curveFitter.fit(initialGuess);
 
         for (int i = 0; i < fit.length; i++) {
-            System.out.printf("%d,%s%n", i, fit[i]);
+            System.out.printf("3rd order fit: %d,%s%n", i, fit[i]);
         }
 
-    }
-
-    @Test
-    public void testPolynominal7thOrderCurveFitting() throws Exception {
-        final double[] initialGuess = {0., 0., 0., 0.,0., 0., 0., 0.};
-
-        PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
-
-        curveFitter.addObservedPoint(400., 1.0);
-        curveFitter.addObservedPoint(753., 0.963);
-        curveFitter.addObservedPoint(865., 0.922);
-        curveFitter.addObservedPoint(1020., 0.737);
-        final double[] fit = curveFitter.fit(initialGuess);
+        initialGuess = new double[]{0., 0., 0., 0., 0., 0., 0., 0.};
+        fit = curveFitter.fit(initialGuess);
 
         for (int i = 0; i < fit.length; i++) {
-            System.out.printf("3rd order: %d,%s%n", i, fit[i]);
+            System.out.printf("7th order fit: %d,%s%n", i, fit[i]);
         }
-
     }
 
     @Test
     public void testSigmoidalCurveFitting() throws Exception {
-//        final double[] initialGuess = {1., 1., 1., 1.};
-        final double[] initialGuess = {1., 1.};
 
         SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
 
@@ -167,14 +147,39 @@ public class OlciSnowAlbedoAlgorithmTest {
         curveFitter.addObservedPoint(0.753, 0.963);
         curveFitter.addObservedPoint(0.865, 0.922);
         curveFitter.addObservedPoint(1.02, 0.737);
-        final double[] fit = curveFitter.fit(initialGuess);
+        double[] initialGuess = {1., 1.};
+        double[] fit = curveFitter.fit(initialGuess, 2);
 
         for (int i = 0; i < fit.length; i++) {
-            System.out.printf("Sigmoidal: %d,%s%n", i, fit[i]);
+            System.out.printf("Sigmoidal 2 parameter fit: %d,%s%n", i, fit[i]);
         }
 
+        initialGuess = new double[]{1., 1., 1., 1.};
+        fit = curveFitter.fit(initialGuess, 4);
+
+        for (int i = 0; i < fit.length; i++) {
+            System.out.printf("Sigmoidal 4 parameter fit: %d,%s%n", i, fit[i]);
+        }
     }
 
+    @Test
+    public void testAlgoSep22() throws Exception {
+        final double[] rhoToa = new double[]{
+                0.8732, 0.8710, 0.8738, 0.8583, 0.8255, 0.7338, 0.7208,
+                0.8050, 0.8184, 0.8246, 0.8273, 0.8451, 0.1507, 0.3121,
+                0.7134, 0.8263, 0.8132, 0.7909, 0.6403, 0.3507, 0.6673
+        };
+        final double sza = 75.4347;
+        final double vza = 26.35964;
+        final double saa = -52.43322;
+        final double vaa = -118.132866;
 
+        final double[] spectralSphericalAlbedos =
+                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, saa, vaa);
 
+        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
+            System.out.printf("Spectral albedos: %f,%s%n", wvl, spectralSphericalAlbedos[i]);
+        }
+    }
 }
