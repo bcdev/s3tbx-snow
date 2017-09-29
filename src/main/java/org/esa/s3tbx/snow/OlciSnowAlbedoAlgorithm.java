@@ -41,7 +41,7 @@ public class OlciSnowAlbedoAlgorithm {
         // ****************************************************************************************
 
         // new approach, AK 20170922:
-        // "An update on the algorithm to retrieve snow spectral albedo using OLCI measurements
+        // "An update on the algorithm to retrieve snow spectral albedo1020 using OLCI measurements
         // over fresh snow layers (no pollution)":
 
         // visible subrange (400-510nm, 5 bands):
@@ -55,7 +55,7 @@ public class OlciSnowAlbedoAlgorithm {
         spectralSphericalAlbedosTmp[2] = computeSpectralAlbedo_2(brr[16], brrVis, sza, vza);
         spectralSphericalAlbedosTmp[3] = computeSpectralAlbedo_2(brr[20], brrVis, sza, vza);
 
-        // step 2): Fit the derived values of albedo
+        // step 2): Fit the derived values of albedo1020
         SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
 
         curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosTmp[0]);
@@ -68,8 +68,24 @@ public class OlciSnowAlbedoAlgorithm {
         // use eq. (3) simplified to 2 parameters:
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
-//            spectralSphericalAlbedos[i] = 1.0 / (1.0 + Math.exp(fit[0]*wvl[i] + fit[1));
             spectralSphericalAlbedos[i] = new SigmoidalFunction(2).value(wvl, fit);
+        }
+
+        // ****************************************************************************************
+
+        // new approach, AK 20170929: "spectral_albedo_exp_eq.doc":
+        final double albedo1020 = spectralSphericalAlbedos[20];
+        double grainDiameter = computeGrainDiameter(albedo1020);
+        grainDiameter /= 1000; // needed in microns
+        final double b = 3.62;
+        final double[] a = new double[spectralSphericalAlbedos.length];
+        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+            if (i == 20) {
+                System.out.println("i = " + i);
+            }
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
+            a[i] = computeA(wvl);
+            spectralSphericalAlbedos[i] = Math.exp(-b * Math.sqrt(a[i] * grainDiameter));
         }
 
         // *****************************************************************************************
@@ -186,7 +202,8 @@ public class OlciSnowAlbedoAlgorithm {
     static SphericalBroadbandAlbedo computeSphericalBroadbandAlbedoTerms(double[] sphericalSpectralAlbedos, double brr21) {
         SphericalBroadbandAlbedo sbba = new SphericalBroadbandAlbedo();
         sbba.setR_b1(integrateR_b1(sphericalSpectralAlbedos));
-        final double grainDiameter = computeGrainDiameter(brr21);
+        final double albedo1020 = sphericalSpectralAlbedos[20];
+        final double grainDiameter = computeGrainDiameter(albedo1020);
         sbba.setGrainDiameter(grainDiameter);
         sbba.setR_b2(integrateR_b2(grainDiameter));
 
@@ -197,17 +214,25 @@ public class OlciSnowAlbedoAlgorithm {
      * Computes the snow grain diameter for given Rayleigh corrected reflectance at band 21 (1020nm).
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
      *
-     * @param brr21 - Rayleigh corrected reflectance at band 21 (1020nm)
+     * @param albedo1020 - Spectral albedo at band 21 (1020nm)
      * @return the snow grain diameter in microns
      */
-    static double computeGrainDiameter(double brr21) {
+    static double computeGrainDiameter(double albedo1020) {
         // eq. (5):
         final double b = 3.62;
-        final double chi = 2.25E-6;
-        final double lambda_21 = 1.02;
-        final double a_21 = 4.0 * Math.PI * chi / lambda_21;
+        final double a_21 = computeA(OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[20]);
+        return Math.log(albedo1020) * Math.log(albedo1020) / (b * b * a_21);    // this is the grain diameter in microns!!
+    }
 
-        return Math.log(brr21) * Math.log(brr21) / (b * b * a_21);    // this is the grain diameter in microns!!
+    private static double computeA(double lambda) {
+        double chi;
+        if (lambda == OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[20]) {
+            chi = 2.25E-6;
+            ;
+        } else {
+            chi = 2.44E-13 * Math.exp(lambda / 0.06367);
+        }
+        return 4.0 * Math.PI * chi / lambda;
     }
 
     /**
@@ -274,7 +299,7 @@ public class OlciSnowAlbedoAlgorithm {
     }
 
     private static double computeK(double mu) {
-        return 3.0 * (1.0 + 3.0 * mu) / 7.0;
+        return 3.0 * (1.0 + 2.0 * mu) / 7.0;
     }
 
     /**

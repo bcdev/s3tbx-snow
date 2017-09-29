@@ -31,7 +31,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     @Test
     public void testComputeGrainDiameter() throws Exception {
         final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.71233);
-        assertEquals(316.765, grainDiameter, 1.E-2);
+        assertEquals(319.25, grainDiameter, 1.E-2);
     }
 
     @Test
