@@ -46,7 +46,7 @@ public class OlciSnowAlbedoConstants {
             0.885,         // OA18
             0.900,         // OA19
             0.940,         // OA20
-            1.028          // OA21
+            1.02          // OA21
     };
 
     public static final double[] WAVELENGTH_GRID_OLCI_EXTENDED = {

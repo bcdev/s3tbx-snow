@@ -76,7 +76,7 @@ public class OlciSnowAlbedoAlgorithm {
         // new approach, AK 20170929: "spectral_albedo_exp_eq.doc":
         final double albedo1020 = spectralSphericalAlbedos[20];
         double grainDiameter = computeGrainDiameter(albedo1020);
-        grainDiameter /= 1000; // needed in microns
+//        grainDiameter /= 1000; // needed in microns
         final double b = 3.62;
         final double[] a = new double[spectralSphericalAlbedos.length];
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
@@ -232,6 +232,8 @@ public class OlciSnowAlbedoAlgorithm {
         } else {
             chi = 2.44E-13 * Math.exp(lambda / 0.06367);
         }
+        chi = 2.44E-13 * Math.exp(lambda / 0.06367);
+        chi = 2.25E-6;
         return 4.0 * Math.PI * chi / lambda;
     }
 
