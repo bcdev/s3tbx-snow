@@ -19,7 +19,6 @@
 package org.esa.s3tbx.snow;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.s3tbx.olci.radiometry.rayleigh.RayleighCorrectionOp;
 import org.esa.s3tbx.processor.rad2refl.Rad2ReflOp;
 import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.gpf.*;
@@ -45,10 +44,10 @@ import java.util.Map;
 
 public class OlciSnowAlbedoOp extends Operator {
 
-    public static final String SPECTRAL_SPHERICAL_ALBEDO_OUTPUT_PREFIX = "spectral_albedo_spherical_";
-    public static final String SPECTRAL_PLANAR_ALBEDO_OUTPUT_PREFIX = "spectral_albedo_planar_";
-    public static final String PLANAR_BBA_BAND_NAME = "planar_BBA";
-    public static final String SPHERICAL_BBA_BAND_NAME = "spherical_BBA";
+    public static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
+    public static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
+    public static final String ALBEDO_BROADBAND_SPHERICAL_BAND_NAME = "albedo_broadband_spherical";
+    public static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
     public static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
     @Parameter(defaultValue = "false",
@@ -131,28 +130,30 @@ public class OlciSnowAlbedoOp extends Operator {
                                 rhoToa[i] = rhoToaTiles[i].getSampleDouble(x, y);
                             }
 
-                            final double rhoToa21 = rhoToa[Sensor.OLCI.getRequiredBrrBandNames().length - 1];
                             final double sza = szaTile.getSampleDouble(x, y);
                             final double vza = vzaTile.getSampleDouble(x, y);
                             final double saa = saaTile.getSampleDouble(x, y);
                             final double vaa = vaaTile.getSampleDouble(x, y);
 
+                            // actually done with latest approach from AK, 20170929
                             final double[] spectralSphericalAlbedos =
                                     OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, saa, vaa);
-                            setTargetTilesSpectralSphericalAlbedos(spectralSphericalAlbedos, targetTiles, x, y);
+                            setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
+                                                          ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
 
                             final double[] spectralPlanarAlbedos =
                                     OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedos(spectralSphericalAlbedos, sza);
-                            setTargetTilesSpectralPlanarAlbedos(spectralPlanarAlbedos, targetTiles, x, y);
+                            setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
+                                                          ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
                             final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
-                                    OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralSphericalAlbedos, rhoToa21);
+                                    OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralSphericalAlbedos);
 
                             final double sbba = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
                             final double planarBroadbandAlbedo =
                                     OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedo(sbba, sza);
-                            final Band sphericalBBABand = targetProduct.getBand(SPHERICAL_BBA_BAND_NAME);
-                            final Band planarBBABand = targetProduct.getBand(PLANAR_BBA_BAND_NAME);
+                            final Band sphericalBBABand = targetProduct.getBand(ALBEDO_BROADBAND_SPHERICAL_BAND_NAME);
+                            final Band planarBBABand = targetProduct.getBand(ALBEDO_BROADBAND_PLANAR_BAND_NAME);
                             final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
                             targetTiles.get(sphericalBBABand).setSample(x, y, sbba);
                             targetTiles.get(planarBBABand).setSample(x, y, planarBroadbandAlbedo);
@@ -183,17 +184,20 @@ public class OlciSnowAlbedoOp extends Operator {
             }
         }
 
-        targetProduct.addBand(PLANAR_BBA_BAND_NAME, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(SPHERICAL_BBA_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            targetProduct.addBand(SPECTRAL_SPHERICAL_ALBEDO_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
-        }
-        for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            targetProduct.addBand(SPECTRAL_PLANAR_ALBEDO_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
+            final int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
+            final Band sphericalBand =
+                    targetProduct.addBand(ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
+            sphericalBand.setSpectralWavelength(wvl);
+            sphericalBand.setSpectralBandIndex(OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i]);
+            final Band planarBand =
+                    targetProduct.addBand(ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
+            planarBand.setSpectralWavelength(wvl);
+            planarBand.setSpectralBandIndex(OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i]);
         }
 
         for (Band band : targetProduct.getBands()) {
@@ -208,24 +212,17 @@ public class OlciSnowAlbedoOp extends Operator {
         ProductUtils.copyMasks(sourceProduct, targetProduct);
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
-        targetProduct.setAutoGrouping("rBRR:spectral_albedo_spherical:spectral_albedo_planar");
+        targetProduct.setAutoGrouping("rBRR:albedo_spectral_spherical:albedo_spectral_planar");
 
         setTargetProduct(targetProduct);
     }
 
-    private void setTargetTilesSpectralSphericalAlbedos(double[] spectralSphericalAlbedos, Map<Band, Tile> targetTiles, int x, int y) {
+    private void setTargetTilesSpectralAlbedos(double[] spectralAlbedos, String prefix, Map<Band, Tile> targetTiles, int x, int y) {
         for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            final Band spectralSphericalAlbedoBand = targetProduct.getBand(SPECTRAL_SPHERICAL_ALBEDO_OUTPUT_PREFIX + wvl);
-            targetTiles.get(spectralSphericalAlbedoBand).setSample(x, y, spectralSphericalAlbedos[i]);
-        }
-    }
-
-    private void setTargetTilesSpectralPlanarAlbedos(double[] spectralPlanarAlbedos, Map<Band, Tile> targetTiles, int x, int y) {
-        for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            final Band spectralPlanarAlbedoBand = targetProduct.getBand(SPECTRAL_PLANAR_ALBEDO_OUTPUT_PREFIX + wvl);
-            targetTiles.get(spectralPlanarAlbedoBand).setSample(x, y, spectralPlanarAlbedos[i]);
+            final int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
+            final Band spectralAlbedoBand = targetProduct.getBand(prefix + wvl);
+            final int wvlIndex = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i];
+            targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[wvlIndex]);
         }
     }
 

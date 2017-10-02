@@ -7,25 +7,25 @@ package org.esa.s3tbx.snow;
  */
 public class OlciSnowAlbedoConstants {
 
-    public static final double[] WAVELENGTH_GRID_OLCI_PARTIAL = {
-            0.299,         // 'outside' wavelength needed for extrapolation
-            0.400,         // OA01
-            0.4125,        // OA02
-            0.4425,        // OA03
-            0.490,         // OA04
-            0.510,         // OA05
-            0.560,         // OA06
-            0.620,         // OA07
-            0.665,         // OA08
-            0.68125,       // OA10
-            0.70875,       // OA11
-            0.77875,       // OA16
-            0.865,         // OA17
-            0.885,         // OA18
-            1.028          // OA21
-    };
+//    public static final double[] WAVELENGTH_GRID_OLCI_PARTIAL = {
+//            0.299,         // 'outside' wavelength needed for extrapolation
+//            0.400,         // OA01
+//            0.4125,        // OA02
+//            0.4425,        // OA03
+//            0.490,         // OA04
+//            0.510,         // OA05
+//            0.560,         // OA06
+//            0.620,         // OA07
+//            0.665,         // OA08
+//            0.68125,       // OA10
+//            0.70875,       // OA11
+//            0.77875,       // OA16
+//            0.865,         // OA17
+//            0.885,         // OA18
+//            1.02           // OA21
+//    };
 
-    public static final double[] WAVELENGTH_GRID_OLCI_FULL = {
+    public static final double[] WAVELENGTH_GRID_OLCI = {
             0.400,         // OA01
             0.4125,        // OA02
             0.4425,        // OA03
@@ -46,7 +46,7 @@ public class OlciSnowAlbedoConstants {
             0.885,         // OA18
             0.900,         // OA19
             0.940,         // OA20
-            1.02          // OA21
+            1.02           // OA21
     };
 
     public static final double[] WAVELENGTH_GRID_OLCI_EXTENDED = {
@@ -55,7 +55,7 @@ public class OlciSnowAlbedoConstants {
             0.494, 0.506, 0.52, 0.533, 0.548, 0.563, 0.58, 0.597, 0.616, 0.635,
             0.652, 0.665, 0.678,  0.692, 0.707, 0.722, 0.738, 0.755, 0.772, 0.791,
             0.81, 0.83, 0.851, 0.874, 0.897, 0.915, 0.927, 0.939, 0.952, 0.964,
-            0.985, 1.011, 1.028
+            0.985, 1.011, 1.02
     };
 
     public static final double[] F_LAMBDA_EXTENDED = {
@@ -69,5 +69,8 @@ public class OlciSnowAlbedoConstants {
 
     public static final int[] SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS = {
             400, 560, 665, 865, 1020
+    };
+    public static final int[] SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES = {
+            0, 5, 7, 16, 20
     };
 }

@@ -3,6 +3,7 @@ package org.esa.s3tbx.snow;
 import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -11,16 +12,16 @@ import static junit.framework.TestCase.assertEquals;
 public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
+    @Ignore
     public void testComputeBroadbandAlbedos() throws Exception {
         double[] spectralAlbedos = new double[]{
 //                0.998,
                 0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
                 0.95, 0.92, 0.89, 0.86, 0.712
         };
-        double r21 = 0.71233;     // theoretical brr_21 for snow of 200mu diameter
         double sza = 50.0;
         final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
-                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralAlbedos, r21);
+                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralAlbedos);
         final double sphericalBroadbandAlbedo = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
         assertEquals(0.8385, sphericalBroadbandAlbedo, 1.E-2);
         final double broadbandPlanarAlbedo =
@@ -30,31 +31,31 @@ public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
     public void testComputeGrainDiameter() throws Exception {
-        final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.71233);
-        assertEquals(319.25, grainDiameter, 1.E-2);
+        final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274);
+        assertEquals(260.18598, grainDiameter, 1.E-2);
     }
 
-    @Test
-    public void testComputeSpectralAlbedo() throws Exception {
-        double brr = 0.71233;
-        double sza = 55.5;
-        double vza = 31.55;
-        double saa = 154.28;
-        double vaa = 103.75;
-        final double spectralAlbedo = OlciSnowAlbedoAlgorithm.computeSpectralAlbedo(brr, sza, vza, saa, vaa);
-        assertEquals(0.7244, spectralAlbedo, 1.E-2);
-    }
+//    @Test
+//    public void testComputeSpectralAlbedo() throws Exception {
+//        double brr = 0.71233;
+//        double sza = 55.5;
+//        double vza = 31.55;
+//        double saa = 154.28;
+//        double vaa = 103.75;
+//        final double spectralAlbedo = OlciSnowAlbedoAlgorithm.computeSpectralAlbedo_old(brr, sza, vza, saa, vaa);
+//        assertEquals(0.7244, spectralAlbedo, 1.E-2);
+//    }
 
-    @Test
-    public void testIntegrateR_b1() throws Exception {
-        double[] spectralAlbedos = new double[]{
-//                0.998,
-                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
-                0.95, 0.92, 0.89, 0.86, 0.712
-        };
-        double r_b1 = OlciSnowAlbedoAlgorithm.integrateR_b1(spectralAlbedos);
-        assertEquals(0.7552, r_b1, 1.E-2);
-    }
+//    @Test
+//    public void testIntegrateR_b1() throws Exception {
+//        double[] spectralAlbedos = new double[]{
+////                0.998,
+//                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
+//                0.95, 0.92, 0.89, 0.86, 0.712
+//        };
+//        double r_b1 = OlciSnowAlbedoAlgorithm.integrateR_b1(spectralAlbedos);
+//        assertEquals(0.7552, r_b1, 1.E-2);
+//    }
 
     @Test
     public void testIntegrateR_b2() throws Exception {
@@ -178,7 +179,7 @@ public class OlciSnowAlbedoAlgorithmTest {
                 OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, saa, vaa);
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             System.out.printf("Spectral albedos: %f,%s%n", wvl, spectralSphericalAlbedos[i]);
         }
     }
