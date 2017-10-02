@@ -19,6 +19,7 @@
 package org.esa.s3tbx.snow;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.s3tbx.olci.radiometry.rayleigh.RayleighCorrectionOp;
 import org.esa.s3tbx.processor.rad2refl.Rad2ReflOp;
 import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.gpf.*;
@@ -58,7 +59,8 @@ public class OlciSnowAlbedoOp extends Operator {
             description = "If selected, albedo computation is done for land pixels only")
     private boolean computeLandPixelsOnly;
 
-    @SourceProduct(description = "OLCI L1b product", label = "OLCI L1b product")
+    @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
+            label = "OLCI L1b or Rayleigh correctedproduct")
     public Product sourceProduct;
 
     private Product targetProduct;
@@ -76,7 +78,10 @@ public class OlciSnowAlbedoOp extends Operator {
         waterMaskProduct = GPF.createProduct("LandWaterMask", GPF.NO_PARAMS, sourceProduct);
         landWaterBand = waterMaskProduct.getBand("land_water_fraction");
 
-        if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
+        if (isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI)) {
+            reflProduct = sourceProduct;
+        } else if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
+            // apply Rayleigh correction
 //            RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
 //            rayleighCorrectionOp.setSourceProduct(sourceProduct);
 //            rayleighCorrectionOp.setParameterDefaultValues();
@@ -242,6 +247,15 @@ public class OlciSnowAlbedoOp extends Operator {
 
     private static boolean isValidL1bSourceProduct(Product sourceProduct, Sensor sensor) {
         for (String bandName : sensor.getRequiredRadianceBandNames()) {
+            if (!sourceProduct.containsBand(bandName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isValidRayleighCorrectedSourceProduct(Product sourceProduct, Sensor sensor) {
+        for (String bandName : sensor.getRequiredBrrBandNames()) {
             if (!sourceProduct.containsBand(bandName)) {
                 return false;
             }
