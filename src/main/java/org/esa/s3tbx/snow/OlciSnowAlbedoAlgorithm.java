@@ -255,6 +255,28 @@ public class OlciSnowAlbedoAlgorithm {
         return r_b1;
     }
 
+    static double integrateR_b1_new(double[] spectralAlbedos) {
+        double r_b1 = 0.0;
+        // interpolate input spectralAlbedos (21 OLCI wavelengths) to full grid 300-1020nm (53 wavelengths)
+        final double[] wvlFull = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED;
+        final double[] wvlOlci = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI;
+        // we need to extrapolate array to 300nm on the lower side:
+        double[] wvl22 = new double[wvlOlci.length + 1];
+        wvl22[0] = 0.299;
+        System.arraycopy(wvlOlci, 0, wvl22, 1, wvlOlci.length);
+        double[] spectralAlbedos22 = new double[spectralAlbedos.length + 1];
+        spectralAlbedos22[0] = spectralAlbedos[0];
+        System.arraycopy(spectralAlbedos, 0, spectralAlbedos22, 1, spectralAlbedos.length);
+        final double[] spectralAlbedosInterpolated = interpolateSpectralAlbedos(wvl22, spectralAlbedos22, wvlFull);
+
+        // integration: eq. (A.1) with f_lambda from Table (A.2)
+        for (int i = 0; i < OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED.length; i++) {
+            r_b1 += spectralAlbedosInterpolated[i] * OlciSnowAlbedoConstants.F_LAMBDA_EXTENDED[i];
+        }
+        return r_b1;
+    }
+
+
     /**
      * Interpolates array of spectral albedos (here: 21 OLCI) to coarser grid (here 53 wavelengths 300-1020nm).
      * Follows 'algorithm__BROADBAND_SPHERICAL_ALBEDO.docx' (AK, 20170530)
