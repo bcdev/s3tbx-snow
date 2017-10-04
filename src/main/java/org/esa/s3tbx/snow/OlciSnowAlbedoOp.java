@@ -20,7 +20,6 @@ package org.esa.s3tbx.snow;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.s3tbx.olci.radiometry.rayleigh.RayleighCorrectionOp;
-import org.esa.s3tbx.processor.rad2refl.Rad2ReflOp;
 import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.gpf.*;
 import org.esa.snap.core.gpf.annotations.OperatorMetadata;
@@ -51,6 +50,7 @@ public class OlciSnowAlbedoOp extends Operator {
     public static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
     public static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
+
     @Parameter(defaultValue = "false",
             description = "If selected, Rayleigh corrected reflectances are written to target product")
     private boolean copyReflectanceBands;
@@ -60,12 +60,16 @@ public class OlciSnowAlbedoOp extends Operator {
     private boolean computeLandPixelsOnly;
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
-            label = "OLCI L1b or Rayleigh correctedproduct")
+            label = "OLCI L1b or Rayleigh corrected product")
     public Product sourceProduct;
+
+    private Sensor sensor = Sensor.OLCI;
 
     private Product targetProduct;
 
     private Band landWaterBand;
+
+    private int reflType;
 
     private Product waterMaskProduct;
     private Product reflProduct;
@@ -80,21 +84,23 @@ public class OlciSnowAlbedoOp extends Operator {
 
         if (isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI)) {
             reflProduct = sourceProduct;
+            reflType = SensorConstants.REFL_TYPE_BRR;
         } else if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
             // apply Rayleigh correction
-//            RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
-//            rayleighCorrectionOp.setSourceProduct(sourceProduct);
-//            rayleighCorrectionOp.setParameterDefaultValues();
-//            rayleighCorrectionOp.setParameter("computeTaur", false);
-//            rayleighCorrectionOp.setParameter("sourceBandNames", Sensor.OLCI.getRequiredRadianceBandNames());
-//            reflProduct = rayleighCorrectionOp.getTargetProduct();
+            RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
+            rayleighCorrectionOp.setSourceProduct(sourceProduct);
+            rayleighCorrectionOp.setParameterDefaultValues();
+            rayleighCorrectionOp.setParameter("computeTaur", false);
+            rayleighCorrectionOp.setParameter("sourceBandNames", Sensor.OLCI.getRequiredRadianceBandNames());
+            reflProduct = rayleighCorrectionOp.getTargetProduct();
+            reflType = SensorConstants.REFL_TYPE_TOA;
 
-            Rad2ReflOp rad2ReflOp = new Rad2ReflOp();
-            rad2ReflOp.setSourceProduct(sourceProduct);
-            rad2ReflOp.setParameterDefaultValues();
-            rad2ReflOp.setParameter("sensor", org.esa.s3tbx.processor.rad2refl.Sensor.OLCI);
-            rad2ReflOp.setParameter("copyNonSpectralBands", false);
-            reflProduct = rad2ReflOp.getTargetProduct();
+//            Rad2ReflOp rad2ReflOp = new Rad2ReflOp();
+//            rad2ReflOp.setSourceProduct(sourceProduct);
+//            rad2ReflOp.setParameterDefaultValues();
+//            rad2ReflOp.setParameter("sensor", org.esa.s3tbx.processor.rad2refl.Sensor.OLCI);
+//            rad2ReflOp.setParameter("copyNonSpectralBands", false);
+//            reflProduct = rad2ReflOp.getTargetProduct();
         } else {
             throw new OperatorException
                     ("Input product not supported - must be " + Sensor.OLCI.getName() +
@@ -107,9 +113,10 @@ public class OlciSnowAlbedoOp extends Operator {
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
         try {
-            Tile[] rhoToaTiles = new Tile[Sensor.OLCI.getRequiredBrrBandNames().length];
-            for (int i = 0; i < Sensor.OLCI.getRequiredBrrBandNames().length; i++) {
-                final Band rhoToaBand = reflProduct.getBand(Sensor.OLCI.getRequiredBrrBandNames()[i]);
+            final String[] reflBandNames = SnowUtils.getReflectanceTypeBandNames(sensor, reflType);
+            Tile[] rhoToaTiles = new Tile[reflBandNames.length];
+            for (int i = 0; i < reflBandNames.length; i++) {
+                final Band rhoToaBand = reflProduct.getBand(reflBandNames[i]);
                 rhoToaTiles[i] = getSourceTile(rhoToaBand, targetRectangle);
             }
 
@@ -130,8 +137,8 @@ public class OlciSnowAlbedoOp extends Operator {
                         if (computeLandPixelsOnly && !isLandPixel(x, y, l1FlagsTile, waterFraction)) {
                             setTargetTilesInvalid(targetTiles, x, y);
                         } else {
-                            double[] rhoToa = new double[Sensor.OLCI.getRequiredBrrBandNames().length];
-                            for (int i = 0; i < Sensor.OLCI.getRequiredBrrBandNames().length; i++) {
+                            double[] rhoToa = new double[reflBandNames.length];
+                            for (int i = 0; i < reflBandNames.length; i++) {
                                 rhoToa[i] = rhoToaTiles[i].getSampleDouble(x, y);
                             }
 
@@ -142,7 +149,7 @@ public class OlciSnowAlbedoOp extends Operator {
 
                             // actually done with latest approach from AK, 20170929
                             final double[] spectralSphericalAlbedos =
-                                    OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, saa, vaa);
+                                    OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(sensor, rhoToa, sza, vza, saa, vaa);
                             setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                           ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
 
@@ -240,8 +247,11 @@ public class OlciSnowAlbedoOp extends Operator {
     private static void checkSensorType(Product sourceProduct) {
         boolean isOlci = isValidL1bSourceProduct(sourceProduct, Sensor.OLCI);
         if (!isOlci) {
-            throw new OperatorException("Source product not applicable to this operator.\n" +
-                                                "Only OLCI is currently supported");
+            isOlci = isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI);
+            if (!isOlci) {
+                throw new OperatorException("Source product not applicable to this operator.\n" +
+                                                    "Only OLCI is currently supported");
+            }
         }
     }
 
@@ -254,7 +264,7 @@ public class OlciSnowAlbedoOp extends Operator {
         return true;
     }
 
-    private boolean isValidRayleighCorrectedSourceProduct(Product sourceProduct, Sensor sensor) {
+    private static boolean isValidRayleighCorrectedSourceProduct(Product sourceProduct, Sensor sensor) {
         for (String bandName : sensor.getRequiredBrrBandNames()) {
             if (!sourceProduct.containsBand(bandName)) {
                 return false;

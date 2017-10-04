@@ -2,6 +2,9 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
+import org.esa.s3tbx.snow.math.SigmoidalFitter;
+import org.esa.s3tbx.snow.math.SigmoidalFunction;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
@@ -25,6 +28,8 @@ public class OlciSnowAlbedoAlgorithm {
      * Update 20170929: 'An update on the algorithm to retrieve snow grain size and snow spectral  albedo using OLCI
      *                   measurements over fresh snow layers (no pollution)', in: 'spectral_albedo_exp_eq.docx'
      *
+     *
+     * @param sensor
      * @param brr - Rayleigh corrected reflectance at considered wavelengths (see {@link OlciSnowAlbedoConstants })
      * @param sza - sun zenith angle
      * @param vza - view zenith angle
@@ -32,7 +37,7 @@ public class OlciSnowAlbedoAlgorithm {
      * @param vaa - view azimuth angle
      * @return array of snow spectral albedos
      */
-    static double[] computeSpectralSphericalAlbedos(double[] brr, double sza, double vza, double saa, double vaa) {
+    static double[] computeSpectralSphericalAlbedos(Sensor sensor, double[] brr, double sza, double vza, double saa, double vaa) {
         double[] spectralSphericalAlbedos = new double[brr.length];
 
 //        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
@@ -51,40 +56,40 @@ public class OlciSnowAlbedoAlgorithm {
         double[] spectralSphericalAlbedosFromBrrVis = new double[4];
 
         // step 1): Use Eq. (2) at channels: 1( 400nm), 12 (753.75nm), 17(865nm), and 21 (1020nm)
-//        spectralSphericalAlbedosFromBrrVis[0] = computeSpectralAlbedoFromBrrVis(brr[0], brrVis, sza, vza);
-//        spectralSphericalAlbedosFromBrrVis[1] = computeSpectralAlbedoFromBrrVis(brr[11], brrVis, sza, vza);
-//        spectralSphericalAlbedosFromBrrVis[2] = computeSpectralAlbedoFromBrrVis(brr[16], brrVis, sza, vza);
+        spectralSphericalAlbedosFromBrrVis[0] = computeSpectralAlbedoFromBrrVis(brr[0], brrVis, sza, vza);
+        spectralSphericalAlbedosFromBrrVis[1] = computeSpectralAlbedoFromBrrVis(brr[11], brrVis, sza, vza);
+        spectralSphericalAlbedosFromBrrVis[2] = computeSpectralAlbedoFromBrrVis(brr[16], brrVis, sza, vza);
         final double brr21 = brr[Sensor.OLCI.getRequiredBrrBandNames().length-1];
         spectralSphericalAlbedosFromBrrVis[3] = computeSpectralAlbedoFromBrrVis(brr21, brrVis, sza, vza);
 
         // step 2): Fit the derived values of albedo1020
-//        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
-//
-//        curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
-//        curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
-//        curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
-//        curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
-//        double[] initialGuess = {1., 1.};
-//        double[] fit = curveFitter.fit(initialGuess, 2);
-//
-//        // use eq. (3) simplified to 2 parameters:
-//        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-//            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_FULL[i];
-//            spectralSphericalAlbedos[i] = new SigmoidalFunction(2).value(wvl, fit);
-//        }
+        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
+
+        curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
+        curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
+        curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
+        curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
+        double[] initialGuess = {1., 1.};
+        double[] fit = curveFitter.fit(initialGuess, 2);
+
+        // use eq. (3) simplified to 2 parameters:
+        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            spectralSphericalAlbedos[i] = new SigmoidalFunction(2).value(wvl, fit);
+        }
 
         // ****************************************************************************************
 
         // latest approach, AK 20170929: "spectral_albedo_exp_eq.doc":
-        final double albedo1020 = spectralSphericalAlbedosFromBrrVis[3];
-        double grainDiameter = computeGrainDiameter(albedo1020);
-        final double b = 3.62;
-        final double[] a = new double[spectralSphericalAlbedos.length];
-        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            a[i] = computeA(wvl);
-            spectralSphericalAlbedos[i] = Math.exp(-b * Math.sqrt(a[i] * grainDiameter));
-        }
+//        final double albedo1020 = spectralSphericalAlbedosFromBrrVis[3];
+//        double grainDiameter = computeGrainDiameter(albedo1020);
+//        final double b = 3.62;
+//        final double[] a = new double[spectralSphericalAlbedos.length];
+//        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+//            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+//            a[i] = computeA(wvl);
+//            spectralSphericalAlbedos[i] = Math.exp(-b * Math.sqrt(a[i] * grainDiameter));
+//        }
 
         // *****************************************************************************************
 

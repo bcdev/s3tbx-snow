@@ -176,7 +176,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double vaa = -118.132866;
 
         final double[] spectralSphericalAlbedos =
-                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, saa, vaa);
+                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(Sensor.OLCI, rhoToa, sza, vza, saa, vaa);
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];

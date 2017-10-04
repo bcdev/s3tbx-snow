@@ -10,7 +10,8 @@ import static org.esa.s3tbx.snow.SensorConstants.*;
 public enum Sensor {
 
     OLCI("OLCI", OLCI_SZA_NAME, OLCI_VZA_NAME, OLCI_SAA_NAME, OLCI_VAA_NAME,
-         OLCI_L1B_FLAGS_NAME, OLCI_INVALID_BIT, OLCI_LAND_BIT, OLCI_REQUIRED_RADIANCE_BAND_NAMES, OLCI_REQUIRED_BRR_BAND_NAMES);
+         OLCI_L1B_FLAGS_NAME, OLCI_INVALID_BIT, OLCI_LAND_BIT,
+         OLCI_REQUIRED_RADIANCE_BAND_NAMES, OLCI_REQUIRED_REFL_BAND_NAMES, OLCI_REQUIRED_BRR_BAND_NAMES);
 
     private String name;
     private String szaName;
@@ -21,10 +22,12 @@ public enum Sensor {
     private int invalidBit;
     private int landBit;
     private String[] requiredRadianceBandNames;
+    private String[] requiredReflBandNames;
     private String[] requiredBrrBandNames;
 
     Sensor(String name, String szaName, String vzaName, String saaName, String vaaName,
-           String l1bFlagsName, int invalidBit, int landBit, String requiredRadianceBandNames[], String[] requiredBrrBandNames) {
+           String l1bFlagsName, int invalidBit, int landBit, String requiredRadianceBandNames[],
+           String requiredReflBandNames[], String[] requiredBrrBandNames) {
         this.name = name;
         this.szaName = szaName;
         this.vzaName = vzaName;
@@ -34,6 +37,7 @@ public enum Sensor {
         this.invalidBit = invalidBit;
         this.landBit = landBit;
         this.requiredRadianceBandNames = requiredRadianceBandNames;
+        this.requiredReflBandNames = requiredReflBandNames;
         this.requiredBrrBandNames = requiredBrrBandNames;
     }
 
@@ -71,6 +75,10 @@ public enum Sensor {
 
     public String[] getRequiredRadianceBandNames() {
         return requiredRadianceBandNames;
+    }
+
+    public String[] getRequiredReflBandNames() {
+        return requiredReflBandNames;
     }
 
     public String[] getRequiredBrrBandNames() {
