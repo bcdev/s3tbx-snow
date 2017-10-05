@@ -73,4 +73,21 @@ public class OlciSnowAlbedoConstants {
     public static final int[] SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES = {
             0, 5, 7, 16, 20
     };
+
+    // Table 1 from spectral_albedo_october_5_2017.doc:
+    public static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
+    public static final double[] LAMBDA_MAX = {0.525, 0.7, 1.98, 2.4475};
+    public static final double[] H = {0.175, 0.175, 1.28, 0.4675};
+    public static final double[] c0 = {3.85E-9, 2.2E-9, 1.30689, 1.27525};
+    public static final double[] c1 = {-5.287E-9, 3.384E-9, -0.026, -0.026};
+    public static final double[] c2 = {2.2594E-9, 6.41E-9, 0.017956, -0.00149};
+    public static final double[] c3 = {1.38411E-9, 1.63665E-8, -0.024, -0.0128};
+
+    public static final double[] KAPPA_2 = {
+            2.365E-011,2.669E-011,6.268E-011,4.172E-010,8.036E-010,
+            2.839E-009,8.580E-009,1.770E-008,1.890E-008,2.090E-008,
+            3.440E-008,5.870E-008,7.080E-008,7.500E-008,8.080E-008,
+            1.020E-007,2.400E-007,3.600E-007,4.200E-007,5.530E-007,
+            2.250E-006
+    };
 }

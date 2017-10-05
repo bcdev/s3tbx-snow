@@ -149,7 +149,9 @@ public class OlciSnowAlbedoOp extends Operator {
 
                             // actually done with latest approach from AK, 20170929
                             final double[] spectralSphericalAlbedos =
-                                    OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(sensor, rhoToa, sza, vza, saa, vaa);
+                                    OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa,
+                                                                                            sza, vza,
+                                                                                            SpectralAlbedoMode.SIGMOIDAL);
                             setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                           ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
 

@@ -2,6 +2,8 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
+import org.esa.s3tbx.snow.math.Exp4ParamFitter;
+import org.esa.s3tbx.snow.math.Exp4ParamFunction;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -176,11 +178,41 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double vaa = -118.132866;
 
         final double[] spectralSphericalAlbedos =
-                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(Sensor.OLCI, rhoToa, sza, vza, saa, vaa);
+                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, SpectralAlbedoMode.SIGMOIDAL);
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             System.out.printf("Spectral albedos: %f,%s%n", wvl, spectralSphericalAlbedos[i]);
         }
     }
+
+    @Test
+    public void testExp4ParamCurveFitting() throws Exception {
+
+        Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
+
+        curveFitter.addObservedPoint(0.4, 1.0);
+        curveFitter.addObservedPoint(0.49, 0.97365);
+        curveFitter.addObservedPoint(0.865, 0.843676);
+        curveFitter.addObservedPoint(1.02, 0.689266);
+
+        double[] initialGuess = new double[]{1., 1., 1., 1.};
+        double[] fit = curveFitter.fit(initialGuess);
+
+        for (int i = 0; i < fit.length; i++) {
+            System.out.printf("Exp4Param 4 parameter fit: %d,%s%n", i, fit[i]);
+        }
+
+        final double[] spectralSphericalAlbedos = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
+        final double[] L = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
+
+        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+            L[i] = 2.0*OlciSnowAlbedoConstants.KAPPA_2[i]*Math.PI/fit[2];
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            spectralSphericalAlbedos[i] = Math.exp(-(fit[1] + fit[2]/wvl));
+            System.out.printf("Exp4Param albedos: %f,%s%n", wvl, spectralSphericalAlbedos[i]);
+        }
+        System.out.println();
+    }
+
 }
