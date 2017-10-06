@@ -90,4 +90,32 @@ public class OlciSnowAlbedoConstants {
             1.020E-007,2.400E-007,3.600E-007,4.200E-007,5.530E-007,
             2.250E-006
     };
+
+    public static final double[][] KAPPA_2_SPLINE_COEFFS = {
+            // from fit to https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat
+            {
+                    // 4th order spline fit, 400-525nm:
+                    4.913273573521765E-8 ,
+                    -5.446912137768008E-7,
+                    2.2340617964072435E-6,
+                    -4.029955265312061E-6,
+                    2.70443404633965E-6  ,
+            },
+            {
+                    // 4th order spline fit, 525-700nm:
+                     7.871975805631149E-7  ,
+                     -5.5075218680064285E-6,
+                     1.4735203245000926E-5 ,
+                     -1.7996480996799473E-5,
+                     8.533638647997086E-6  ,
+            },
+            {
+                    // 4th order spline fit, 700-1020nm:
+                   3.20662332955914E-4   ,
+                    -0.0016037321152243488,
+                    0.0030016823137293783,
+                    -0.0024933767575023914,
+                    7.763358059437843E-4,
+            }
+    };
 }

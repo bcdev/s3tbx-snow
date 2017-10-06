@@ -9,7 +9,8 @@ import org.apache.commons.math3.optim.nonlinear.vector.MultivariateVectorOptimiz
  * @author olafd
  *
  */
-public class Exp4ParamFitter extends CurveFitter<Exp4ParamFunction> {
+//public class Exp4ParamFitter extends CurveFitter<Exp4ParamFunction> {
+public class Exp4ParamFitter extends CurveFitter<Exp4ParamFunction2> {
     public Exp4ParamFitter(MultivariateVectorOptimizer optimizer) {
         super(optimizer);
     }
@@ -22,6 +23,7 @@ public class Exp4ParamFitter extends CurveFitter<Exp4ParamFunction> {
      * @return parameter array
      */
     public double[] fit(double[] guess) {
-        return this.fit(new Exp4ParamFunction(), guess);
+//        return this.fit(new Exp4ParamFunction(), guess);
+        return this.fit(new Exp4ParamFunction2(), guess);
     }
 }

@@ -9,32 +9,31 @@ import org.apache.commons.math3.util.MathUtils;
 import org.esa.s3tbx.snow.OlciSnowAlbedoConstants;
 
 /**
- * Implementation of exponential function with 4 parameters as:
- * f(v; a, b, kappa1, l) := a *(exp(-(2*PI/v) * (kappa1*L + kappa2(v)*L)))^b
+ * Implementation of exponential function with 3 parameters as:
+ * f(v; a, b, c) := a * exp(-sqrt((b + c*kappa2(v))/v))
  *
  * @author olafd
  */
-public class Exp4ParamFunction implements ParametricUnivariateFunction {
+public class Exp4ParamFunction2 implements ParametricUnivariateFunction {
 
     public double[] gradient(double v, double... parms) {
-        // 4 parameter approach:
+        // approach with 3 parameters: f(v; a, b, c) := a * exp(-sqrt((b + c*kappa2(v))/v))
 
         double[] kappaCoeffs = getKappaCoeffs(v);
         final PolynomialFunction kappa2Function = new PolynomialFunction(kappaCoeffs);
         final double kappa2 = kappa2Function.value(v);
-//        final double kappa2 = 2.365E-11;  // test!
 
-        final double bracket = Math.exp(-(2 * Math.PI / v) * (parms[1] * parms[2] + kappa2 * parms[2]));
-        final double aDeriv = Math.pow(bracket, parms[3]);
-        final double kappa1Deriv = (-2 * Math.PI * parms[0] * parms[2] * parms[3] / v) *
-                Math.exp(-2 * Math.PI * parms[2] * parms[3] *(parms[1] + kappa2) / v);
-//        final double lDeriv = kappa1Deriv / v;
-        final double lDeriv = (-2 * Math.PI * parms[0] * parms[2] * parms[3] *(parms[1] + kappa2) / v) *
-                Math.exp(-2 * Math.PI * parms[2] * parms[3] *(parms[1] + kappa2) / v);
-//        final double bDeriv = Math.log(parms[0] * bracket) * Math.exp(parms[3] * Math.log(parms[0] * bracket));
-        final double bDeriv = parms[0] * Math.log( bracket) * Math.exp(parms[3] * Math.log(bracket));
 
-        return new double[]{aDeriv, kappa1Deriv, lDeriv, bDeriv};
+        final double a = parms[0];
+        final double b = parms[1];
+        final double c = parms[2];
+        final double root = Math.sqrt((b + c*kappa2)/v);
+
+        final double aDeriv = Math.exp(-root);
+        final double bDeriv = -a * root * Math.exp(-root) / (2.*v);
+        final double cDeriv = kappa2 * bDeriv;
+
+        return new double[]{aDeriv, bDeriv, cDeriv};
     }
 
     public double value(double x, double... parameters) throws NoDataException {
@@ -45,19 +44,17 @@ public class Exp4ParamFunction implements ParametricUnivariateFunction {
         MathUtils.checkNotNull(parms);
         final int numParms = parms.length;
 
-        if (numParms == 4) {
-            // approach with 4 parameters: f(v; a, b, kappa1, L) := a *(exp(- ( (2*PI/v) * (kappa1*L + kappa2(v)*L) ))))^b
+        if (numParms == 3) {
+            // approach with 3 parameters: f(v; a, b, c) := a * exp(-sqrt((b + c*kappa2(v))/v))
             final double a = parms[0];
-            final double kappa1 = parms[1];
-            final double L = parms[2];
-            final double b = parms[3];
+            final double b = parms[1];
+            final double c = parms[2];
 
             double[] kappaCoeffs = getKappaCoeffs(v);
             final PolynomialFunction kappa2Function = new PolynomialFunction(kappaCoeffs);
             final double kappa2 = kappa2Function.value(v);
-//            final double kappa2 = 2.365E-11;  // test!
 
-            return a * Math.pow(Math.exp(-((2. * Math.PI / v) * (kappa1 * L + kappa2 * L))), b);
+            return a * Math.exp(-Math.sqrt((b + c*kappa2)/v));
         } else {
             throw new NoDataException(LocalizedFormats.DIMENSIONS_MISMATCH);
         }
