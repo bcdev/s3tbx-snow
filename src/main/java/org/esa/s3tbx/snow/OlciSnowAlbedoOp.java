@@ -51,6 +51,10 @@ public class OlciSnowAlbedoOp extends Operator {
     public static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
 
+    @Parameter(label = "Spectral albedo computation mode",
+            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
+    private SpectralAlbedoMode spectralAlbedoComputationMode;
+
     @Parameter(defaultValue = "false",
             description = "If selected, Rayleigh corrected reflectances are written to target product")
     private boolean copyReflectanceBands;
@@ -58,6 +62,7 @@ public class OlciSnowAlbedoOp extends Operator {
     @Parameter(defaultValue = "false",
             description = "If selected, albedo computation is done for land pixels only")
     private boolean computeLandPixelsOnly;
+
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
             label = "OLCI L1b or Rayleigh corrected product")
@@ -151,7 +156,7 @@ public class OlciSnowAlbedoOp extends Operator {
                             final double[] spectralSphericalAlbedos =
                                     OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa,
                                                                                             sza, vza,
-                                                                                            SpectralAlbedoMode.SIGMOIDAL);
+                                                                                            spectralAlbedoComputationMode);
                             setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                           ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
 

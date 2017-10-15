@@ -2,10 +2,7 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
-import org.esa.s3tbx.snow.math.Exp4ParamFitter;
-import org.esa.s3tbx.snow.math.Exp4ParamFunction;
-import org.esa.s3tbx.snow.math.Exp4ParamFunction2;
-import org.esa.s3tbx.snow.math.SigmoidalFitter;
+import org.esa.s3tbx.snow.math.*;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -208,7 +205,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         curveFitter.addObservedPoint(1.020E+000, 2.250E-006);
         curveFitter.addObservedPoint(1.030E+000, 2.330E-006);
 
-        initialGuess = new double[]{0., 0., 0., 0., 0.};
+        initialGuess = new double[]{1., 1., 1., 1., 1.};
         fit = curveFitter.fit(initialGuess);
         for (int i = 0; i < fit.length; i++) {
             System.out.printf("4th order fit 700-1020nm: %d,%s%n", i, fit[i]);
@@ -250,7 +247,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double vza = 26.35964;
 
         final double[] spectralSphericalAlbedos =
-                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, SpectralAlbedoMode.SIGMOIDAL);
+                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza, SpectralAlbedoMode.SIGMOIDAL_FIT);
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
@@ -259,7 +256,6 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    @Ignore
     public void testExp4ParamCurveFitting() throws Exception {
 
         Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
@@ -293,20 +289,32 @@ public class OlciSnowAlbedoAlgorithmTest {
     @Test
     public void testExp4ParamCurveFitting_2() throws Exception {
 
-        Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
+        Exp4ParamFitter2 curveFitter = new Exp4ParamFitter2(new LevenbergMarquardtOptimizer());
 
         curveFitter.addObservedPoint(0.4, 1.0);
         curveFitter.addObservedPoint(0.49, 0.97365);
         curveFitter.addObservedPoint(0.865, 0.843676);
         curveFitter.addObservedPoint(1.02, 0.689266);
 
+        // more fake points:
+//        curveFitter.addObservedPoint(0.45, 0.99);
+//        curveFitter.addObservedPoint(0.5, 0.97);
+//        curveFitter.addObservedPoint(0.55, 0.95);
+//        curveFitter.addObservedPoint(0.6, 0.93);
+//        curveFitter.addObservedPoint(0.65, 0.92);
+//        curveFitter.addObservedPoint(0.7, 0.9);
+//        curveFitter.addObservedPoint(0.75, 0.88);
+//        curveFitter.addObservedPoint(0.8, 0.86);
+//        curveFitter.addObservedPoint(0.9, 0.8);
+//        curveFitter.addObservedPoint(0.95, 0.75);
+
         // fit does not work, result strongly depends on initial guess // todo ask AK
         double[] initialGuess = new double[]{1., 1., 1.};
-//        double[] initialGuess = new double[]{0., 0., 0.};
+//        double[] initialGuess = new double[]{1., 0., 1.E5};
         double[] fit = curveFitter.fit(initialGuess);
 
         for (int i = 0; i < fit.length; i++) {
-            System.out.printf("Exp4Param 4 parameter fit: %d,%s%n", i, fit[i]);
+            System.out.printf("Exp4Param2 4 parameter fit: %d,%s%n", i, fit[i]);
         }
 
         final double[] refl = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
@@ -315,7 +323,7 @@ public class OlciSnowAlbedoAlgorithmTest {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             refl[i] = new Exp4ParamFunction2().value(wvl, fit);
             spectralSphericalAlbedos[i] = refl[i]/fit[0];
-            System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", "  + spectralSphericalAlbedos[i]);
+            System.out.println("Exp4Param2 albedos: " + wvl + ", " + refl[i] + ", "  + spectralSphericalAlbedos[i]);
         }
 
         System.out.println();

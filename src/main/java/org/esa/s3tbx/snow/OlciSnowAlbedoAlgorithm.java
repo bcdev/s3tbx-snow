@@ -1,7 +1,9 @@
 package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
 import org.esa.s3tbx.snow.math.SigmoidalFunction;
@@ -51,10 +53,29 @@ public class OlciSnowAlbedoAlgorithm {
         final double brr21 = brr[Sensor.OLCI.getRequiredBrrBandNames().length - 1];
         spectralSphericalAlbedosFromBrrVis[3] = computeSpectralAlbedoFromBrrVis(brr21, brrVis, sza, vza);
 
-        if (mode == SpectralAlbedoMode.SIGMOIDAL) {
-            // AK 20170922:
-            // "An update on the algorithm to retrieve snow spectral albedo1020 using OLCI measurements
-            // over fresh snow layers (no pollution)":
+        // AK 20170922:
+        // "An update on the algorithm to retrieve snow spectral albedo1020 using OLCI measurements
+        // over fresh snow layers (no pollution)":
+        if (mode == SpectralAlbedoMode.POLYNOMINAL_FIT) {
+
+            // OD proposed also to provide polynominal fit
+            double[] initialGuess = {0., 0., 0., 0., 0., 0., 0., 0.};
+            PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
+
+            curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
+            curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
+            curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
+            curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
+            double[] fit = curveFitter.fit(initialGuess);
+
+            // use eq. (3) simplified to 2 parameters:
+            for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+                final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+                spectralSphericalAlbedos[i] = new PolynomialFunction(fit).value(wvl);
+            }
+
+            // ****************************************************************************************
+        } else if (mode == SpectralAlbedoMode.SIGMOIDAL_FIT) {
 
             // step 2): Fit the derived values of albedo1020
             SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
@@ -73,7 +94,7 @@ public class OlciSnowAlbedoAlgorithm {
             }
 
             // ****************************************************************************************
-        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_SQRT) {
+        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_SQRT_FIT) {
 
             // latest approach, AK 20170929: "spectral_albedo_exp_eq.doc":
             final double albedo1020 = spectralSphericalAlbedosFromBrrVis[3];
@@ -85,7 +106,7 @@ public class OlciSnowAlbedoAlgorithm {
                 a[i] = computeA(wvl);
                 spectralSphericalAlbedos[i] = Math.exp(-b * Math.sqrt(a[i] * grainDiameter));
             }
-        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_3PARAM) {
+        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_3PARAM_FIT) {
             // todo
 
         } else {
