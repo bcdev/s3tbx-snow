@@ -27,7 +27,11 @@ import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.SourceProduct;
 import org.esa.snap.core.util.ProductUtils;
 
+import javax.media.jai.JAI;
+import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.registry.RenderedRegistryMode;
 import java.awt.*;
+import java.awt.image.RenderedImage;
 import java.util.Map;
 
 /**
@@ -51,7 +55,7 @@ public class OlciSnowAlbedoOp extends Operator {
     public static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
 
-    @Parameter(label = "Spectral albedo computation mode",
+    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIGMOIDAL_FIT",
             description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
     private SpectralAlbedoMode spectralAlbedoComputationMode;
 
@@ -62,6 +66,13 @@ public class OlciSnowAlbedoOp extends Operator {
     @Parameter(defaultValue = "false",
             description = "If selected, albedo computation is done for land pixels only")
     private boolean computeLandPixelsOnly;
+
+    @Parameter(defaultValue = "0.9798, 0.9718, 0.9747, 0.9781, 0.9827, 0.9892, 0.9922,, 0.9920, 0.9943, 0.9962," +
+            "0.996, 1.003, 1.0, 1.0, 1.0, 1.005, 1.0, 0.996, 1.0, 1.0, 0.914",
+            description = "OLCI SVC gains (default values as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gains")
+    private double[] olciGains;
 
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
@@ -91,21 +102,18 @@ public class OlciSnowAlbedoOp extends Operator {
             reflProduct = sourceProduct;
             reflType = SensorConstants.REFL_TYPE_BRR;
         } else if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
+
             // apply Rayleigh correction
             RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
+            // no effect if we correct gain on TOA radiance or BRR?! todo: clarify
+//            final Product gainCorrSourceProduct = getGainCorrectedL1bProduct(sourceProduct);
+//            rayleighCorrectionOp.setSourceProduct(gainCorrSourceProduct);
             rayleighCorrectionOp.setSourceProduct(sourceProduct);
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
             rayleighCorrectionOp.setParameter("sourceBandNames", Sensor.OLCI.getRequiredRadianceBandNames());
             reflProduct = rayleighCorrectionOp.getTargetProduct();
             reflType = SensorConstants.REFL_TYPE_TOA;
-
-//            Rad2ReflOp rad2ReflOp = new Rad2ReflOp();
-//            rad2ReflOp.setSourceProduct(sourceProduct);
-//            rad2ReflOp.setParameterDefaultValues();
-//            rad2ReflOp.setParameter("sensor", org.esa.s3tbx.processor.rad2refl.Sensor.OLCI);
-//            rad2ReflOp.setParameter("copyNonSpectralBands", false);
-//            reflProduct = rad2ReflOp.getTargetProduct();
         } else {
             throw new OperatorException
                     ("Input product not supported - must be " + Sensor.OLCI.getName() +
@@ -113,6 +121,27 @@ public class OlciSnowAlbedoOp extends Operator {
         }
 
         createTargetProduct();
+    }
+
+    private Product getGainCorrectedL1bProduct(Product sourceProduct) {
+        int w = sourceProduct.getSceneRasterWidth();
+        int h = sourceProduct.getSceneRasterHeight();
+
+        Product corrSourceProduct = new Product("X", "Y", w, h);
+        for (Band b: sourceProduct.getBands()) {
+            if (!corrSourceProduct.containsBand(b.getName())) {
+                ProductUtils.copyBand(b.getName(), sourceProduct, corrSourceProduct, true);
+                for (int i=0; i<SensorConstants.OLCI_REQUIRED_RADIANCE_BAND_NAMES.length; i++) {
+                    final Band targetBand = corrSourceProduct.getBand(b.getName());
+                    if (targetBand.getName().equals(SensorConstants.OLCI_REQUIRED_RADIANCE_BAND_NAMES[i])) {
+                        multiplyConstToImage(targetBand, olciGains[i]);
+                    }
+                }
+            }
+        }
+        ProductUtils.copyTiePointGrids(sourceProduct, corrSourceProduct);
+
+        return corrSourceProduct;
     }
 
     @Override
@@ -144,13 +173,12 @@ public class OlciSnowAlbedoOp extends Operator {
                         } else {
                             double[] rhoToa = new double[reflBandNames.length];
                             for (int i = 0; i < reflBandNames.length; i++) {
-                                rhoToa[i] = rhoToaTiles[i].getSampleDouble(x, y);
+                                rhoToa[i] = olciGains[i] * rhoToaTiles[i].getSampleDouble(x, y);
+//                                rhoToa[i] = rhoToaTiles[i].getSampleDouble(x, y);
                             }
 
                             final double sza = szaTile.getSampleDouble(x, y);
                             final double vza = vzaTile.getSampleDouble(x, y);
-                            final double saa = saaTile.getSampleDouble(x, y);
-                            final double vaa = vaaTile.getSampleDouble(x, y);
 
                             // actually done with latest approach from AK, 20170929
                             final double[] spectralSphericalAlbedos =
@@ -195,8 +223,8 @@ public class OlciSnowAlbedoOp extends Operator {
 
         if (copyReflectanceBands) {
             for (Band band : reflProduct.getBands()) {
-//                if (band.getName().startsWith(SensorConstants.OLCI_BRR_BAND_PREFIX)) {
-                if (band.getName().endsWith(SensorConstants.OLCI_REFL_BAND_SUFFIX)) {
+                if (band.getName().startsWith(SensorConstants.OLCI_BRR_BAND_PREFIX)) {
+//                if (band.getName().endsWith(SensorConstants.OLCI_REFL_BAND_SUFFIX)) {
                     ProductUtils.copyBand(band.getName(), reflProduct, targetProduct, true);
                     ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
                 }
@@ -303,6 +331,14 @@ public class OlciSnowAlbedoOp extends Operator {
         geoCoding.getGeoPos(pixelPos, geoPos);
         return geoPos;
     }
+
+    public static RenderedImage multiplyConstToImage(Band sourceBand, double value) {
+        ParameterBlockJAI pb = new ParameterBlockJAI("MultiplyConst", RenderedRegistryMode.MODE_NAME);
+        pb.setSource("source0", sourceBand.getSourceImage());
+        pb.setParameter("constants", new double[]{value});
+        return  JAI.create("MultiplyConst", pb);
+    }
+
 
     /**
      * The Service Provider Interface (SPI) for the operator.

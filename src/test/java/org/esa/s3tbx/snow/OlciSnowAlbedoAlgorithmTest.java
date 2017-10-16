@@ -329,4 +329,12 @@ public class OlciSnowAlbedoAlgorithmTest {
         System.out.println();
     }
 
+    @Test
+    public void testOlciGains() throws Exception {
+//        final double sza = 75.33;
+//        final double vza = 25.495424;
+//        final double[] brrGains =
+//        final double[] sphericalAlbedosGains =
+//                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(brrGains, sza, vza, SpectralAlbedoMode.SIGMOIDAL_FIT);
+    }
 }

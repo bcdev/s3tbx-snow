@@ -27,6 +27,7 @@ public class SensorConstants {
     };
 
     public final static String OLCI_REFL_BAND_SUFFIX = "reflectance";
+    public final static String OLCI_BRR_BAND_PREFIX = "rBRR";
 
     public final static String[] OLCI_REQUIRED_REFL_BAND_NAMES = new String[]{
             "Oa01_reflectance", "Oa02_reflectance", "Oa03_reflectance", "Oa04_reflectance", "Oa05_reflectance",
