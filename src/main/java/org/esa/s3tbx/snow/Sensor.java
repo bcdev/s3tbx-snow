@@ -11,7 +11,7 @@ public enum Sensor {
 
     OLCI("OLCI", OLCI_SZA_NAME, OLCI_VZA_NAME, OLCI_SAA_NAME, OLCI_VAA_NAME,
          OLCI_L1B_FLAGS_NAME, OLCI_INVALID_BIT, OLCI_LAND_BIT,
-         OLCI_REQUIRED_RADIANCE_BAND_NAMES, OLCI_REQUIRED_REFL_BAND_NAMES, OLCI_REQUIRED_BRR_BAND_NAMES);
+         OLCI_REQUIRED_RADIANCE_BAND_NAMES, OLCI_REQUIRED_REFL_BAND_NAMES, OLCI_REQUIRED_BRR_BAND_NAMES, OLCI_TARGET_TPGS);
 
     private String name;
     private String szaName;
@@ -24,10 +24,11 @@ public enum Sensor {
     private String[] requiredRadianceBandNames;
     private String[] requiredReflBandNames;
     private String[] requiredBrrBandNames;
+    private String[] targetTpgs;
 
     Sensor(String name, String szaName, String vzaName, String saaName, String vaaName,
            String l1bFlagsName, int invalidBit, int landBit, String requiredRadianceBandNames[],
-           String requiredReflBandNames[], String[] requiredBrrBandNames) {
+           String requiredReflBandNames[], String[] requiredBrrBandNames, String[] targetTpgs) {
         this.name = name;
         this.szaName = szaName;
         this.vzaName = vzaName;
@@ -39,6 +40,7 @@ public enum Sensor {
         this.requiredRadianceBandNames = requiredRadianceBandNames;
         this.requiredReflBandNames = requiredReflBandNames;
         this.requiredBrrBandNames = requiredBrrBandNames;
+        this.targetTpgs = targetTpgs;
     }
 
     public String getName() {
@@ -85,4 +87,7 @@ public enum Sensor {
         return requiredBrrBandNames;
     }
 
+    public String[] getTargetTpgs() {
+        return targetTpgs;
+    }
 }

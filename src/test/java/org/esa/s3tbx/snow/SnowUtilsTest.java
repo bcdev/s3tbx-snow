@@ -1,10 +1,5 @@
 package org.esa.s3tbx.snow;
 
-import org.apache.commons.math3.fitting.PolynomialFitter;
-import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
-import org.esa.s3tbx.snow.math.Exp4ParamFitter;
-import org.esa.s3tbx.snow.math.Exp4ParamFunction;
-import org.esa.s3tbx.snow.math.SigmoidalFitter;
 import org.junit.Ignore;
 import org.junit.Test;
 
