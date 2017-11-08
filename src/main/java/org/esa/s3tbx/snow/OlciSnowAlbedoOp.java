@@ -20,7 +20,9 @@ package org.esa.s3tbx.snow;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.s3tbx.olci.radiometry.rayleigh.RayleighCorrectionOp;
-import org.esa.snap.core.datamodel.*;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.OperatorSpi;
@@ -30,11 +32,7 @@ import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.SourceProduct;
 import org.esa.snap.core.util.ProductUtils;
 
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.registry.RenderedRegistryMode;
 import java.awt.*;
-import java.awt.image.RenderedImage;
 import java.util.Map;
 
 /**
@@ -51,27 +49,20 @@ import java.util.Map;
 
 public class OlciSnowAlbedoOp extends Operator {
 
-    public static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
-    public static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
-    public static final String ALBEDO_BROADBAND_SPHERICAL_BAND_NAME = "albedo_broadband_spherical";
-    public static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
-    public static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
+    private static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
+    private static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
+    private static final String ALBEDO_BROADBAND_SPHERICAL_BAND_NAME = "albedo_broadband_spherical";
+    private static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
+    private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
 
-    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIGMOIDAL_FIT",
+    @Parameter(label = "Spectral albedo computation mode", defaultValue = "EXPONENTIAL_4PARAM_FIT",
             description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
     private SpectralAlbedoMode spectralAlbedoComputationMode;
 
     @Parameter(defaultValue = "false",
             description = "If selected, Rayleigh corrected reflectances are written to target product")
     private boolean copyReflectanceBands;
-
-//    @Parameter(defaultValue = "0.9798, 0.9718, 0.9747, 0.9781, 0.9827, 0.9892, 0.9922,, 0.9920, 0.9943, 0.9962," +
-//            "0.996, 1.003, 1.0, 1.0, 1.0, 1.005, 1.0, 0.996, 1.0, 1.0, 0.914",
-//            description = "OLCI SVC gains (default values as provided by Sentinel-3A Product Notice – " +
-//                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
-//            label = "OLCI SVC gains")
-//    private double[] olciGains;
 
     // we need gains only for OLCI BRR bands 1, 2, 3, 4, 5, 12, 17, 21
     @Parameter(defaultValue = "0.9798, 0.9718, 0.9747, 0.9781, 0.9827, 1.003, 1.0, 0.914",
@@ -83,7 +74,7 @@ public class OlciSnowAlbedoOp extends Operator {
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
             label = "OLCI L1b or Rayleigh corrected product")
-    public Product sourceProduct;
+    private Product sourceProduct;
 
     private Sensor sensor = Sensor.OLCI;
 
@@ -150,6 +141,10 @@ public class OlciSnowAlbedoOp extends Operator {
 
                         final double sza = szaTile.getSampleDouble(x, y);
                         final double vza = vzaTile.getSampleDouble(x, y);
+
+                        if (x == 54 && y == 49) {
+                            System.out.println("x = " + x);
+                        }
 
                         // actually done with latest approach from AK, 20170929
                         final double[] spectralSphericalAlbedos =
@@ -251,7 +246,8 @@ public class OlciSnowAlbedoOp extends Operator {
         for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
             final int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
             final Band spectralAlbedoBand = targetProduct.getBand(prefix + wvl);
-            targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[i]);
+            int spectralIndex = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i];
+            targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[spectralIndex]);
         }
     }
 
@@ -288,37 +284,6 @@ public class OlciSnowAlbedoOp extends Operator {
             }
         }
         return true;
-    }
-
-    private boolean isLandPixel(int x, int y, Tile l1FlagsTile, int waterFraction) {
-        // the water mask ends at 59 Degree south, stop earlier to avoid artefacts
-        if (getGeoPos(x, y).lat > -58f) {
-            // values bigger than 100 indicate no data
-            if (waterFraction <= 100) {
-                // todo: this does not work if we have a PixelGeocoding. In that case, waterFraction
-                // is always 0 or 100!! (TS, OD, 20140502)
-                return waterFraction == 0;
-            } else {
-                return l1FlagsTile.getSampleBit(x, y, Sensor.OLCI.getLandBit());
-            }
-        } else {
-            return l1FlagsTile.getSampleBit(x, y, Sensor.OLCI.getLandBit());
-        }
-    }
-
-    private GeoPos getGeoPos(int x, int y) {
-        final GeoPos geoPos = new GeoPos();
-        final GeoCoding geoCoding = getSourceProduct().getSceneGeoCoding();
-        final PixelPos pixelPos = new PixelPos(x, y);
-        geoCoding.getGeoPos(pixelPos, geoPos);
-        return geoPos;
-    }
-
-    public static RenderedImage multiplyConstToImage(Band sourceBand, double value) {
-        ParameterBlockJAI pb = new ParameterBlockJAI("MultiplyConst", RenderedRegistryMode.MODE_NAME);
-        pb.setSource("source0", sourceBand.getSourceImage());
-        pb.setParameter("constants", new double[]{value});
-        return JAI.create("MultiplyConst", pb);
     }
 
 

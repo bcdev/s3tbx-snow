@@ -10,7 +10,7 @@ import org.esa.s3tbx.snow.OlciSnowAlbedoConstants;
 
 /**
  * Implementation of exponential function with 4 parameters as:
- * f(v; a, b, kappa1, l) := a *(exp(-(2*PI/v) * (kappa1*L + kappa2(v)*L)))^b
+ * f(v; a, kappa1, L, b) := a *(exp(-(2*PI/v) * (kappa1*L + kappa2(v)*L)))^b
  *
  * @author olafd
  */
@@ -22,16 +22,13 @@ public class Exp4ParamFunction implements ParametricUnivariateFunction {
         double[] kappaCoeffs = getKappaCoeffs(v);
         final PolynomialFunction kappa2Function = new PolynomialFunction(kappaCoeffs);
         final double kappa2 = kappa2Function.value(v);
-//        final double kappa2 = 2.365E-11;  // test!
 
         final double bracket = Math.exp(-(2 * Math.PI / v) * (parms[1] * parms[2] + kappa2 * parms[2]));
         final double aDeriv = Math.pow(bracket, parms[3]);
         final double kappa1Deriv = (-2 * Math.PI * parms[0] * parms[2] * parms[3] / v) *
                 Math.exp(-2 * Math.PI * parms[2] * parms[3] *(parms[1] + kappa2) / v);
-//        final double lDeriv = kappa1Deriv / v;
         final double lDeriv = (-2 * Math.PI * parms[0] * parms[2] * parms[3] *(parms[1] + kappa2) / v) *
                 Math.exp(-2 * Math.PI * parms[2] * parms[3] *(parms[1] + kappa2) / v);
-//        final double bDeriv = Math.log(parms[0] * bracket) * Math.exp(parms[3] * Math.log(parms[0] * bracket));
         final double bDeriv = parms[0] * Math.log( bracket) * Math.exp(parms[3] * Math.log(bracket));
 
         return new double[]{aDeriv, kappa1Deriv, lDeriv, bDeriv};
@@ -41,12 +38,12 @@ public class Exp4ParamFunction implements ParametricUnivariateFunction {
         return evaluate(parameters, x);
     }
 
-    protected static double evaluate(double[] parms, double v) throws NullArgumentException, NoDataException {
+    private static double evaluate(double[] parms, double v) throws NullArgumentException, NoDataException {
         MathUtils.checkNotNull(parms);
         final int numParms = parms.length;
 
         if (numParms == 4) {
-            // approach with 4 parameters: f(v; a, b, kappa1, L) := a *(exp(- ( (2*PI/v) * (kappa1*L + kappa2(v)*L) ))))^b
+            // approach with 4 parameters: f(v; a, kappa1, L, b) := a *(exp(- ( (2*PI/v) * (kappa1*L + kappa2(v)*L) ))))^b
             final double a = parms[0];
             final double kappa1 = parms[1];
             final double L = parms[2];
@@ -55,7 +52,6 @@ public class Exp4ParamFunction implements ParametricUnivariateFunction {
             double[] kappaCoeffs = getKappaCoeffs(v);
             final PolynomialFunction kappa2Function = new PolynomialFunction(kappaCoeffs);
             final double kappa2 = kappa2Function.value(v);
-//            final double kappa2 = 2.365E-11;  // test!
 
             return a * Math.pow(Math.exp(-((2. * Math.PI / v) * (kappa1 * L + kappa2 * L))), b);
         } else {

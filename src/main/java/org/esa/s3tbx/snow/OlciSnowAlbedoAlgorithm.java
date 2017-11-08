@@ -5,10 +5,10 @@ import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
+import org.esa.s3tbx.snow.math.Exp4ParamFitter;
+import org.esa.s3tbx.snow.math.Exp4ParamFunction;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
 import org.esa.s3tbx.snow.math.SigmoidalFunction;
-import org.esa.s3tbx.snow.math.lma.LMA;
-import org.esa.s3tbx.snow.math.lma.implementations.Polynomial;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
@@ -22,7 +22,7 @@ import org.esa.snap.core.util.math.MathUtils;
  *
  * @author olafd
  */
-public class OlciSnowAlbedoAlgorithm {
+class OlciSnowAlbedoAlgorithm {
 
     /**
      * Computes snow spectral albedo for considered wavelengths from input reflectances (after AC) and given geometry.
@@ -72,7 +72,7 @@ public class OlciSnowAlbedoAlgorithm {
             curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
             curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
             curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
-            double[] fit = ((PolynomialFitter) curveFitter).fit(initialGuess);
+            double[] fit = curveFitter.fit(initialGuess);
 
             // use eq. (3) simplified to 2 parameters:
             for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
@@ -113,8 +113,31 @@ public class OlciSnowAlbedoAlgorithm {
                 a[i] = computeA(wvl);
                 spectralSphericalAlbedos[i] = Math.exp(-b * Math.sqrt(a[i] * grainDiameter));
             }
-        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_3PARAM_FIT) {
-            // todo
+        } else if (mode == SpectralAlbedoMode.EXPONENTIAL_4PARAM_FIT) {
+            Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
+
+            double[] initialGuess = new double[4]; // a, kappa_1, L, b, from AK TN, 20171005
+            initialGuess[0] = brr[0]; // ~1.0?!
+            initialGuess[1] = 0;
+            final double kappa2_1020 = 1.E-6;
+            final double r_1020 = spectralSphericalAlbedosFromBrrVis[3];
+            initialGuess[2] = 1.02*Math.log(r_1020)*Math.log(r_1020)/(2.0*Math.PI*kappa2_1020);
+            final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+            final double mu = Math.cos(vza * MathUtils.DTOR);
+            final double k_mu_0 = computeK(mu_0);
+            final double k_mu = computeK(mu);
+            initialGuess[3] = k_mu*k_mu_0/brr[0];
+            final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
+            curveFitter.clearObservations();
+            curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
+            curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
+            curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
+            curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
+            double[] fit = curveFitter.fit(initialGuess);
+            for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
+                final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+                spectralSphericalAlbedos[i] = exp4ParamFunction.value(wvl, fit);
+            }
 
         } else {
             throw new IllegalArgumentException("spectral albedo algoritm mode " + mode.getName() + " not supported");
@@ -125,81 +148,6 @@ public class OlciSnowAlbedoAlgorithm {
         return spectralSphericalAlbedos;
     }
 
-    static double[] computeSpectralSphericalAlbedos_test(double[] brr, double sza, double vza) {
-//        double[] spectralSphericalAlbedos = new double[brr.length];
-        double[] spectralSphericalAlbedos = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
-
-        // ****************************************************************************************
-        // visible subrange (400-510nm, 5 bands):
-        final double[] brrVis = new double[5];
-        System.arraycopy(brr, 0, brrVis, 0, 5);
-        double[] spectralSphericalAlbedosFromBrrVis = new double[4];
-
-        // step 1): Use Eq. (2) at channels: 1( 400nm), 12 (753.75nm), 17(865nm), and 21 (1020nm)
-        spectralSphericalAlbedosFromBrrVis[0] = computeSpectralAlbedoFromBrrVis(brr[0], brrVis, sza, vza);
-        spectralSphericalAlbedosFromBrrVis[1] = computeSpectralAlbedoFromBrrVis(brr[5], brrVis, sza, vza);
-        spectralSphericalAlbedosFromBrrVis[2] = computeSpectralAlbedoFromBrrVis(brr[6], brrVis, sza, vza);
-        final double brr21 = brr[Sensor.OLCI.getRequiredBrrBandNames().length - 1];
-        spectralSphericalAlbedosFromBrrVis[3] = computeSpectralAlbedoFromBrrVis(brr21, brrVis, sza, vza);
-
-        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
-
-        double[] initialGuess = {1., 1.};
-        final SigmoidalFunction sigmoidalFunction_2 = new SigmoidalFunction(2);
-        curveFitter.clearObservations();
-        curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
-        curveFitter.addObservedPoint(0.753, spectralSphericalAlbedosFromBrrVis[1]);
-        curveFitter.addObservedPoint(0.865, spectralSphericalAlbedosFromBrrVis[2]);
-        curveFitter.addObservedPoint(1.02, spectralSphericalAlbedosFromBrrVis[3]);
-        double[] fit = curveFitter.fit(initialGuess, 2);    // todo: this is the performance killer!!
-//        double[] fit = initialGuess;
-        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            spectralSphericalAlbedos[i] = sigmoidalFunction_2.value(wvl, fit);
-        }
-
-        return spectralSphericalAlbedos;
-    }
-
-    static double[] computeSpectralSphericalAlbedos_test_lma(double[] brr, double sza, double vza) {
-        double[] spectralSphericalAlbedos = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
-
-        // ****************************************************************************************
-        // visible subrange (400-510nm, 5 bands):
-        final double[] brrVis = new double[5];
-        System.arraycopy(brr, 0, brrVis, 0, 5);
-        double[] spectralSphericalAlbedosFromBrrVis = new double[4];
-
-        // step 1): Use Eq. (2) at channels: 1( 400nm), 12 (753.75nm), 17(865nm), and 21 (1020nm)
-        spectralSphericalAlbedosFromBrrVis[0] = computeSpectralAlbedoFromBrrVis(brr[0], brrVis, sza, vza);
-        spectralSphericalAlbedosFromBrrVis[1] = computeSpectralAlbedoFromBrrVis(brr[5], brrVis, sza, vza);
-        spectralSphericalAlbedosFromBrrVis[2] = computeSpectralAlbedoFromBrrVis(brr[6], brrVis, sza, vza);
-        final double brr21 = brr[Sensor.OLCI.getRequiredBrrBandNames().length - 1];
-        spectralSphericalAlbedosFromBrrVis[3] = computeSpectralAlbedoFromBrrVis(brr21, brrVis, sza, vza);
-
-        LMA lma = new LMA(
-                new Polynomial(),
-//                new double[]{1, 1, 1., 1., 1., 1., 1., 1.},
-                new double[]{0., 0., 0., 0., 0., 0., 0., 0.},
-                new double[][]{
-                        {0.4, 0.753, 0.865, 1.02},
-                        {spectralSphericalAlbedosFromBrrVis[0],
-                                spectralSphericalAlbedosFromBrrVis[1],
-                                spectralSphericalAlbedosFromBrrVis[2],
-                                spectralSphericalAlbedosFromBrrVis[3]}}
-        );
-        lma.fit();
-        double[] fit = lma.parameters;
-
-        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            spectralSphericalAlbedos[i] = new Polynomial().getY(wvl, fit);
-        }
-
-        return spectralSphericalAlbedos;
-    }
-
-
     /**
      * New algorithm from 'alex_sept_22_2017.pdf':
      *
@@ -209,7 +157,7 @@ public class OlciSnowAlbedoAlgorithm {
      * @param vza    - VZA
      * @return spectral albedo
      */
-    static double computeSpectralAlbedoFromBrrVis(double brr, double[] brrVis, double sza, double vza) {
+    private static double computeSpectralAlbedoFromBrrVis(double brr, double[] brrVis, double sza, double vza) {
         // eq. (1):
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
@@ -308,7 +256,7 @@ public class OlciSnowAlbedoAlgorithm {
      * @param spectralAlbedos - the spectral albedos at considered wavelengths.
      * @return r_b1
      */
-    static double integrateR_b1(double[] spectralAlbedos) {
+    private static double integrateR_b1(double[] spectralAlbedos) {
         double r_b1 = 0.0;
         // interpolate input spectralAlbedos (21 OLCI wavelengths) to full grid 300-1020nm (53 wavelengths)
         final double[] wvlFull = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED;
@@ -376,27 +324,27 @@ public class OlciSnowAlbedoAlgorithm {
         double r_b2;
         double grainDiameter;
 
-        public double getR_b1() {
+        double getR_b1() {
             return r_b1;
         }
 
-        public void setR_b1(double r_b1) {
+        void setR_b1(double r_b1) {
             this.r_b1 = r_b1;
         }
 
-        public double getR_b2() {
+        double getR_b2() {
             return r_b2;
         }
 
-        public void setR_b2(double r_b2) {
+        void setR_b2(double r_b2) {
             this.r_b2 = r_b2;
         }
 
-        public double getGrainDiameter() {
+        double getGrainDiameter() {
             return grainDiameter;
         }
 
-        public void setGrainDiameter(double grainDiameter) {
+        void setGrainDiameter(double grainDiameter) {
             this.grainDiameter = grainDiameter;
         }
     }
