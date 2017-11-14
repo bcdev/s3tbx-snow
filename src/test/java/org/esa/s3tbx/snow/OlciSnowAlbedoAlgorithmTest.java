@@ -291,7 +291,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
 
         curveFitter.addObservedPoint(0.4, 1.0);
-        curveFitter.addObservedPoint(0.49, 0.768120321063813);
+        curveFitter.addObservedPoint(0.753, 0.768120321063813);
         curveFitter.addObservedPoint(0.865, 0.7226259625191246);
         curveFitter.addObservedPoint(1.02, 0.48345802606075666);
 
@@ -313,6 +313,11 @@ public class OlciSnowAlbedoAlgorithmTest {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             spectralSphericalAlbedos[i] = exp4ParamFunction.value(wvl, fit);
             System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", "  + spectralSphericalAlbedos[i]);
+        }
+
+        for (int i = 0; i < 40; i++) {
+            final double wvl = 0.4 + 0.02*i;
+            System.out.println("Exp4Param fit: " + wvl +  ", "  + exp4ParamFunction.value(wvl, fit));
         }
 
         System.out.println();
