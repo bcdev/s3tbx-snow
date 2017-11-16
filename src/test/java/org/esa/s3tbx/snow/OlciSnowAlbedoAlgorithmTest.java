@@ -315,9 +315,46 @@ public class OlciSnowAlbedoAlgorithmTest {
             System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", "  + spectralSphericalAlbedos[i]);
         }
 
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 32; i++) {
             final double wvl = 0.4 + 0.02*i;
             System.out.println("Exp4Param fit: " + wvl +  ", "  + exp4ParamFunction.value(wvl, fit));
+        }
+
+        System.out.println();
+    }
+
+    @Test
+    public void testExp4ParamCurveFitting_aoki() throws Exception {
+
+        // this test refers to AK TN 20171010 !!!
+
+        Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
+
+        // put AOKI values in here and just do the fit...
+        curveFitter.addObservedPoint(0.4, 0.97);
+        curveFitter.addObservedPoint(0.753, 0.93);
+        curveFitter.addObservedPoint(0.865, 0.89);
+        curveFitter.addObservedPoint(1.02, 0.72);
+
+        // fit does not always work, result strongly depends on initial guess!
+        // see AK TN, 20171005
+        // f(v; a, kappa1, L, b) := a *(exp(-(2*PI/v) * (kappa1*L + kappa2(v)*L)))^b
+
+        final double kappa2_1020 = 1.E-6;
+        final double r_1020 = 0.72;
+        final double initialGuess_2 = 1.02*Math.log(r_1020)*Math.log(r_1020)/(2.0*Math.PI*kappa2_1020);
+
+        double[] initialGuess = new double[]{0.97, 0., initialGuess_2, 0.7266642582580547};
+        double[] fit = curveFitter.fit(initialGuess);
+
+        for (int i = 0; i < fit.length; i++) {
+            System.out.printf("Exp4Param 4 parameter fit for AOKI: %d,%s%n", i, fit[i]);
+        }
+
+        final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
+        for (int i = 0; i < 32; i++) {
+            final double wvl = 0.4 + 0.02*i;
+            System.out.println("Exp4Param fit for AOKI: " + wvl +  ", "  + exp4ParamFunction.value(wvl, fit));
         }
 
         System.out.println();
