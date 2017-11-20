@@ -331,8 +331,9 @@ public class OlciSnowAlbedoAlgorithmTest {
         Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
 
         // put AOKI values in here and just do the fit...
-        curveFitter.addObservedPoint(0.4, 0.97);
-        curveFitter.addObservedPoint(0.753, 0.93);
+        curveFitter.addObservedPoint(0.4, 0.975);
+        curveFitter.addObservedPoint(0.49, 0.975);
+//        curveFitter.addObservedPoint(0.753, 0.93);
         curveFitter.addObservedPoint(0.865, 0.89);
         curveFitter.addObservedPoint(1.02, 0.72);
 

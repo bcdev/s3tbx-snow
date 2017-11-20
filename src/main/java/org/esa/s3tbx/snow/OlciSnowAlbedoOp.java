@@ -146,11 +146,17 @@ public class OlciSnowAlbedoOp extends Operator {
                             System.out.println("x = " + x);
                         }
 
+                        // actually done with latest approach from AK, 20171120:
+                        final double[][] sphericalAlbedos =
+                                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos_nov20(rhoToa, sza, vza);
+                        final double[] spectralSphericalAlbedos = sphericalAlbedos[0];
+                        final double[] spectralPlanarAlbedos = sphericalAlbedos[1];
+
                         // actually done with latest approach from AK, 20170929
-                        final double[] spectralSphericalAlbedos =
-                                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa,
-                                                                                        sza, vza,
-                                                                                        spectralAlbedoComputationMode);
+//                        final double[] spectralSphericalAlbedos =
+//                                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa,
+//                                                                                        sza, vza,
+//                                                                                        spectralAlbedoComputationMode);
 
                         // This is a test using LMA fitting library, which helped to find the negative brr input,
                         // which obviously leads to infinite iterations in the apache-commons polynominal
@@ -161,10 +167,10 @@ public class OlciSnowAlbedoOp extends Operator {
                         setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                       ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
 
-                        final double[] spectralPlanarAlbedos =
-                                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedos(spectralSphericalAlbedos, sza);
-                        setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
-                                                      ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
+//                        final double[] spectralPlanarAlbedos =
+//                                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedos(spectralSphericalAlbedos, sza);
+//                        setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
+//                                                      ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
                         final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
                                 OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralSphericalAlbedos);

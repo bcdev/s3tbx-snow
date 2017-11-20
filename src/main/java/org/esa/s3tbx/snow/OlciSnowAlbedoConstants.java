@@ -83,7 +83,7 @@ public class OlciSnowAlbedoConstants {
     public static final double[] c2 = {2.2594E-9, 6.41E-9, 0.017956, -0.00149};
     public static final double[] c3 = {1.38411E-9, 1.63665E-8, -0.024, -0.0128};
 
-    public static final double[] KAPPA_2 = {
+    public static final double[] ICE_REFR_INDEX = {
             2.365E-011,2.669E-011,6.268E-011,4.172E-010,8.036E-010,
             2.839E-009,8.580E-009,1.770E-008,1.890E-008,2.090E-008,
             3.440E-008,5.870E-008,7.080E-008,7.500E-008,8.080E-008,

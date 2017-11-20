@@ -25,6 +25,48 @@ import org.esa.snap.core.util.math.MathUtils;
 class OlciSnowAlbedoAlgorithm {
 
     /**
+     * Computation of spectral spherical albedo following AK new approach, 20171120:
+     * References:
+     *  [1]: The simple approximation  for the spectral planar albedo. TN AK, 20171120. File: nov_20.doc.
+     *  [2]: The snow grain size determination. TN AK, 20171120. File: sgs_nov_20.doc.
+     *
+     * @param brr - Rayleigh corrected reflectances
+     * @param sza
+     * @param vza
+     *
+     * @return  double[][] {spectralSphericalAlbedos, planarSphericalAlbedos}
+     */
+    static double[][] computeSphericalAlbedos_nov20(double[] brr, double sza, double vza) {
+
+        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        double[][] sphericalAlbedos = new double[2][numWvl];
+
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        final double mu = Math.cos(vza * MathUtils.DTOR);
+        final double k_mu_0 = computeK(mu_0);
+        final double k_mu = computeK(mu);
+        final double brr_400 = brr[0];
+        final double xi = brr_400/(k_mu_0*k_mu);   // [1], eq. (5)
+        final double brr_1020 = brr[brr.length - 1];
+        final double r_1020 = Math.pow(brr_1020/brr_400, xi); // [1], eq. (5)
+        final double wvl_1020 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[numWvl-1];  // 1.02um !!
+        final double chi_1020 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl-1];
+        final double kappa_1020 = 4.0*Math.PI*chi_1020/wvl_1020;  // [2], eqs. (1), (2)
+        final double B = Math.log(r_1020)*Math.log(r_1020)/kappa_1020;  // [2], eq. (2) transformed
+
+        for (int i = 0; i < numWvl; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
+            final double kappa = 4.0*Math.PI*chi/wvl;  // [2], eqs. (1), (2)
+
+            sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B*kappa));  // spectral spherical abledo
+            sphericalAlbedos[1][i] = Math.pow(sphericalAlbedos[0][i], k_mu_0);  // planar spherical abledo
+        }
+
+        return sphericalAlbedos;
+    }
+
+    /**
      * Computes snow spectral albedo for considered wavelengths from input reflectances (after AC) and given geometry.
      * Initially follows: 'snow_albedo_algorithm_1.docx' (AK, 20170519)
      * <p/>
