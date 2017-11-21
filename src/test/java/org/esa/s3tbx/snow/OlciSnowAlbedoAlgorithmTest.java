@@ -17,7 +17,6 @@ public class OlciSnowAlbedoAlgorithmTest {
     @Ignore
     public void testComputeBroadbandAlbedos() throws Exception {
         double[] spectralAlbedos = new double[]{
-//                0.998,
                 0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
                 0.95, 0.92, 0.89, 0.86, 0.712
         };
@@ -36,28 +35,6 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274);
         assertEquals(260.18598, grainDiameter, 1.E-2);
     }
-
-//    @Test
-//    public void testComputeSpectralAlbedo() throws Exception {
-//        double brr = 0.71233;
-//        double sza = 55.5;
-//        double vza = 31.55;
-//        double saa = 154.28;
-//        double vaa = 103.75;
-//        final double spectralAlbedo = OlciSnowAlbedoAlgorithm.computeSpectralAlbedo_old(brr, sza, vza, saa, vaa);
-//        assertEquals(0.7244, spectralAlbedo, 1.E-2);
-//    }
-
-//    @Test
-//    public void testIntegrateR_b1() throws Exception {
-//        double[] spectralAlbedos = new double[]{
-////                0.998,
-//                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
-//                0.95, 0.92, 0.89, 0.86, 0.712
-//        };
-//        double r_b1 = OlciSnowAlbedoAlgorithm.integrateR_b1(spectralAlbedos);
-//        assertEquals(0.7552, r_b1, 1.E-2);
-//    }
 
     @Test
     public void testIntegrateR_b2() throws Exception {
@@ -96,27 +73,6 @@ public class OlciSnowAlbedoAlgorithmTest {
         assertEquals(200.0, yi[4]);
     }
 
-    // this works only for apache commons-math3-3.6.1 !!
-//    @Test
-//    public void testPolynominalCurveFitting() throws Exception {
-//
-//
-//        // fit to third-order polynom
-//        PolynomialCurveFitter curveFitter = PolynomialCurveFitter.create(3);
-//        final WeightedObservedPoints obs = new WeightedObservedPoints();
-//
-//        obs.add(0.4, 1.0);
-//        obs.add(0.753, 0.963);
-//        obs.add(0.865, 0.922);
-//        obs.add(1.02, 0.737);
-//        final double[] curveFit = curveFitter.fit(obs.toList());
-//
-//        for (int i = 0; i < curveFit.length; i++) {
-//            System.out.printf("%d,%s%n", i, curveFit[i]);
-//        }
-//        assertTrue(true);
-//    }
-
     @Test
     public void testPolynominalCurveFitting() throws Exception {
         double[] initialGuess = {0., 0., 0., 0., 0.};
@@ -124,19 +80,19 @@ public class OlciSnowAlbedoAlgorithmTest {
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
 
         // 350-525nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
-        curveFitter.addObservedPoint(4.000E-001,  2.365E-011);
-        curveFitter.addObservedPoint(4.100E-001,  2.669E-011);
-        curveFitter.addObservedPoint(4.200E-001,  3.135E-011);
-        curveFitter.addObservedPoint(4.300E-001,  4.140E-011);
-        curveFitter.addObservedPoint(4.400E-001,  6.268E-011);
-        curveFitter.addObservedPoint(4.500E-001,  9.239E-011);
-        curveFitter.addObservedPoint(4.600E-001,  1.325E-010);
-        curveFitter.addObservedPoint(4.700E-001,  1.956E-010);
-        curveFitter.addObservedPoint(4.800E-001,  2.861E-010);
-        curveFitter.addObservedPoint(4.900E-001,  4.172E-010);
-        curveFitter.addObservedPoint(5.000E-001,  5.889E-010);
-        curveFitter.addObservedPoint(5.100E-001,  8.036E-010);
-        curveFitter.addObservedPoint(5.200E-001,  1.076E-009);
+        curveFitter.addObservedPoint(4.000E-001, 2.365E-011);
+        curveFitter.addObservedPoint(4.100E-001, 2.669E-011);
+        curveFitter.addObservedPoint(4.200E-001, 3.135E-011);
+        curveFitter.addObservedPoint(4.300E-001, 4.140E-011);
+        curveFitter.addObservedPoint(4.400E-001, 6.268E-011);
+        curveFitter.addObservedPoint(4.500E-001, 9.239E-011);
+        curveFitter.addObservedPoint(4.600E-001, 1.325E-010);
+        curveFitter.addObservedPoint(4.700E-001, 1.956E-010);
+        curveFitter.addObservedPoint(4.800E-001, 2.861E-010);
+        curveFitter.addObservedPoint(4.900E-001, 4.172E-010);
+        curveFitter.addObservedPoint(5.000E-001, 5.889E-010);
+        curveFitter.addObservedPoint(5.100E-001, 8.036E-010);
+        curveFitter.addObservedPoint(5.200E-001, 1.076E-009);
 
         double[] fit = curveFitter.fit(initialGuess);
         for (int i = 0; i < fit.length; i++) {
@@ -145,25 +101,25 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         // 525-700nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
         curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
-        curveFitter.addObservedPoint(5.200E-001,  1.076E-009);
-        curveFitter.addObservedPoint(5.300E-001,  1.409E-009);
-        curveFitter.addObservedPoint(5.400E-001,  1.813E-009);
-        curveFitter.addObservedPoint(5.500E-001,  2.289E-009);
-        curveFitter.addObservedPoint(5.600E-001,  2.839E-009);
-        curveFitter.addObservedPoint(5.700E-001,  3.461E-009);
-        curveFitter.addObservedPoint(5.800E-001,  4.159E-009);
-        curveFitter.addObservedPoint(5.900E-001,  4.930E-009);
-        curveFitter.addObservedPoint(6.000E-001,  5.730E-009);
-        curveFitter.addObservedPoint(6.100E-001,  6.890E-009);
-        curveFitter.addObservedPoint(6.200E-001,  8.580E-009);
-        curveFitter.addObservedPoint(6.300E-001,  1.040E-008);
-        curveFitter.addObservedPoint(6.400E-001,  1.220E-008);
-        curveFitter.addObservedPoint(6.500E-001,  1.430E-008);
-        curveFitter.addObservedPoint(6.600E-001,  1.660E-008);
-        curveFitter.addObservedPoint(6.700E-001,  1.890E-008);
-        curveFitter.addObservedPoint(6.800E-001,  2.090E-008);
-        curveFitter.addObservedPoint(6.900E-001,  2.400E-008);
-        curveFitter.addObservedPoint(7.000E-001,  2.900E-008);
+        curveFitter.addObservedPoint(5.200E-001, 1.076E-009);
+        curveFitter.addObservedPoint(5.300E-001, 1.409E-009);
+        curveFitter.addObservedPoint(5.400E-001, 1.813E-009);
+        curveFitter.addObservedPoint(5.500E-001, 2.289E-009);
+        curveFitter.addObservedPoint(5.600E-001, 2.839E-009);
+        curveFitter.addObservedPoint(5.700E-001, 3.461E-009);
+        curveFitter.addObservedPoint(5.800E-001, 4.159E-009);
+        curveFitter.addObservedPoint(5.900E-001, 4.930E-009);
+        curveFitter.addObservedPoint(6.000E-001, 5.730E-009);
+        curveFitter.addObservedPoint(6.100E-001, 6.890E-009);
+        curveFitter.addObservedPoint(6.200E-001, 8.580E-009);
+        curveFitter.addObservedPoint(6.300E-001, 1.040E-008);
+        curveFitter.addObservedPoint(6.400E-001, 1.220E-008);
+        curveFitter.addObservedPoint(6.500E-001, 1.430E-008);
+        curveFitter.addObservedPoint(6.600E-001, 1.660E-008);
+        curveFitter.addObservedPoint(6.700E-001, 1.890E-008);
+        curveFitter.addObservedPoint(6.800E-001, 2.090E-008);
+        curveFitter.addObservedPoint(6.900E-001, 2.400E-008);
+        curveFitter.addObservedPoint(7.000E-001, 2.900E-008);
 
         fit = curveFitter.fit(initialGuess);
         for (int i = 0; i < fit.length; i++) {
@@ -276,8 +232,8 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double vza = 26.35964;
 
         final double[] spectralSphericalAlbedos =
-                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa, sza, vza,
-                                                                        SpectralAlbedoMode.SIGMOIDAL_FIT);
+                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToa, sza, vza,
+                                                                SpectralAlbedoMode.SIGMOIDAL_FIT)[0];
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
@@ -312,12 +268,12 @@ public class OlciSnowAlbedoAlgorithmTest {
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             spectralSphericalAlbedos[i] = exp4ParamFunction.value(wvl, fit);
-            System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", "  + spectralSphericalAlbedos[i]);
+            System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", " + spectralSphericalAlbedos[i]);
         }
 
         for (int i = 0; i < 32; i++) {
-            final double wvl = 0.4 + 0.02*i;
-            System.out.println("Exp4Param fit: " + wvl +  ", "  + exp4ParamFunction.value(wvl, fit));
+            final double wvl = 0.4 + 0.02 * i;
+            System.out.println("Exp4Param fit: " + wvl + ", " + exp4ParamFunction.value(wvl, fit));
         }
 
         System.out.println();
@@ -343,7 +299,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         final double kappa2_1020 = 1.E-6;
         final double r_1020 = 0.72;
-        final double initialGuess_2 = 1.02*Math.log(r_1020)*Math.log(r_1020)/(2.0*Math.PI*kappa2_1020);
+        final double initialGuess_2 = 1.02 * Math.log(r_1020) * Math.log(r_1020) / (2.0 * Math.PI * kappa2_1020);
 
         double[] initialGuess = new double[]{0.97, 0., initialGuess_2, 0.7266642582580547};
         double[] fit = curveFitter.fit(initialGuess);
@@ -354,8 +310,8 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
         for (int i = 0; i < 32; i++) {
-            final double wvl = 0.4 + 0.02*i;
-            System.out.println("Exp4Param fit for AOKI: " + wvl +  ", "  + exp4ParamFunction.value(wvl, fit));
+            final double wvl = 0.4 + 0.02 * i;
+            System.out.println("Exp4Param fit for AOKI: " + wvl + ", " + exp4ParamFunction.value(wvl, fit));
         }
 
         System.out.println();

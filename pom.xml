@@ -22,7 +22,7 @@
 
     <groupId>org.esa.s3tbx</groupId>
     <artifactId>s3tbx-snow</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>nbm</packaging>    
     <name>S3TBX Snow Operator</name>
     <description>Provides snow properties from OLCI/SLSTR measurements.</description>

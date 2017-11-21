@@ -56,7 +56,7 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
 
-    @Parameter(label = "Spectral albedo computation mode", defaultValue = "EXPONENTIAL_4PARAM_FIT",
+    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
             description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
     private SpectralAlbedoMode spectralAlbedoComputationMode;
 
@@ -142,35 +142,22 @@ public class OlciSnowAlbedoOp extends Operator {
                         final double sza = szaTile.getSampleDouble(x, y);
                         final double vza = vzaTile.getSampleDouble(x, y);
 
+                        // Sigma site in subset_0_of_S3A_OL_1_EFR____20170529T004035_20170529T004335_20170529T030013_0179_018_145_1260_SVL_O_NR_002_rayleigh.dim
                         if (x == 54 && y == 49) {
                             System.out.println("x = " + x);
                         }
 
-                        // actually done with latest approach from AK, 20171120:
+                        // default is actually SIMPLE_APPROXIMATION (latest approach from AK, 20171120):
                         final double[][] sphericalAlbedos =
-                                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos_nov20(rhoToa, sza, vza);
+                                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToa, sza, vza,
+                                                                                spectralAlbedoComputationMode);
                         final double[] spectralSphericalAlbedos = sphericalAlbedos[0];
                         final double[] spectralPlanarAlbedos = sphericalAlbedos[1];
 
-                        // actually done with latest approach from AK, 20170929
-//                        final double[] spectralSphericalAlbedos =
-//                                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(rhoToa,
-//                                                                                        sza, vza,
-//                                                                                        spectralAlbedoComputationMode);
-
-                        // This is a test using LMA fitting library, which helped to find the negative brr input,
-                        // which obviously leads to infinite iterations in the apache-commons polynominal
-                        // or sigmoidal fits. todo: check and identify that more clearly
-//                            final double[] spectralSphericalAlbedos =
-//                                    OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos_test_lma(rhoToa, sza, vza);
-
                         setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                       ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
-
-//                        final double[] spectralPlanarAlbedos =
-//                                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedos(spectralSphericalAlbedos, sza);
-//                        setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
-//                                                      ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
+                        setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
+                                                      ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
                         final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
                                 OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralSphericalAlbedos);
@@ -202,7 +189,6 @@ public class OlciSnowAlbedoOp extends Operator {
         if (copyReflectanceBands) {
             for (Band band : reflProduct.getBands()) {
                 if (band.getName().startsWith(SensorConstants.OLCI_BRR_BAND_PREFIX)) {
-//                if (band.getName().endsWith(SensorConstants.OLCI_REFL_BAND_SUFFIX)) {
                     ProductUtils.copyBand(band.getName(), reflProduct, targetProduct, true);
                     ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
                 }
@@ -239,7 +225,6 @@ public class OlciSnowAlbedoOp extends Operator {
         }
 
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
-//        ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
         ProductUtils.copyMasks(sourceProduct, targetProduct);
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
