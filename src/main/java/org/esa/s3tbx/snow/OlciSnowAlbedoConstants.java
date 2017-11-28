@@ -7,23 +7,6 @@ package org.esa.s3tbx.snow;
  */
 public class OlciSnowAlbedoConstants {
 
-//    public static final double[] WAVELENGTH_GRID_OLCI_PARTIAL = {
-//            0.299,         // 'outside' wavelength needed for extrapolation
-//            0.400,         // OA01
-//            0.4125,        // OA02
-//            0.4425,        // OA03
-//            0.490,         // OA04
-//            0.510,         // OA05
-//            0.560,         // OA06
-//            0.620,         // OA07
-//            0.665,         // OA08
-//            0.68125,       // OA10
-//            0.70875,       // OA11
-//            0.77875,       // OA16
-//            0.865,         // OA17
-//            0.885,         // OA18
-//            1.02           // OA21
-//    };
 
     public static final double[] WAVELENGTH_GRID_OLCI = {
             0.400,         // OA01
@@ -67,16 +50,8 @@ public class OlciSnowAlbedoConstants {
             0.01564, 0.01451, 0.00884
     };
 
-    public static final int[] SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS = {
-            400, 560, 665, 865, 1020
-    };
-    public static final int[] SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES = {
-            0, 5, 7, 16, 20
-    };
-
     // Table 1 from spectral_albedo_october_5_2017.doc:
     public static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
-    public static final double[] LAMBDA_MAX = {0.525, 0.7, 1.98, 2.4475};
     public static final double[] H = {0.175, 0.175, 1.28, 0.4675};
     public static final double[] c0 = {3.85E-9, 2.2E-9, 1.30689, 1.27525};
     public static final double[] c1 = {-5.287E-9, 3.384E-9, -0.026, -0.026};

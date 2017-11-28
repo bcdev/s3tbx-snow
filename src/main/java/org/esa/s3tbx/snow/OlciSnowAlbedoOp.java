@@ -55,21 +55,48 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
+//    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
+//            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
+//    private SpectralAlbedoMode spectralAlbedoComputationMode;
 
-    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
-            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
-    private SpectralAlbedoMode spectralAlbedoComputationMode;
+    // AK, 20171127: no longer a user option, simple approx is best
+    private SpectralAlbedoMode spectralAlbedoComputationMode = SpectralAlbedoMode.SIMPLE_APPROXIMATION;
+
+    @Parameter(description = "The OLCI wavelengths for spectral spherical and planar albedos which will " +
+            "be written to the target product.",
+            label = "Select OLCI wavelengths for spectral albedos",
+            valueSet = {
+                    "Oa01 (400 nm)", "Oa02 (412.5 nm)", "Oa03 (442.5 nm)", "Oa04 (490 nm)", "Oa05 (510 nm)",
+                    "Oa06 (560 nm)", "Oa07 (620 nm)", "Oa08 (665 nm)", "Oa09 (673.75 nm)", "Oa10 (681.25 nm)",
+                    "Oa11 (708.75 nm)", "Oa12 (753.75 nm)", "Oa13 (761.25 nm)", "Oa14 (764.375 nm)", "Oa15 (767.5 nm)",
+                    "Oa16 (778.75 nm)", "Oa17 (865 nm)", "Oa18 (885 nm)", "Oa19 (900 nm)", "Oa20 (940 nm)",
+                    "Oa21 (1020 nm)"
+            },
+            defaultValue = "")
+    String[] spectralAlbedoTargetBands;
 
     @Parameter(defaultValue = "false",
             description = "If selected, Rayleigh corrected reflectances are written to target product")
     private boolean copyReflectanceBands;
 
-    // we need gains only for OLCI BRR bands 1, 2, 3, 4, 5, 12, 17, 21
-    @Parameter(defaultValue = "0.9798, 0.9718, 0.9747, 0.9781, 0.9827, 1.003, 1.0, 0.914",
-            description = "OLCI SVC gains for bands 1-5, 12, 17, 21 (default values as provided by Sentinel-3A Product Notice – " +
-                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gains (bands 1-5, 12, 17, 21)")
+    // for SIMPLE_APPROXIMATION we need gains only for OLCI BRR bands 1, 21
+//    @Parameter(defaultValue = "0.9798, 0.914",
+//            description = "OLCI SVC gains for bands 1, 21 (default values as provided by Sentinel-3A Product Notice – " +
+//                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+//            label = "OLCI SVC gains (bands 1, 21)")
     private double[] olciGains;
+
+    @Parameter(defaultValue = "0.9798",
+            description = "OLCI SVC gain for band 1 (default value as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gain for band 1")
+    private double olciGainBand1;
+
+    @Parameter(defaultValue = "0.914",
+            description = "OLCI SVC gain for band 21 (default value as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gain for band 21")
+    private double olciGainBand21;
 
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
@@ -90,17 +117,20 @@ public class OlciSnowAlbedoOp extends Operator {
     public void initialize() throws OperatorException {
         checkSensorType(sourceProduct);
 
+//        if (spectralAlbedoTargetBands == null || spectralAlbedoTargetBands.length == 0) {
+//            throw new OperatorException("Please select at least one OLCI wavelength for spectral albedos.");
+//        }
+
         if (isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI)) {
             reflProduct = sourceProduct;
             reflType = SensorConstants.REFL_TYPE_BRR;
         } else if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
-
             // apply Rayleigh correction
             RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
             rayleighCorrectionOp.setSourceProduct(sourceProduct);
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
-            // we need OLCI BRR bands 1, 2, 3, 4, 5, 12, 17, 21
+            // for SIMPLE_APPROXIMATION we need only OLCI BRR bands 1, 21
             rayleighCorrectionOp.setParameter("sourceBandNames", Sensor.OLCI.getRequiredRadianceBandNames());
             reflProduct = rayleighCorrectionOp.getTargetProduct();
             reflType = SensorConstants.REFL_TYPE_TOA;
@@ -109,6 +139,11 @@ public class OlciSnowAlbedoOp extends Operator {
                     ("Input product not supported - must be " + Sensor.OLCI.getName() +
                              " L1b or Rayleigh corrected BRR product");
         }
+
+        // for SIMPLE_APPROXIMATION we need only OLCI gains for bands 1, 21
+        olciGains = new double[2];
+        olciGains[0] = olciGainBand1;
+        olciGains[1] = olciGainBand21;
 
         createTargetProduct();
     }
@@ -199,16 +234,19 @@ public class OlciSnowAlbedoOp extends Operator {
         targetProduct.addBand(ALBEDO_BROADBAND_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
 
-        for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            final int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            final Band sphericalBand =
-                    targetProduct.addBand(ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
-            sphericalBand.setSpectralWavelength(wvl);
-            sphericalBand.setSpectralBandIndex(OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i]);
-            final Band planarBand =
-                    targetProduct.addBand(ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX + wvl, ProductData.TYPE_FLOAT32);
-            planarBand.setSpectralWavelength(wvl);
-            planarBand.setSpectralBandIndex(OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i]);
+        if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
+            for (final String targetBand : spectralAlbedoTargetBands) {
+                final int spectralBandIndex = Integer.parseInt(targetBand.substring(2, 4));
+                final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[spectralBandIndex - 1] * 1000.0;
+                final Band sphericalBand =
+                        targetProduct.addBand(ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX + (int) wvl, ProductData.TYPE_FLOAT32);
+                sphericalBand.setSpectralWavelength((float) wvl);
+                sphericalBand.setSpectralBandIndex(spectralBandIndex);
+                final Band planarBand =
+                        targetProduct.addBand(ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX + (int) wvl, ProductData.TYPE_FLOAT32);
+                planarBand.setSpectralWavelength((float) wvl);
+                planarBand.setSpectralBandIndex(spectralBandIndex);
+            }
         }
 
         for (Band band : targetProduct.getBands()) {
@@ -234,11 +272,13 @@ public class OlciSnowAlbedoOp extends Operator {
     }
 
     private void setTargetTilesSpectralAlbedos(double[] spectralAlbedos, String prefix, Map<Band, Tile> targetTiles, int x, int y) {
-        for (int i = 0; i < OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS.length; i++) {
-            final int wvl = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTHS[i];
-            final Band spectralAlbedoBand = targetProduct.getBand(prefix + wvl);
-            int spectralIndex = OlciSnowAlbedoConstants.SPECTRAL_ALBEDO_OUTPUT_WAVELENGTH_INDICES[i];
-            targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[spectralIndex]);
+        if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
+            for (final String targetBand : spectralAlbedoTargetBands) {
+                final int spectralBandIndex = Integer.parseInt(targetBand.substring(2, 4));
+                final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[spectralBandIndex - 1] * 1000.0;
+                final Band spectralAlbedoBand = targetProduct.getBand(prefix + (int) wvl);
+                targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[spectralBandIndex - 1]);
+            }
         }
     }
 
