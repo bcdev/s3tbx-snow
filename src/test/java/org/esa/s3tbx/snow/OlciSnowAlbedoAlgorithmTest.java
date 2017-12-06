@@ -5,6 +5,7 @@ import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquar
 import org.esa.s3tbx.snow.math.Exp4ParamFitter;
 import org.esa.s3tbx.snow.math.Exp4ParamFunction;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
+import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
     @Ignore
-    public void testComputeBroadbandAlbedos() throws Exception {
+    public void testComputeBroadbandAlbedosOld() throws Exception {
         double[] spectralAlbedos = new double[]{
                 0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
                 0.95, 0.92, 0.89, 0.86, 0.712
@@ -80,6 +81,9 @@ public class OlciSnowAlbedoAlgorithmTest {
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
 
         // 350-525nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
+        curveFitter.addObservedPoint(3.000E-001, 2.0E-011);
+        curveFitter.addObservedPoint(3.500E-001, 2.0E-011);
+        curveFitter.addObservedPoint(3.900E-001, 2.0E-011);
         curveFitter.addObservedPoint(4.000E-001, 2.365E-011);
         curveFitter.addObservedPoint(4.100E-001, 2.669E-011);
         curveFitter.addObservedPoint(4.200E-001, 3.135E-011);
@@ -126,7 +130,7 @@ public class OlciSnowAlbedoAlgorithmTest {
             System.out.printf("4th order fit 525-700nm: %d,%s%n", i, fit[i]);
         }
 
-        // 700-1980nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
+        // 700-1020nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
         curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
         curveFitter.addObservedPoint(7.000E-001, 2.900E-008);
         curveFitter.addObservedPoint(7.100E-001, 3.440E-008);
@@ -168,6 +172,136 @@ public class OlciSnowAlbedoAlgorithmTest {
         for (int i = 0; i < fit.length; i++) {
             System.out.printf("4th order fit 700-1020nm: %d,%s%n", i, fit[i]);
         }
+
+        // 1020-3000nm Im(K), https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat:
+        curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
+        curveFitter.addObservedPoint(1.030E+000, 2.330E-006);
+        curveFitter.addObservedPoint(1.040E+000, 2.330E-006);
+        curveFitter.addObservedPoint(1.050E+000, 2.170E-006);
+        curveFitter.addObservedPoint(1.060E+000, 1.960E-006);
+        curveFitter.addObservedPoint(1.070E+000, 1.810E-006);
+        curveFitter.addObservedPoint(1.080E+000, 1.740E-006);
+        curveFitter.addObservedPoint(1.090E+000, 1.730E-006);
+        curveFitter.addObservedPoint(1.100E+000, 1.700E-006);
+        curveFitter.addObservedPoint(1.110E+000, 1.760E-006);
+        curveFitter.addObservedPoint(1.120E+000, 1.820E-006);
+        curveFitter.addObservedPoint(1.130E+000, 2.040E-006);
+        curveFitter.addObservedPoint(1.140E+000, 2.250E-006);
+        curveFitter.addObservedPoint(1.150E+000, 2.290E-006);
+        curveFitter.addObservedPoint(1.160E+000, 3.040E-006);
+        curveFitter.addObservedPoint(1.170E+000, 3.840E-006);
+        curveFitter.addObservedPoint(1.180E+000, 4.770E-006);
+        curveFitter.addObservedPoint(1.190E+000, 5.760E-006);
+        curveFitter.addObservedPoint(1.200E+000, 6.710E-006);
+        curveFitter.addObservedPoint(1.210E+000, 8.660E-006);
+        curveFitter.addObservedPoint(1.220E+000, 1.020E-005);
+        curveFitter.addObservedPoint(1.230E+000, 1.130E-005);
+        curveFitter.addObservedPoint(1.240E+000, 1.220E-005);
+        curveFitter.addObservedPoint(1.250E+000, 1.290E-005);
+        curveFitter.addObservedPoint(1.260E+000, 1.320E-005);
+        curveFitter.addObservedPoint(1.270E+000, 1.350E-005);
+        curveFitter.addObservedPoint(1.280E+000, 1.330E-005);
+        curveFitter.addObservedPoint(1.290E+000, 1.320E-005);
+        curveFitter.addObservedPoint(1.300E+000, 1.320E-005);
+        curveFitter.addObservedPoint(1.310E+000, 1.310E-005);
+        curveFitter.addObservedPoint(1.320E+000, 1.320E-005);
+        curveFitter.addObservedPoint(1.330E+000, 1.320E-005);
+        curveFitter.addObservedPoint(1.340E+000, 1.340E-005);
+        curveFitter.addObservedPoint(1.350E+000, 1.390E-005);
+        curveFitter.addObservedPoint(1.360E+000, 1.420E-005);
+        curveFitter.addObservedPoint(1.370E+000, 1.480E-005);
+        curveFitter.addObservedPoint(1.380E+000, 1.580E-005);
+        curveFitter.addObservedPoint(1.390E+000, 1.740E-005);
+        curveFitter.addObservedPoint(1.400E+000, 1.980E-005);
+        curveFitter.addObservedPoint(1.410E+000, 3.442E-005);
+        curveFitter.addObservedPoint(1.420E+000, 5.959E-005);
+        curveFitter.addObservedPoint(1.430E+000, 1.028E-004);
+        curveFitter.addObservedPoint(1.440E+000, 1.516E-004);
+        curveFitter.addObservedPoint(1.449E+000, 2.030E-004);
+        curveFitter.addObservedPoint(1.460E+000, 2.942E-004);
+        curveFitter.addObservedPoint(1.471E+000, 3.987E-004);
+        curveFitter.addObservedPoint(1.481E+000, 4.941E-004);
+        curveFitter.addObservedPoint(1.493E+000, 5.532E-004);
+        curveFitter.addObservedPoint(1.504E+000, 5.373E-004);
+        curveFitter.addObservedPoint(1.515E+000, 5.143E-004);
+        curveFitter.addObservedPoint(1.527E+000, 4.908E-004);
+        curveFitter.addObservedPoint(1.538E+000, 4.594E-004);
+        curveFitter.addObservedPoint(1.563E+000, 3.858E-004);
+        curveFitter.addObservedPoint(1.587E+000, 3.105E-004);
+        curveFitter.addObservedPoint(1.613E+000, 2.659E-004);
+        curveFitter.addObservedPoint(1.650E+000, 2.361E-004);
+        curveFitter.addObservedPoint(1.680E+000, 2.046E-004);
+        curveFitter.addObservedPoint(1.700E+000, 1.875E-004);
+        curveFitter.addObservedPoint(1.730E+000, 1.650E-004);
+        curveFitter.addObservedPoint(1.760E+000, 1.522E-004);
+        curveFitter.addObservedPoint(1.800E+000, 1.411E-004);
+        curveFitter.addObservedPoint(1.830E+000, 1.302E-004);
+        curveFitter.addObservedPoint(1.840E+000, 1.310E-004);
+        curveFitter.addObservedPoint(1.850E+000, 1.339E-004);
+        curveFitter.addObservedPoint(1.855E+000, 1.377E-004);
+        curveFitter.addObservedPoint(1.860E+000, 1.432E-004);
+        curveFitter.addObservedPoint(1.870E+000, 1.632E-004);
+        curveFitter.addObservedPoint(1.890E+000, 2.566E-004);
+        curveFitter.addObservedPoint(1.905E+000, 4.081E-004);
+        curveFitter.addObservedPoint(1.923E+000, 7.060E-004);
+        curveFitter.addObservedPoint(1.942E+000, 1.108E-003);
+        curveFitter.addObservedPoint(1.961E+000, 1.442E-003);
+        curveFitter.addObservedPoint(1.980E+000, 1.614E-003);
+        curveFitter.addObservedPoint(2.000E+000, 1.640E-003);
+        curveFitter.addObservedPoint(2.020E+000, 1.566E-003);
+        curveFitter.addObservedPoint(2.041E+000, 1.458E-003);
+        curveFitter.addObservedPoint(2.062E+000, 1.267E-003);
+        curveFitter.addObservedPoint(2.083E+000, 1.023E-003);
+        curveFitter.addObservedPoint(2.105E+000, 7.586E-004);
+        curveFitter.addObservedPoint(2.130E+000, 5.255E-004);
+        curveFitter.addObservedPoint(2.150E+000, 4.025E-004);
+        curveFitter.addObservedPoint(2.170E+000, 3.235E-004);
+        curveFitter.addObservedPoint(2.190E+000, 2.707E-004);
+        curveFitter.addObservedPoint(2.220E+000, 2.228E-004);
+        curveFitter.addObservedPoint(2.240E+000, 2.037E-004);
+        curveFitter.addObservedPoint(2.245E+000, 2.026E-004);
+        curveFitter.addObservedPoint(2.250E+000, 2.035E-004);
+        curveFitter.addObservedPoint(2.260E+000, 2.078E-004);
+        curveFitter.addObservedPoint(2.270E+000, 2.171E-004);
+        curveFitter.addObservedPoint(2.290E+000, 2.538E-004);
+        curveFitter.addObservedPoint(2.310E+000, 3.138E-004);
+        curveFitter.addObservedPoint(2.330E+000, 3.858E-004);
+        curveFitter.addObservedPoint(2.350E+000, 4.591E-004);
+        curveFitter.addObservedPoint(2.370E+000, 5.187E-004);
+        curveFitter.addObservedPoint(2.390E+000, 5.605E-004);
+        curveFitter.addObservedPoint(2.410E+000, 5.956E-004);
+        curveFitter.addObservedPoint(2.430E+000, 6.259E-004);
+        curveFitter.addObservedPoint(2.460E+000, 6.820E-004);
+        curveFitter.addObservedPoint(2.500E+000, 7.530E-004);
+        curveFitter.addObservedPoint(2.520E+000, 7.685E-004);
+        curveFitter.addObservedPoint(2.550E+000, 7.647E-004);
+        curveFitter.addObservedPoint(2.565E+000, 7.473E-004);
+        curveFitter.addObservedPoint(2.580E+000, 7.392E-004);
+        curveFitter.addObservedPoint(2.590E+000, 7.437E-004);
+        curveFitter.addObservedPoint(2.600E+000, 7.543E-004);
+        curveFitter.addObservedPoint(2.620E+000, 8.059E-004);
+        curveFitter.addObservedPoint(2.675E+000, 1.367E-003);
+        curveFitter.addObservedPoint(2.725E+000, 3.508E-003);
+        curveFitter.addObservedPoint(2.778E+000, 1.346E-002);
+        curveFitter.addObservedPoint(2.817E+000, 3.245E-002);
+        curveFitter.addObservedPoint(2.833E+000, 4.572E-002);
+        curveFitter.addObservedPoint(2.849E+000, 6.287E-002);
+        curveFitter.addObservedPoint(2.865E+000, 8.548E-002);
+        curveFitter.addObservedPoint(2.882E+000, 1.198E-001);
+        curveFitter.addObservedPoint(2.899E+000, 1.690E-001);
+        curveFitter.addObservedPoint(2.915E+000, 2.210E-001);
+        curveFitter.addObservedPoint(2.933E+000, 2.760E-001);
+        curveFitter.addObservedPoint(2.950E+000, 3.120E-001);
+        curveFitter.addObservedPoint(2.967E+000, 3.470E-001);
+        curveFitter.addObservedPoint(2.985E+000, 3.880E-001);
+        curveFitter.addObservedPoint(3.003E+000, 4.380E-001);
+
+        initialGuess = new double[]{1., 1., 1., 1., 1.};
+        fit = curveFitter.fit(initialGuess);
+        for (int i = 0; i < fit.length; i++) {
+            System.out.printf("4th order fit 1020-3000nm: %d,%s%n", i, fit[i]);
+        }
+
     }
 
     @Test
@@ -324,5 +458,48 @@ public class OlciSnowAlbedoAlgorithmTest {
 //        final double[] brrGains =
 //        final double[] sphericalAlbedosGains =
 //                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(brrGains, sza, vza, SpectralAlbedoMode.SIGMOIDAL_FIT);
+    }
+
+    @Test
+    public void testComputeBroadbandAlbedo() throws Exception {
+        final double grainDiamMicrons = 200.0;
+        final double sza = 60.0;
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        final RefractiveIndexTable refractiveIndexTable = new RefractiveIndexTable();
+        refractiveIndexTable.readTableFromFile();
+        final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();
+        solarSpectrumTable.readTableFromFile();
+
+        RefractiveIndexTable refractiveIndexInterpolatedTable =
+                SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
+                                                         solarSpectrumTable);
+
+        double[] planarBroadbandAlbedo = null;
+        for (int k=0; k<10000; k++) {
+            planarBroadbandAlbedo =
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(mu_0, grainDiamMicrons,
+                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+            if (k % 1000 == 0) {
+                System.out.println("k1 = " + k);
+            }
+        }
+        for (int i = 0; i < planarBroadbandAlbedo.length; i++) {
+            System.out.println("planarBroadbandAlbedo = " + planarBroadbandAlbedo[i]);
+        }
+
+        double[] sphericalBroadbandAlbedo = null;
+        for (int k=0; k<10000; k++) {
+            sphericalBroadbandAlbedo =
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(1.0, grainDiamMicrons,
+                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+            if (k % 1000 == 0) {
+                System.out.println("k2 = " + k);
+            }
+        }
+        for (int i = 0; i < sphericalBroadbandAlbedo.length; i++) {
+            System.out.println("sphericalBroadbandAlbedo = " + sphericalBroadbandAlbedo[i]);
+        }
+
+        System.out.println();
     }
 }

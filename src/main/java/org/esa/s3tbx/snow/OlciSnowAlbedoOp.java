@@ -31,6 +31,7 @@ import org.esa.snap.core.gpf.annotations.OperatorMetadata;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.SourceProduct;
 import org.esa.snap.core.util.ProductUtils;
+import org.esa.snap.core.util.math.MathUtils;
 
 import java.awt.*;
 import java.util.Map;
@@ -51,8 +52,23 @@ public class OlciSnowAlbedoOp extends Operator {
 
     private static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
     private static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
-    private static final String ALBEDO_BROADBAND_SPHERICAL_BAND_NAME = "albedo_broadband_spherical";
-    private static final String ALBEDO_BROADBAND_PLANAR_BAND_NAME = "albedo_broadband_planar";
+
+    private static final String ALBEDO_BB_SPHERICAL_OUTPUT_PREFIX = "albedo_bb_spherical_";
+    private static final String ALBEDO_BB_PLANAR_OUTPUT_PREFIX = "albedo_bb_planar_";
+    private static final String ALBEDO_BB_OUTPUT_PREFIX = "albedo_bb_";
+
+    private static final String ALBEDO_BROADBAND_VIS_SPHERICAL_BAND_NAME = "albedo_bb_spherical_vis";
+    private static final String ALBEDO_BROADBAND_NIR_SPHERICAL_BAND_NAME = "albedo_bb_spherical_nir";
+    private static final String ALBEDO_BROADBAND_SW_SPHERICAL_BAND_NAME = "albedo_bb_spherical_sw";
+
+    private static final String ALBEDO_BROADBAND_VIS_PLANAR_BAND_NAME = "albedo_bb_planar_vis";
+    private static final String ALBEDO_BROADBAND_NIR_PLANAR_BAND_NAME = "albedo_bb_planar_nir";
+    private static final String ALBEDO_BROADBAND_SW_PLANAR_BAND_NAME = "albedo_bb_planar_sw";
+
+    private static final String ALBEDO_BROADBAND_SPHERICAL_PREFIX = "albedo_bb_spherical_";
+    private static final String ALBEDO_BROADBAND_PLANAR_PREFIX = "albedo_bb_planar_";
+    private static final String[] ALBEDO_BROADBAND_SUFFIXES = {"vis", "nir", "sw"};
+
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
 
 //    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
@@ -112,6 +128,10 @@ public class OlciSnowAlbedoOp extends Operator {
 
     private Product reflProduct;
 
+    RefractiveIndexTable refractiveIndexTable;
+    SolarSpectrumTable solarSpectrumTable;
+    private RefractiveIndexTable refractiveIndexInterpolatedTable;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -145,6 +165,14 @@ public class OlciSnowAlbedoOp extends Operator {
         olciGains[0] = olciGainBand1;
         olciGains[1] = olciGainBand21;
 
+        // read auxiliary data:
+        refractiveIndexTable = new RefractiveIndexTable();
+        solarSpectrumTable = new SolarSpectrumTable();
+
+        // interpolate input refractive indices (at 83 wavelengths) to full grid 0.3-1.02um from solar spectrum auxdata
+        refractiveIndexInterpolatedTable = SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
+                                                                                    solarSpectrumTable);
+
         createTargetProduct();
     }
 
@@ -174,13 +202,14 @@ public class OlciSnowAlbedoOp extends Operator {
                             rhoToa[i] = Math.max(0.0, rhoToa[i]);
                         }
 
-                        final double sza = szaTile.getSampleDouble(x, y);
                         final double vza = vzaTile.getSampleDouble(x, y);
+                        final double sza = szaTile.getSampleDouble(x, y);
+                        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
 
                         // Sigma site in subset_0_of_S3A_OL_1_EFR____20170529T004035_20170529T004335_20170529T030013_0179_018_145_1260_SVL_O_NR_002_rayleigh.dim
-                        if (x == 54 && y == 49) {
-                            System.out.println("x = " + x);
-                        }
+//                        if (x == 54 && y == 49) {
+//                            System.out.println("x = " + x);
+//                        }
 
                         // default is actually SIMPLE_APPROXIMATION (latest approach from AK, 20171120):
                         final double[][] sphericalAlbedos =
@@ -194,19 +223,26 @@ public class OlciSnowAlbedoOp extends Operator {
                         setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
                                                       ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
-                        final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
-                                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralSphericalAlbedos);
+                        final double albedo1020 = spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1];
+                        final double grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(albedo1020);
+                        // todo: this is a test with 'manual' summation rather than Simpson integration.
+                        // Check why Simpson is so slow!
+                        final double[] broadbandPlanarAlbedo =
+                                OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(mu_0,
+                                                                               grainDiam,
+                                                                               refractiveIndexInterpolatedTable,
+                                                                               solarSpectrumTable);
+                        final double[] broadbandSphericalAlbedo =
+                                OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(1.0,
+                                                                               grainDiam,
+                                                                               refractiveIndexInterpolatedTable,
+                                                                               solarSpectrumTable);
 
-                        final double sbba = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
-                        final double planarBroadbandAlbedo =
-                                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedo(sbba, sza);
-                        final Band sphericalBBABand = targetProduct.getBand(ALBEDO_BROADBAND_SPHERICAL_BAND_NAME);
-                        final Band planarBBABand = targetProduct.getBand(ALBEDO_BROADBAND_PLANAR_BAND_NAME);
+                        setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
+                        setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
+
                         final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
-                        targetTiles.get(sphericalBBABand).setSample(x, y, sbba);
-                        targetTiles.get(planarBBABand).setSample(x, y, planarBroadbandAlbedo);
-                        final double grainDiameterInMillimeter = sbbaTerms.getGrainDiameter() * 0.001;
-                        targetTiles.get(grainDiameterBand).setSample(x, y, grainDiameterInMillimeter);
+                        targetTiles.get(grainDiameterBand).setSample(x, y, grainDiam/1000.0);  // in mm
                     } else {
                         setTargetTilesInvalid(targetTiles, x, y);
                     }
@@ -230,8 +266,13 @@ public class OlciSnowAlbedoOp extends Operator {
             }
         }
 
-        targetProduct.addBand(ALBEDO_BROADBAND_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(ALBEDO_BROADBAND_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_VIS_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_NIR_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_SW_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_VIS_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_NIR_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ALBEDO_BROADBAND_SW_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
+
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
@@ -279,6 +320,15 @@ public class OlciSnowAlbedoOp extends Operator {
                 final Band spectralAlbedoBand = targetProduct.getBand(prefix + (int) wvl);
                 targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[spectralBandIndex - 1]);
             }
+        }
+    }
+
+    private void setTargetTilesBroadbandAlbedos(double[] bbAlbedos, Map<Band, Tile> targetTiles,
+                                                String bbMode, int x, int y) {
+        int index = 0;
+        for (final String bbSuffix : ALBEDO_BROADBAND_SUFFIXES) {
+            final Band targetBand = targetProduct.getBand(ALBEDO_BB_OUTPUT_PREFIX + bbMode + "_" + bbSuffix);
+            targetTiles.get(targetBand).setSample(x, y, bbAlbedos[index++]);
         }
     }
 

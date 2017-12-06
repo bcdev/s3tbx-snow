@@ -1,23 +1,21 @@
 package org.esa.s3tbx.snow;
 
+import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.math3.fitting.PolynomialFitter;
 import org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizer;
-import org.esa.s3tbx.snow.math.Exp4ParamFitter;
-import org.esa.s3tbx.snow.math.Exp4ParamFunction;
-import org.esa.s3tbx.snow.math.SigmoidalFitter;
-import org.esa.s3tbx.snow.math.SigmoidalFunction;
+import org.esa.s3tbx.snow.math.*;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
  * Snow Albedo Algorithm for OLCI following A. Kokhanovsky (former EUMETSAT, now Vitrociset_Belgium).
- * <p/>
+ * <p>
  * Initial references, updated several times:
  * - [TN1] Snow planar broadband albedo determination from spectral OLCI snow spherical albedo measurements. (2017)
  * - [TN2] Snow spectral albedo determination using OLCI measurement. (2017)
- * <p/>
+ * <p>
  *
  * @author olafd
  */
@@ -27,11 +25,10 @@ class OlciSnowAlbedoAlgorithm {
      * Computes spectral spherical and planar albedos using given computation mode from the ones proposed by AK.
      * Current default is SIMPLE_APPROXIMATION (20171120)
      *
-     * @param brr - subset of BRR spectrum
-     * @param sza - sun zenith angle (deg)
-     * @param vza - view zenith angle (deg)
+     * @param brr  - subset of BRR spectrum
+     * @param sza  - sun zenith angle (deg)
+     * @param vza  - view zenith angle (deg)
      * @param mode - computation mode
-     *
      * @return double[][]{spectralSphericalAlbedo, spectralPlanarAlbedo}
      */
     static double[][] computeSphericalAlbedos(double[] brr, double sza, double vza, SpectralAlbedoMode mode) {
@@ -85,7 +82,7 @@ class OlciSnowAlbedoAlgorithm {
                                                    double sza) {
         // eq. (5):
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
-        return Math.pow(sphericaAlbedo, computeK(mu_0));
+        return Math.pow(sphericaAlbedo, SnowUtils.computeU(mu_0));
     }
 
 
@@ -98,7 +95,7 @@ class OlciSnowAlbedoAlgorithm {
      */
     static SphericalBroadbandAlbedo computeSphericalBroadbandAlbedoTerms(double[] sphericalSpectralAlbedos) {
         SphericalBroadbandAlbedo sbba = new SphericalBroadbandAlbedo();
-        sbba.setR_b1(integrateR_b1(sphericalSpectralAlbedos));
+        sbba.setR_b1(sbba_integrateR_b1(sphericalSpectralAlbedos));
         final double albedo1020 = sphericalSpectralAlbedos[sphericalSpectralAlbedos.length - 1];
         final double grainDiameter = computeGrainDiameter(albedo1020);
         sbba.setGrainDiameter(grainDiameter);
@@ -160,34 +157,33 @@ class OlciSnowAlbedoAlgorithm {
     /**
      * Computation of spectral spherical albedo following AK new approach, 20171120.
      * Currently used as default.
-     *
+     * <p>
      * References:
-     *  [1]: The simple approximation  for the spectral planar albedo. TN AK, 20171120. File: nov_20.doc.
-     *  [2]: The snow grain size determination. TN AK, 20171120. File: sgs_nov_20.doc.
-     *
+     * [1]: The simple approximation  for the spectral planar albedo. TN AK, 20171120. File: nov_20.doc.
+     * [2]: The snow grain size determination. TN AK, 20171120. File: sgs_nov_20.doc.
      */
     private static void computeSpectralSphericalAlbedoWithSimpleApproximation(double[] brr,
                                                                               double sza, double vza, int numWvl,
                                                                               double[][] sphericalAlbedos) {
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
-        final double k_mu_0 = computeK(mu_0);
-        final double k_mu = computeK(mu);
+        final double k_mu_0 = SnowUtils.computeU(mu_0);
+        final double k_mu = SnowUtils.computeU(mu);
         final double brr_400 = Math.min(1.0, brr[0]);
-        final double xi = brr_400/(k_mu_0*k_mu);   // [1], eq. (5)
+        final double xi = brr_400 / (k_mu_0 * k_mu);   // [1], eq. (5)
         final double brr_1020 = brr[brr.length - 1];
-        final double r_1020 = Math.pow(brr_1020/brr_400, xi); // [1], eq. (5)
-        final double wvl_1020 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[numWvl-1];  // 1.02um !!
-        final double chi_1020 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl-1];
-        final double kappa_1020 = 4.0*Math.PI*chi_1020/wvl_1020;  // [2], eqs. (1), (2)
-        final double B = Math.log(r_1020)*Math.log(r_1020)/kappa_1020;  // [2], eq. (2) transformed
+        final double r_1020 = Math.pow(brr_1020 / brr_400, xi); // [1], eq. (5)
+        final double wvl_1020 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[numWvl - 1];  // 1.02um !!
+        final double chi_1020 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
+        final double kappa_1020 = 4.0 * Math.PI * chi_1020 / wvl_1020;  // [2], eqs. (1), (2)
+        final double B = Math.log(r_1020) * Math.log(r_1020) / kappa_1020;  // [2], eq. (2) transformed
 
         for (int i = 0; i < numWvl; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
-            final double kappa = 4.0*Math.PI*chi/wvl;  // [2], eqs. (1), (2)
+            final double kappa = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
 
-            sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B*kappa));  // spectral spherical abledo
+            sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B * kappa));  // spectral spherical abledo
         }
     }
 
@@ -201,12 +197,12 @@ class OlciSnowAlbedoAlgorithm {
         initialGuess[1] = 0;
         final double kappa2_1020 = 1.E-6;
         final double r_1020 = spectralSphericalAlbedosFromBrrVis[3];
-        initialGuess[2] = 1.02*Math.log(r_1020)*Math.log(r_1020)/(2.0*Math.PI*kappa2_1020);
+        initialGuess[2] = 1.02 * Math.log(r_1020) * Math.log(r_1020) / (2.0 * Math.PI * kappa2_1020);
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
-        final double k_mu_0 = computeK(mu_0);
-        final double k_mu = computeK(mu);
-        initialGuess[3] = k_mu*k_mu_0/brr[0];
+        final double k_mu_0 = SnowUtils.computeU(mu_0);
+        final double k_mu = SnowUtils.computeU(mu);
+        initialGuess[3] = k_mu * k_mu_0 / brr[0];
         final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
         curveFitter.clearObservations();
         curveFitter.addObservedPoint(0.4, spectralSphericalAlbedosFromBrrVis[0]);
@@ -280,7 +276,6 @@ class OlciSnowAlbedoAlgorithm {
      * @param brrVis - array of BRR values in VIS range (400-510nm)
      * @param sza    - SZA
      * @param vza    - VZA
-     *
      * @return spectral albedo
      */
     private static double computeSpectralAlbedoFromBrrVis(double brr, double[] brrVis, double sza, double vza) {
@@ -288,8 +283,8 @@ class OlciSnowAlbedoAlgorithm {
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
 
-        final double k_mu_0 = computeK(mu_0);
-        final double k_mu = computeK(mu);
+        final double k_mu_0 = SnowUtils.computeU(mu_0);
+        final double k_mu = SnowUtils.computeU(mu);
 
         // get R_v for eq. (2):
         double brrMax = Double.MIN_VALUE;
@@ -333,7 +328,7 @@ class OlciSnowAlbedoAlgorithm {
      * @param spectralAlbedos - the spectral albedos at considered wavelengths.
      * @return r_b1
      */
-    private static double integrateR_b1(double[] spectralAlbedos) {
+    private static double sbba_integrateR_b1(double[] spectralAlbedos) {
         double r_b1 = 0.0;
         // interpolate input spectralAlbedos (21 OLCI wavelengths) to full grid 300-1020nm (53 wavelengths)
         final double[] wvlFull = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI_EXTENDED;
@@ -354,8 +349,165 @@ class OlciSnowAlbedoAlgorithm {
         return r_b1;
     }
 
-    private static double computeK(double mu) {
-        return 3.0 * (1.0 + 2.0 * mu) / 7.0;
+//    static double[] computePlanarBroadbandAlbedo_old(double[] planarSpectralAlbedos, double mu_0, double d,
+//                                                     RefractiveIndexTable refractiveIndexTable,
+//                                                     SolarSpectrumTable solarSpectrumTable) {
+//        double pbbaVis;
+//        double pbbaNir;
+//        double pbbaSw;
+//        double numeratorVis = 0.0;
+//        double denominatorVis = 0.0;
+//        double numeratorNir = 0.0;
+//        double denominatorNir = 0.0;
+//        double numeratorSw = 0.0;
+//        double denominatorSw = 0.0;
+//
+//        double[] wvlsFull = solarSpectrumTable.getWvl();
+//
+//        // interpolate input refractive indices (at 83 wavelengths) to full grid 0.3-1.02um from solar spectrum auxdata
+//        final double[] wvlsRefrIndexAux = refractiveIndexTable.getWvl();
+//        final double[] refractiveIndicesInterpolated = SnowUtils.splineInterpolate(wvlsRefrIndexAux,
+//                                                                                   refractiveIndexTable.getRefractiveIndexImag(),
+//                                                                                   wvlsFull);
+//
+//        // interpolate input spectralAlbedos (at 21 OLCI wavelengths) to full grid 0.3-1.02um from solar spectrum auxdata
+////         final double[] wvlsOlci = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI;
+////         final double[] planarSpectralAlbedosInterpolated = splineInterpolate(wvlsOlci, planarSpectralAlbedos, wvlsFull);
+//
+//        final double[] f_lambda = computeFLambda(solarSpectrumTable, mu_0);
+//
+//        // integration: eq. (A.1) with f_lambda
+//        // todo: replace the following with Simpson integration
+//        for (int i = 0; i < wvlsFull.length - 1; i++) {
+//            final double wvl = wvlsFull[i];
+//            double u;
+//            if (mu_0 == 1.0) {
+//                u = 1.0;
+//            } else {
+//                u = SnowUtils.computeU(mu_0);
+//            }
+//            final double chi = refractiveIndicesInterpolated[i];
+//            final double k = 4.0 * Math.PI * chi / wvl;
+////             final double planarSpectralAlbedo = planarSpectralAlbedosInterpolated[i];
+//            // computed, not taken from previous step:
+//            final double planarSpectralAlbedo = Math.exp(-3.6 * u * Math.sqrt(k * d));
+////            System.out.println("planarSpectralAlbedo = " + wvl + ", " + planarSpectralAlbedo);
+//            System.out.println("Integration: " + wvl + ", " + chi + ", " + k + ", " + k * d + ", "
+//                                       + u + ", " + planarSpectralAlbedo);
+//
+//            double dx = wvlsFull[i + 1] - wvl;
+//            // VIS 0.3-0.7
+//            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_2) {
+//                numeratorVis += planarSpectralAlbedo * f_lambda[i] * dx;
+//                denominatorVis += f_lambda[i] * dx;
+//            }
+//            // NIR 0.7-2.4
+//            if (wvl > OlciSnowAlbedoConstants.BB_WVL_2 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+//                numeratorNir += planarSpectralAlbedo * f_lambda[i] * dx;
+//                denominatorNir += f_lambda[i] * dx;
+//            }
+//            // SW 0.3-2.4
+//            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+//                numeratorSw += planarSpectralAlbedo * f_lambda[i] * dx;
+//                denominatorSw += f_lambda[i] * dx;
+//            }
+//        }
+//
+//        pbbaVis = numeratorVis / denominatorVis;
+//        pbbaNir = numeratorNir / denominatorNir;
+//        pbbaSw = numeratorSw / denominatorSw;
+//
+//        return new double[]{pbbaVis, pbbaNir, pbbaSw};
+//    }
+
+
+    public static double[] computeBroadbandAlbedo(double mu_0, double d,
+                                                  RefractiveIndexTable refractiveIndexTable,
+                                                  SolarSpectrumTable solarSpectrumTable) {
+
+        final PlanarBroadbandAlbedoIntegrand2 numeratorIntegrand =
+                new PlanarBroadbandAlbedoIntegrand2(refractiveIndexTable,
+                                                    solarSpectrumTable,
+                                                    mu_0, d,
+                                                    PlanarBroadbandAlbedoIntegrand2.NUMERATOR);
+        final PlanarBroadbandAlbedoIntegrand2 denominatorIntegrand =
+                new PlanarBroadbandAlbedoIntegrand2(refractiveIndexTable,
+                                                    solarSpectrumTable,
+                                                    mu_0, d,
+                                                    PlanarBroadbandAlbedoIntegrand2.DENOMINATOR);
+
+//        final SimpsonIntegrator integrator = new SimpsonIntegrator(0.005, 0.001, 3, 64);
+        final SimpsonIntegrator integrator = new SimpsonIntegrator(0.05, 0.01, 3, 64);
+
+        final double numeratorVisResult = integrator.integrate(512, numeratorIntegrand, 0.3, 0.7);
+        final double denominatorVisResult = integrator.integrate(512, denominatorIntegrand, 0.3, 0.7);
+        final double pbbaVis = numeratorVisResult / denominatorVisResult;
+
+        final double numeratorNirResult = integrator.integrate(512, numeratorIntegrand, 0.7, 2.39);
+        final double denominatorNirResult = integrator.integrate(512, denominatorIntegrand, 0.7, 2.39);
+        final double pbbaNir = numeratorNirResult / denominatorNirResult;
+
+        final double numeratorSwResult = integrator.integrate(512, numeratorIntegrand, 0.3, 2.39);
+        final double denominatorSwResult = integrator.integrate(512, denominatorIntegrand, 0.3, 2.39);
+        final double pbbaSw = numeratorSwResult / denominatorSwResult;
+
+        return new double[]{pbbaVis, pbbaNir, pbbaSw};
+//        return new double[]{1., 1., 1.};
+    }
+
+    public static double[] computeBroadbandAlbedo_test(double mu_0, double d,
+                                                       RefractiveIndexTable refractiveIndexTable,
+                                                       SolarSpectrumTable solarSpectrumTable) {
+        double pbbaVis;
+        double pbbaNir;
+        double pbbaSw;
+        double numeratorVis = 0.0;
+        double denominatorVis = 0.0;
+        double numeratorNir = 0.0;
+        double denominatorNir = 0.0;
+        double numeratorSw = 0.0;
+        double denominatorSw = 0.0;
+
+        double[] wvlsFull = solarSpectrumTable.getWvl();
+        final double[] f_lambda = SnowUtils.getFLambda(solarSpectrumTable, mu_0);
+
+        for (int i = 0; i < wvlsFull.length - 1; i++) {
+            final double wvl = wvlsFull[i];
+            double u;
+            if (mu_0 == 1.0) {
+                u = 1.0;
+            } else {
+                u = SnowUtils.computeU(mu_0);
+            }
+            final double chi = refractiveIndexTable.getRefractiveIndexImag(i);
+            final double k = 4.0 * Math.PI * chi / wvl;
+            final double planarSpectralAlbedo = Math.exp(-3.6 * u * Math.sqrt(k * d));
+//            System.out.println("Integration: " + wvl + ", " + chi + ", " + k + ", " + k * d + ", "
+//                                       + u + ", " + planarSpectralAlbedo);
+
+            double dx = wvlsFull[i + 1] - wvl;
+            // VIS 0.3-0.7
+            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_2) {
+                numeratorVis += planarSpectralAlbedo * f_lambda[i] * dx;
+                denominatorVis += f_lambda[i] * dx;
+            }
+            // NIR 0.7-2.4
+            if (wvl > OlciSnowAlbedoConstants.BB_WVL_2 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+                numeratorNir += planarSpectralAlbedo * f_lambda[i] * dx;
+                denominatorNir += f_lambda[i] * dx;
+            }
+            // SW 0.3-2.4
+            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+                numeratorSw += planarSpectralAlbedo * f_lambda[i] * dx;
+                denominatorSw += f_lambda[i] * dx;
+            }
+        }
+
+        pbbaVis = numeratorVis / denominatorVis;
+        pbbaNir = numeratorNir / denominatorNir;
+        pbbaSw = numeratorSw / denominatorSw;
+
+        return new double[]{pbbaVis, pbbaNir, pbbaSw};
     }
 
     /**
@@ -390,4 +542,5 @@ class OlciSnowAlbedoAlgorithm {
             this.grainDiameter = grainDiameter;
         }
     }
+
 }

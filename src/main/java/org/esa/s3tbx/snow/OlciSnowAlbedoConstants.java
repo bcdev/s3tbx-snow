@@ -93,4 +93,15 @@ public class OlciSnowAlbedoConstants {
                     7.763358059437843E-4,
             }
     };
+
+    // constants for planar BB albedo retrieval (AK, 20171201):
+    public static final double TAU_MOL_P1 = 0.008569;
+    public static final double TAU_MOL_P2 = 0.0113;
+    public static final double TAU_MOL_P3 = 0.00013;
+    public static final double BETA = 0.01;
+    public static final double G = 0.65;
+    public static final double LAMBDA0 = 1.0;
+    public static final double BB_WVL_1 = 0.3;
+    public static final double BB_WVL_2 = 0.7;
+    public static final double BB_WVL_3 = 2.4;
 }
