@@ -14,27 +14,27 @@ import static junit.framework.TestCase.assertEquals;
 
 public class OlciSnowAlbedoAlgorithmTest {
 
-    @Test
-    @Ignore
-    public void testComputeBroadbandAlbedosOld() throws Exception {
-        double[] spectralAlbedos = new double[]{
-                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
-                0.95, 0.92, 0.89, 0.86, 0.712
-        };
-        double sza = 50.0;
-        final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
-                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralAlbedos);
-        final double sphericalBroadbandAlbedo = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
-        assertEquals(0.8385, sphericalBroadbandAlbedo, 1.E-2);
-        final double broadbandPlanarAlbedo =
-                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedo(sphericalBroadbandAlbedo, sza);
-        assertEquals(0.8416, broadbandPlanarAlbedo, 1.E-2);
-    }
+//    @Test
+//    @Ignore
+//    public void testComputeBroadbandAlbedosOld() throws Exception {
+//        double[] spectralAlbedos = new double[]{
+//                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
+//                0.95, 0.92, 0.89, 0.86, 0.712
+//        };
+//        double sza = 50.0;
+//        final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
+//                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralAlbedos);
+//        final double sphericalBroadbandAlbedo = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
+//        assertEquals(0.8385, sphericalBroadbandAlbedo, 1.E-2);
+//        final double broadbandPlanarAlbedo =
+//                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedo(sphericalBroadbandAlbedo, sza);
+//        assertEquals(0.8416, broadbandPlanarAlbedo, 1.E-2);
+//    }
 
     @Test
     public void testComputeGrainDiameter() throws Exception {
-        final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274);
-        assertEquals(260.18598, grainDiameter, 1.E-2);
+        final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274, 1020.0);
+        assertEquals(255.819, grainDiameter, 1.E-2);
     }
 
     @Test
@@ -367,6 +367,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         final double[] spectralSphericalAlbedos =
                 OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToa, sza, vza,
+                                                                1020.0,
                                                                 SpectralAlbedoMode.SIGMOIDAL_FIT)[0];
 
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {

@@ -95,31 +95,36 @@ public class OlciSnowAlbedoOp extends Operator {
             description = "If selected, Rayleigh corrected reflectances are written to target product")
     private boolean copyReflectanceBands;
 
-    // for SIMPLE_APPROXIMATION we need gains only for OLCI BRR bands 1, 21
-//    @Parameter(defaultValue = "0.9798, 0.914",
-//            description = "OLCI SVC gains for bands 1, 21 (default values as provided by Sentinel-3A Product Notice – " +
-//                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
-//            label = "OLCI SVC gains (bands 1, 21)")
-    private double[] olciGains;
+    @Parameter(defaultValue = "1020.0",
+            valueSet = {"1020.0", "865.0"},
+            description = "OLCI reference wavelength used in computations of snow quantities",
+            label = "OLCI reference wavelength (nm)")
+    private double refWvl;
 
     @Parameter(defaultValue = "0.9798",
             description = "OLCI SVC gain for band 1 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gain for band 1")
+            label = "OLCI SVC gain for band 1 (400nm)")
     private double olciGainBand1;
+
+    @Parameter(defaultValue = "1.0",
+            description = "OLCI SVC gain for band 17 (default value as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gain for band 17 (865nm)")
+    private double olciGainBand17;
 
     @Parameter(defaultValue = "0.914",
             description = "OLCI SVC gain for band 21 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gain for band 21")
+            label = "OLCI SVC gain for band 21 (1020nm)")
     private double olciGainBand21;
-
 
     @SourceProduct(description = "OLCI L1b or Rayleigh corrected product",
             label = "OLCI L1b or Rayleigh corrected product")
     private Product sourceProduct;
 
     private Sensor sensor = Sensor.OLCI;
+    private double[] olciGains;
 
     private Product targetProduct;
 
@@ -135,23 +140,32 @@ public class OlciSnowAlbedoOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        checkSensorType(sourceProduct);
+        checkSensorType(sourceProduct, sensor);
 
-//        if (spectralAlbedoTargetBands == null || spectralAlbedoTargetBands.length == 0) {
-//            throw new OperatorException("Please select at least one OLCI wavelength for spectral albedos.");
-//        }
+        // for SIMPLE_APPROXIMATION we need only OLCI gains for bands (1, 21) or (1, 17)
+        olciGains = new double[2];
+        olciGains[0] = olciGainBand1;
+        olciGains[1] = olciGainBand21;
 
-        if (isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI)) {
+        if (refWvl == 865.0) {
+            sensor.setRequiredRadianceBandNames(new String[]{"Oa01_radiance", "Oa17_radiance"});
+            sensor.setRequiredBrrBandNames(new String[]{"rBRR_01", "rBRR_17"});
+            olciGains[1] = olciGainBand17;
+        }
+
+        if (isValidRayleighCorrectedSourceProduct(sourceProduct, sensor)) {
             reflProduct = sourceProduct;
             reflType = SensorConstants.REFL_TYPE_BRR;
-        } else if (isValidL1bSourceProduct(sourceProduct, Sensor.OLCI)) {
+        } else if (isValidL1bSourceProduct(sourceProduct, sensor)) {
             // apply Rayleigh correction
+            // todo: compute Rayleigh correction for all selected spectral albedo/ppa wavelengths + bands 1, 17, 21
+            // make separate brr subsets for albedo (only 1 + 17/21) and ppa (the selected bands)
             RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
             rayleighCorrectionOp.setSourceProduct(sourceProduct);
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
             // for SIMPLE_APPROXIMATION we need only OLCI BRR bands 1, 21
-            rayleighCorrectionOp.setParameter("sourceBandNames", Sensor.OLCI.getRequiredRadianceBandNames());
+            rayleighCorrectionOp.setParameter("sourceBandNames", sensor.getRequiredRadianceBandNames());
             reflProduct = rayleighCorrectionOp.getTargetProduct();
             reflType = SensorConstants.REFL_TYPE_TOA;
         } else {
@@ -159,11 +173,6 @@ public class OlciSnowAlbedoOp extends Operator {
                     ("Input product not supported - must be " + Sensor.OLCI.getName() +
                              " L1b or Rayleigh corrected BRR product");
         }
-
-        // for SIMPLE_APPROXIMATION we need only OLCI gains for bands 1, 21
-        olciGains = new double[2];
-        olciGains[0] = olciGainBand1;
-        olciGains[1] = olciGainBand21;
 
         // read auxiliary data:
         refractiveIndexTable = new RefractiveIndexTable();
@@ -186,14 +195,14 @@ public class OlciSnowAlbedoOp extends Operator {
                 rhoToaTiles[i] = getSourceTile(rhoToaBand, targetRectangle);
             }
 
-            Tile szaTile = getSourceTile(sourceProduct.getRasterDataNode(Sensor.OLCI.getSzaName()), targetRectangle);
-            Tile vzaTile = getSourceTile(sourceProduct.getRasterDataNode(Sensor.OLCI.getVzaName()), targetRectangle);
-            Tile l1FlagsTile = getSourceTile(sourceProduct.getRasterDataNode(Sensor.OLCI.getL1bFlagsName()), targetRectangle);
+            Tile szaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSzaName()), targetRectangle);
+            Tile vzaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getVzaName()), targetRectangle);
+            Tile l1FlagsTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getL1bFlagsName()), targetRectangle);
 
             for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                    if (!l1FlagsTile.getSampleBit(x, y, Sensor.OLCI.getInvalidBit())) {
+                    if (!l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit())) {
 
                         // we compute snow albedo over land only
                         double[] rhoToa = new double[reflBandNames.length];
@@ -214,6 +223,7 @@ public class OlciSnowAlbedoOp extends Operator {
                         // default is actually SIMPLE_APPROXIMATION (latest approach from AK, 20171120):
                         final double[][] sphericalAlbedos =
                                 OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToa, sza, vza,
+                                                                                refWvl,
                                                                                 spectralAlbedoComputationMode);
                         final double[] spectralSphericalAlbedos = sphericalAlbedos[0];
                         final double[] spectralPlanarAlbedos = sphericalAlbedos[1];
@@ -223,26 +233,28 @@ public class OlciSnowAlbedoOp extends Operator {
                         setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
                                                       ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
-                        final double albedo1020 = spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1];
-                        final double grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(albedo1020);
+                        final double refAlbedo = refWvl == 1020.0 ?
+                                spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1] :
+                                spectralSphericalAlbedos[spectralSphericalAlbedos.length - 5];
+                        final double grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
                         // todo: this is a test with 'manual' summation rather than Simpson integration.
                         // Check why Simpson is so slow!
                         final double[] broadbandPlanarAlbedo =
                                 OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(mu_0,
-                                                                               grainDiam,
-                                                                               refractiveIndexInterpolatedTable,
-                                                                               solarSpectrumTable);
+                                                                                    grainDiam,
+                                                                                    refractiveIndexInterpolatedTable,
+                                                                                    solarSpectrumTable);
                         final double[] broadbandSphericalAlbedo =
                                 OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(1.0,
-                                                                               grainDiam,
-                                                                               refractiveIndexInterpolatedTable,
-                                                                               solarSpectrumTable);
+                                                                                    grainDiam,
+                                                                                    refractiveIndexInterpolatedTable,
+                                                                                    solarSpectrumTable);
 
                         setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
                         setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
 
                         final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
-                        targetTiles.get(grainDiameterBand).setSample(x, y, grainDiam/1000.0);  // in mm
+                        targetTiles.get(grainDiameterBand).setSample(x, y, grainDiam / 1000.0);  // in mm
                     } else {
                         setTargetTilesInvalid(targetTiles, x, y);
                     }
@@ -338,10 +350,10 @@ public class OlciSnowAlbedoOp extends Operator {
         }
     }
 
-    private static void checkSensorType(Product sourceProduct) {
-        boolean isOlci = isValidL1bSourceProduct(sourceProduct, Sensor.OLCI);
+    private static void checkSensorType(Product sourceProduct, Sensor sensor) {
+        boolean isOlci = isValidL1bSourceProduct(sourceProduct, sensor);
         if (!isOlci) {
-            isOlci = isValidRayleighCorrectedSourceProduct(sourceProduct, Sensor.OLCI);
+            isOlci = isValidRayleighCorrectedSourceProduct(sourceProduct, sensor);
             if (!isOlci) {
                 throw new OperatorException("Source product not applicable to this operator.\n" +
                                                     "Only OLCI is currently supported");

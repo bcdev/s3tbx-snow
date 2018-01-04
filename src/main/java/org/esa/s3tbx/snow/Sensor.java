@@ -11,7 +11,10 @@ public enum Sensor {
 
     OLCI("OLCI", OLCI_SZA_NAME, OLCI_VZA_NAME, OLCI_SAA_NAME, OLCI_VAA_NAME,
          OLCI_L1B_FLAGS_NAME, OLCI_INVALID_BIT, OLCI_LAND_BIT,
-         OLCI_REQUIRED_RADIANCE_BAND_NAMES, OLCI_REQUIRED_REFL_BAND_NAMES, OLCI_REQUIRED_BRR_BAND_NAMES, OLCI_TARGET_TPGS);
+         OLCI_DEFAULT_REQUIRED_RADIANCE_BAND_NAMES,
+         OLCI_DEFAULT_REQUIRED_REFL_BAND_NAMES,
+         OLCI_DEFAULT_REQUIRED_BRR_BAND_NAMES,
+         OLCI_TARGET_TPGS);
 
     private String name;
     private String szaName;
@@ -79,12 +82,20 @@ public enum Sensor {
         return requiredRadianceBandNames;
     }
 
+    public void setRequiredRadianceBandNames(String[] requiredRadianceBandNames) {
+        this.requiredRadianceBandNames = requiredRadianceBandNames;
+    }
+
     public String[] getRequiredReflBandNames() {
         return requiredReflBandNames;
     }
 
     public String[] getRequiredBrrBandNames() {
         return requiredBrrBandNames;
+    }
+
+    public void setRequiredBrrBandNames(String[] requiredBrrBandNames) {
+        this.requiredBrrBandNames = requiredBrrBandNames;
     }
 
     public String[] getTargetTpgs() {

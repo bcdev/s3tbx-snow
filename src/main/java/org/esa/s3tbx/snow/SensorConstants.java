@@ -37,16 +37,16 @@ public class SensorConstants {
 //            "rBRR_12", "rBRR_17", "rBRR_21"
 //    };
 
-    // for SIMPLE_APPROXIMATION we only need OLCI BRR bands 1, 21
-    public final static String[] OLCI_REQUIRED_RADIANCE_BAND_NAMES = new String[]{
+    // for SIMPLE_APPROXIMATION we only need OLCI BRR bands 1 + 18 or 21   (for 865 or 1020 choice)
+    public final static String[] OLCI_DEFAULT_REQUIRED_RADIANCE_BAND_NAMES = new String[]{
             "Oa01_radiance", "Oa21_radiance"
     };
 
-    public final static String[] OLCI_REQUIRED_REFL_BAND_NAMES = new String[]{
+    public final static String[] OLCI_DEFAULT_REQUIRED_REFL_BAND_NAMES = new String[]{
             "Oa01_reflectance", "Oa21_reflectance"
     };
 
-    public final static String[] OLCI_REQUIRED_BRR_BAND_NAMES = new String[]{
+    public final static String[] OLCI_DEFAULT_REQUIRED_BRR_BAND_NAMES = new String[]{
             "rBRR_01", "rBRR_21"
     };
 
