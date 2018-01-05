@@ -1,6 +1,5 @@
 package org.esa.s3tbx.snow;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -25,24 +24,8 @@ public class SnowAuxdataTest {
 
     }
 
-//    @Test
-//    public void testLoadSolarSpectrumData() throws Exception {
-//        final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();
-//        assertNotNull(solarSpectrumTable);
-//        assertEquals(7923, solarSpectrumTable.getSolarSpectrum().length);
-//        assertEquals(474.57, solarSpectrumTable.getSolarSpectrum(0), 1.E-12);
-//        assertEquals(299.8E-3, solarSpectrumTable.getWvl(0), 1.E-12);
-//        assertEquals(917.91, solarSpectrumTable.getSolarSpectrum(884), 1.E-12);
-//        assertEquals(892.14E-3, solarSpectrumTable.getWvl(884), 1.E-12);
-//        assertEquals(728.41, solarSpectrumTable.getSolarSpectrum(2097), 1.E-12);
-//        assertEquals(1000.4E-3, solarSpectrumTable.getWvl(2097), 1.E-12);
-//        assertEquals(60.45, solarSpectrumTable.getSolarSpectrum(7922), 1.E-12);
-//        assertEquals(2397.51E-3, solarSpectrumTable.getWvl(7922), 1.E-12);
-//
-//    }
 
     @Test
-    @Ignore
     public void testLoadSolarSpectrumData() throws Exception {
         // solar_spectrum_2:
         final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();

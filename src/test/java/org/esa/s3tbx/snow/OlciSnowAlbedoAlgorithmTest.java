@@ -6,30 +6,12 @@ import org.esa.s3tbx.snow.math.Exp4ParamFitter;
 import org.esa.s3tbx.snow.math.Exp4ParamFunction;
 import org.esa.s3tbx.snow.math.SigmoidalFitter;
 import org.esa.snap.core.util.math.MathUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 
 
 public class OlciSnowAlbedoAlgorithmTest {
-
-//    @Test
-//    @Ignore
-//    public void testComputeBroadbandAlbedosOld() throws Exception {
-//        double[] spectralAlbedos = new double[]{
-//                0.998, 0.998, 0.996, 0.993, 0.99, 0.984, 0.975, 0.964, 0.961,
-//                0.95, 0.92, 0.89, 0.86, 0.712
-//        };
-//        double sza = 50.0;
-//        final OlciSnowAlbedoAlgorithm.SphericalBroadbandAlbedo sbbaTerms =
-//                OlciSnowAlbedoAlgorithm.computeSphericalBroadbandAlbedoTerms(spectralAlbedos);
-//        final double sphericalBroadbandAlbedo = sbbaTerms.getR_b1() + sbbaTerms.getR_b2();
-//        assertEquals(0.8385, sphericalBroadbandAlbedo, 1.E-2);
-//        final double broadbandPlanarAlbedo =
-//                OlciSnowAlbedoAlgorithm.computePlanarFromSphericalAlbedo(sphericalBroadbandAlbedo, sza);
-//        assertEquals(0.8416, broadbandPlanarAlbedo, 1.E-2);
-//    }
 
     @Test
     public void testComputeGrainDiameter() throws Exception {
@@ -54,24 +36,6 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(800.0);
         assertEquals(0.0604, r_b2, 1.E-2);
-    }
-
-    @Test
-    public void testInterpolateSpectralAlbedos() {
-        //preparation
-        double[] x = {0, 50, 100};
-        double[] y = {0, 50, 200};
-        double[] xi = {10, 25, 75, 80, 100};
-
-        double[] yi = OlciSnowAlbedoAlgorithm.interpolateSpectralAlbedos(x, y, xi);
-
-        //assertion
-        assertEquals(5, yi.length, 1.E-2);
-        assertEquals(10.0, yi[0]);
-        assertEquals(25.0, yi[1]);
-        assertEquals(125.0, yi[2]);
-        assertEquals(140.0, yi[3]);
-        assertEquals(200.0, yi[4]);
     }
 
     @Test
@@ -307,7 +271,6 @@ public class OlciSnowAlbedoAlgorithmTest {
     @Test
     public void testSigmoidalCurveFitting() throws Exception {
 
-//        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
         SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
 
         curveFitter.addObservedPoint(0.4, 1.0);
@@ -326,53 +289,6 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         for (int i = 0; i < fit.length; i++) {
             System.out.printf("Sigmoidal 4 parameter fit: %d,%s%n", i, fit[i]);
-        }
-    }
-
-    @Test
-    public void testSigmoidalCurveFittingPerformance() throws Exception {
-
-//        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
-        SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
-
-        curveFitter.addObservedPoint(0.4, 1.0);
-        curveFitter.addObservedPoint(0.753, 0.963);
-        curveFitter.addObservedPoint(0.865, 0.922);
-        curveFitter.addObservedPoint(1.02, 0.737);
-        double[] initialGuess = {1., 1.};
-        double[] fit = curveFitter.fit(initialGuess, 2);
-
-        for (int i = 0; i < fit.length; i++) {
-            System.out.printf("Sigmoidal 2 parameter fit: %d,%s%n", i, fit[i]);
-        }
-
-        initialGuess = new double[]{1., 1., 1., 1.};
-        fit = curveFitter.fit(initialGuess, 4);
-
-        for (int i = 0; i < fit.length; i++) {
-            System.out.printf("Sigmoidal 4 parameter fit: %d,%s%n", i, fit[i]);
-        }
-    }
-
-    @Test
-    @Ignore
-    public void testAlgoSep22() throws Exception {
-        final double[] rhoToa = new double[]{
-                0.8732, 0.8710, 0.8738, 0.8583, 0.8255, 0.7338, 0.7208,
-                0.8050, 0.8184, 0.8246, 0.8273, 0.8451, 0.1507, 0.3121,
-                0.7134, 0.8263, 0.8132, 0.7909, 0.6403, 0.3507, 0.6673
-        };
-        final double sza = 75.4347;
-        final double vza = 26.35964;
-
-        final double[] spectralSphericalAlbedos =
-                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToa, sza, vza,
-                                                                1020.0,
-                                                                SpectralAlbedoMode.SIGMOIDAL_FIT)[0];
-
-        for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            System.out.printf("Spectral albedos: %f,%s%n", wvl, spectralSphericalAlbedos[i]);
         }
     }
 
@@ -397,13 +313,11 @@ public class OlciSnowAlbedoAlgorithmTest {
             System.out.printf("Exp4Param 4 parameter fit: %d,%s%n", i, fit[i]);
         }
 
-        final double[] refl = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
         final double[] spectralSphericalAlbedos = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
         final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             spectralSphericalAlbedos[i] = exp4ParamFunction.value(wvl, fit);
-            System.out.println("Exp4Param albedos: " + wvl + ", " + refl[i] + ", " + spectralSphericalAlbedos[i]);
         }
 
         for (int i = 0; i < 32; i++) {
@@ -453,15 +367,6 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testOlciGains() throws Exception {
-//        final double sza = 75.33;
-//        final double vza = 25.495424;
-//        final double[] brrGains =
-//        final double[] sphericalAlbedosGains =
-//                OlciSnowAlbedoAlgorithm.computeSpectralSphericalAlbedos(brrGains, sza, vza, SpectralAlbedoMode.SIGMOIDAL_FIT);
-    }
-
-    @Test
     public void testComputeBroadbandAlbedo() throws Exception {
         final double grainDiamMicrons = 200.0;
         final double sza = 60.0;
@@ -478,27 +383,27 @@ public class OlciSnowAlbedoAlgorithmTest {
         double[] planarBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             planarBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(mu_0, grainDiamMicrons,
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0, grainDiamMicrons,
                                                                    refractiveIndexInterpolatedTable, solarSpectrumTable);
             if (k % 1000 == 0) {
                 System.out.println("k1 = " + k);
             }
         }
-        for (int i = 0; i < planarBroadbandAlbedo.length; i++) {
-            System.out.println("planarBroadbandAlbedo = " + planarBroadbandAlbedo[i]);
+        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
+            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
         }
 
         double[] sphericalBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             sphericalBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo_test(1.0, grainDiamMicrons,
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0, grainDiamMicrons,
                                                                    refractiveIndexInterpolatedTable, solarSpectrumTable);
             if (k % 1000 == 0) {
                 System.out.println("k2 = " + k);
             }
         }
-        for (int i = 0; i < sphericalBroadbandAlbedo.length; i++) {
-            System.out.println("sphericalBroadbandAlbedo = " + sphericalBroadbandAlbedo[i]);
+        for (double aSphericalBroadbandAlbedo : sphericalBroadbandAlbedo) {
+            System.out.println("sphericalBroadbandAlbedo = " + aSphericalBroadbandAlbedo);
         }
 
         System.out.println();

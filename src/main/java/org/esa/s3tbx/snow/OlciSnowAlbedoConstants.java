@@ -32,24 +32,6 @@ public class OlciSnowAlbedoConstants {
             1.02           // OA21
     };
 
-    public static final double[] WAVELENGTH_GRID_OLCI_EXTENDED = {
-            0.299, 0.308, 0.318, 0.328, 0.339, 0.351, 0.364, 0.374, 0.381, 0.388,
-            0.396, 0.404, 0.412, 0.421, 0.43, 0.44, 0.449, 0.46, 0.471, 0.482,
-            0.494, 0.506, 0.52, 0.533, 0.548, 0.563, 0.58, 0.597, 0.616, 0.635,
-            0.652, 0.665, 0.678,  0.692, 0.707, 0.722, 0.738, 0.755, 0.772, 0.791,
-            0.81, 0.83, 0.851, 0.874, 0.897, 0.915, 0.927, 0.939, 0.952, 0.964,
-            0.985, 1.011, 1.02
-    };
-
-    public static final double[] F_LAMBDA_EXTENDED = {
-            3.43E-6, 2.905E-4, 0.00243, 0.00607, 0.00795, 0.00906, 0.00878, 0.00697, 0.00552, 0.00585,
-            0.00759, 0.01035, 0.01172, 0.01255, 0.01235, 0.01445, 0.01694, 0.01933, 0.019, 0.02038,
-            0.02076, 0.022, 0.0215, 0.02336, 0.02455, 0.02499, 0.02612, 0.02695, 0.02783, 0.02592,
-            0.02094, 0.01858, 0.01898, 0.01772, 0.01936, 0.0165, 0.01957, 0.02027, 0.0207, 0.02024,
-            0.0196, 0.01799, 0.02066, 0.02134, 0.01408, 0.00884, 0.00752, 0.00324, 0.00383, 0.00691,
-            0.01564, 0.01451, 0.00884
-    };
-
     // Table 1 from spectral_albedo_october_5_2017.doc:
     public static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
     public static final double[] H = {0.175, 0.175, 1.28, 0.4675};
@@ -95,12 +77,6 @@ public class OlciSnowAlbedoConstants {
     };
 
     // constants for planar BB albedo retrieval (AK, 20171201):
-    public static final double TAU_MOL_P1 = 0.008569;
-    public static final double TAU_MOL_P2 = 0.0113;
-    public static final double TAU_MOL_P3 = 0.00013;
-    public static final double BETA = 0.01;
-    public static final double G = 0.65;
-    public static final double LAMBDA0 = 1.0;
     public static final double BB_WVL_1 = 0.3;
     public static final double BB_WVL_2 = 0.7;
     public static final double BB_WVL_3 = 2.4;

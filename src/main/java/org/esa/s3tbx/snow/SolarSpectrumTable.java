@@ -9,10 +9,7 @@ import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 05.12.2017
- * Time: 17:06
+ * Holder for Solar Spectrum Table as provided from text file.
  *
  * @author olafd
  */
@@ -34,17 +31,6 @@ public class SolarSpectrumTable {
         wvl = new double[length];
         solarSpectrum = new double[length];
         readTableFromFile();
-    }
-
-    public SolarSpectrumTable(int length) {
-        this.length = length;
-    }
-
-    public SolarSpectrumTable(int length, String filename) {
-        wvl = new double[length];
-        solarSpectrum = new double[length];
-        length = length;
-        filename = filename;
     }
 
     public void readTableFromFile() {
@@ -76,14 +62,6 @@ public class SolarSpectrumTable {
                 e.printStackTrace();
             }
         }
-    }
-
-    public void setWvl(double[] wvl) {
-        this.wvl = wvl;
-    }
-
-    public void setSolarSpectrum(double[] solarSpectrum) {
-        this.solarSpectrum = solarSpectrum;
     }
 
     public void setWvl(int index, double wvl) {

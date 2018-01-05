@@ -9,10 +9,7 @@ import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 05.12.2017
- * Time: 17:09
+ * Holder for Refractive Index Table as provided from text file.
  *
  * @author olafd
  */
@@ -80,10 +77,6 @@ public class RefractiveIndexTable {
         this.wvl = wvl;
     }
 
-    public void setRefractiveIndexReal(double[] refractiveIndexReal) {
-        this.refractiveIndexReal = refractiveIndexReal;
-    }
-
     public void setRefractiveIndexImag(double[] refractiveIndexImag) {
         this.refractiveIndexImag = refractiveIndexImag;
     }
@@ -98,14 +91,6 @@ public class RefractiveIndexTable {
 
     public double[] getWvl() {
         return wvl;
-    }
-
-    public double[] getRefractiveIndexReal() {
-        return refractiveIndexReal;
-    }
-
-    public double getRefractiveIndexReal(int index) {
-        return refractiveIndexReal[index];
     }
 
     public void setRefractiveIndexReal(int index, double refractiveIndexReal) {
