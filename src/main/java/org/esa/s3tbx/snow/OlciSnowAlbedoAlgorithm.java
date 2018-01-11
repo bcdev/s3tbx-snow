@@ -137,7 +137,7 @@ class OlciSnowAlbedoAlgorithm {
     }
 
 
-    static double[] computeSpectralPpa(double[] brr, double sza, double vza) {
+    static double[] computeSpectralPPA(double[] brr, double sza, double vza) {
         double[] ppa = new double[brr.length];
 
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);

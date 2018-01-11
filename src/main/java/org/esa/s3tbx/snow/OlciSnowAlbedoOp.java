@@ -45,9 +45,9 @@ import java.util.Map;
 @OperatorMetadata(alias = "OLCI.SnowAlbedo",
         description = "Computes snow albedo quantities from OLCI L1b data products.",
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
-        copyright = "(c) 2017 by EUMETSAT, Brockmann Consult",
+        copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "1.0")
+        version = "1.5-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 
@@ -55,8 +55,6 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
     private static final String PPA_SPECTRAL_OUTPUT_PREFIX = "ppa_spectral_";
 
-    private static final String ALBEDO_BB_SPHERICAL_OUTPUT_PREFIX = "albedo_bb_spherical_";
-    private static final String ALBEDO_BB_PLANAR_OUTPUT_PREFIX = "albedo_bb_planar_";
     private static final String ALBEDO_BB_OUTPUT_PREFIX = "albedo_bb_";
 
     private static final String ALBEDO_BROADBAND_VIS_SPHERICAL_BAND_NAME = "albedo_bb_spherical_vis";
@@ -67,8 +65,6 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String ALBEDO_BROADBAND_NIR_PLANAR_BAND_NAME = "albedo_bb_planar_nir";
     private static final String ALBEDO_BROADBAND_SW_PLANAR_BAND_NAME = "albedo_bb_planar_sw";
 
-    private static final String ALBEDO_BROADBAND_SPHERICAL_PREFIX = "albedo_bb_spherical_";
-    private static final String ALBEDO_BROADBAND_PLANAR_PREFIX = "albedo_bb_planar_";
     private static final String[] ALBEDO_BROADBAND_SUFFIXES = {"vis", "nir", "sw"};
 
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
@@ -76,13 +72,12 @@ public class OlciSnowAlbedoOp extends Operator {
 //    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
 //            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
 //    private SpectralAlbedoMode spectralAlbedoComputationMode;
-
     // AK, 20171127: no longer a user option, simple approx is best
     private SpectralAlbedoMode spectralAlbedoComputationMode = SpectralAlbedoMode.SIMPLE_APPROXIMATION;
 
-    @Parameter(description = "The OLCI wavelengths for spectral spherical and planar albedos which will " +
-            "be written to the target product.",
-            label = "Select OLCI wavelengths for spectral albedos",
+    @Parameter(description = "The OLCI wavelengths for spectral snow quantities " +
+            "(spherical and planar albedos, PPA) which will be written to the target product.",
+            label = "Select OLCI wavelengths for spectral snow quantities",
             valueSet = {
                     "Oa01 (400 nm)", "Oa02 (412.5 nm)", "Oa03 (442.5 nm)", "Oa04 (490 nm)", "Oa05 (510 nm)",
                     "Oa06 (560 nm)", "Oa07 (620 nm)", "Oa08 (665 nm)", "Oa09 (673.75 nm)", "Oa10 (681.25 nm)",
@@ -94,8 +89,16 @@ public class OlciSnowAlbedoOp extends Operator {
     String[] spectralAlbedoTargetBands;
 
     @Parameter(defaultValue = "false",
-            description = "If selected, Rayleigh corrected reflectances are written to target product")
+            description =
+                    "If selected, Rayleigh corrected reflectances at selected OLCI wavelengths are written to target product")
     private boolean copyReflectanceBands;
+
+    @Parameter(defaultValue = "true",
+            label = "Compute PPA",
+            description =
+                    "If selected, PPA (Probability of Photon Absorption) is computed at selected OLCI wavelengths" +
+                            " and written to target product")
+    private boolean computePPA;
 
     @Parameter(defaultValue = "1020.0",
             valueSet = {"1020.0", "865.0"},
@@ -131,8 +134,8 @@ public class OlciSnowAlbedoOp extends Operator {
     private String[] requiredRadianceBandNamesAlbedo;  // only bands 1 + 17/21
     private String[] requiredBrrBandNamesAlbedo;
 
-    private String[] requiredRadianceBandNamesPpa;     // selected spectral bands
-    private String[] requiredBrrBandNamesPpa;
+    private String[] requiredRadianceBandNamesPPA;     // selected spectral bands
+    private String[] requiredBrrBandNamesPPA;
 
     private Product targetProduct;
 
@@ -167,36 +170,32 @@ public class OlciSnowAlbedoOp extends Operator {
 
         // get required radiance / BRR bands for PPA computation
         if (spectralAlbedoTargetBands != null) {
-            requiredRadianceBandNamesPpa = new String[spectralAlbedoTargetBands.length];
-            requiredBrrBandNamesPpa = new String[spectralAlbedoTargetBands.length];
+            requiredRadianceBandNamesPPA = new String[spectralAlbedoTargetBands.length];
+            requiredBrrBandNamesPPA = new String[spectralAlbedoTargetBands.length];
             for (int i = 0; i < spectralAlbedoTargetBands.length; i++) {
                 // 'Oa01 (400 nm)' --> 'Oa01_radiance'
                 // 'Oa01 (400 nm)' --> 'rBRR_01'
-                requiredRadianceBandNamesPpa[i] = "Oa" + spectralAlbedoTargetBands[i].substring(2, 4) + "_radiance";
-                requiredBrrBandNamesPpa[i] = "rBRR_" + spectralAlbedoTargetBands[i].substring(2, 4);
+                requiredRadianceBandNamesPPA[i] = "Oa" + spectralAlbedoTargetBands[i].substring(2, 4) + "_radiance";
+                requiredBrrBandNamesPPA[i] = "rBRR_" + spectralAlbedoTargetBands[i].substring(2, 4);
             }
         }
 
         validateSourceProduct(sourceProduct);
 
-        if (isValidRayleighCorrectedSourceProduct(sourceProduct)) {
-            reflProduct = sourceProduct;
-            reflType = SensorConstants.REFL_TYPE_BRR;
-        } else if (isValidL1bSourceProduct(sourceProduct)) {
+        if (isValidL1bSourceProduct(sourceProduct)) {
             // apply Rayleigh correction
             RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
             rayleighCorrectionOp.setSourceProduct(sourceProduct);
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
             final String[] sourceBandNames = SnowUtils.setupRcSourceBands(requiredRadianceBandNamesAlbedo,
-                                                                          requiredRadianceBandNamesPpa);
+                                                                          requiredRadianceBandNamesPPA);
             rayleighCorrectionOp.setParameter("sourceBandNames", sourceBandNames);
             reflProduct = rayleighCorrectionOp.getTargetProduct();
             reflType = SensorConstants.REFL_TYPE_TOA;
         } else {
-            throw new OperatorException
-                    ("Input product not supported - must be " + Sensor.OLCI.getName() +
-                             " L1b or Rayleigh corrected BRR product");
+            reflProduct = sourceProduct;
+            reflType = SensorConstants.REFL_TYPE_BRR;
         }
 
         // read auxiliary data:
@@ -218,10 +217,13 @@ public class OlciSnowAlbedoOp extends Operator {
                 final Band rhoToaBandAlbedo = reflProduct.getBand(requiredBrrBandNamesAlbedo[i]);
                 rhoToaTilesAlbedo[i] = getSourceTile(rhoToaBandAlbedo, targetRectangle);
             }
-            Tile[] rhoToaTilesPpa = new Tile[requiredBrrBandNamesPpa.length];
-            for (int i = 0; i < requiredBrrBandNamesPpa.length; i++) {
-                final Band rhoToaBandPpa = reflProduct.getBand(requiredBrrBandNamesPpa[i]);
-                rhoToaTilesPpa[i] = getSourceTile(rhoToaBandPpa, targetRectangle);
+            Tile[] rhoToaTilesPPA = null;
+            if (computePPA && spectralAlbedoTargetBands != null) {
+                rhoToaTilesPPA = new Tile[requiredBrrBandNamesPPA.length];
+                for (int i = 0; i < requiredBrrBandNamesPPA.length; i++) {
+                    final Band rhoToaBandPPA = reflProduct.getBand(requiredBrrBandNamesPPA[i]);
+                    rhoToaTilesPPA[i] = getSourceTile(rhoToaBandPPA, targetRectangle);
+                }
             }
 
             Tile szaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSzaName()), targetRectangle);
@@ -239,10 +241,13 @@ public class OlciSnowAlbedoOp extends Operator {
                             rhoToaAlbedo[i] = Math.max(0.0, rhoToaAlbedo[i]);
                         }
 
-                        double[] rhoToaPpa = new double[requiredBrrBandNamesPpa.length];
-                        for (int i = 0; i < requiredBrrBandNamesPpa.length; i++) {
-                            rhoToaPpa[i] = rhoToaTilesPpa[i].getSampleDouble(x, y);
-                            rhoToaPpa[i] = Math.max(0.0, rhoToaPpa[i]);
+                        double[] rhoToaPPA = null;
+                        if (computePPA && spectralAlbedoTargetBands != null) {
+                            rhoToaPPA = new double[requiredBrrBandNamesPPA.length];
+                            for (int i = 0; i < requiredBrrBandNamesPPA.length; i++) {
+                                rhoToaPPA[i] = rhoToaTilesPPA[i].getSampleDouble(x, y);
+                                rhoToaPPA[i] = Math.max(0.0, rhoToaPPA[i]);
+                            }
                         }
 
                         final double vza = vzaTile.getSampleDouble(x, y);
@@ -287,8 +292,10 @@ public class OlciSnowAlbedoOp extends Operator {
                         setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
                         setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
 
-                        final double[] spectralPpa = OlciSnowAlbedoAlgorithm.computeSpectralPpa(rhoToaPpa, sza, vza);
-                        setTargetTilesSpectralPpa(spectralPpa, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
+                        if (computePPA && spectralAlbedoTargetBands != null) {
+                            final double[] spectralPPA = OlciSnowAlbedoAlgorithm.computeSpectralPPA(rhoToaPPA, sza, vza);
+                            setTargetTilesSpectralPPA(spectralPPA, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
+                        }
 
                         final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
                         targetTiles.get(grainDiameterBand).setSample(x, y, grainDiam / 1000.0);  // in mm
@@ -305,15 +312,6 @@ public class OlciSnowAlbedoOp extends Operator {
     private void createTargetProduct() {
         targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(),
                                     sourceProduct.getSceneRasterWidth(), sourceProduct.getSceneRasterHeight());
-
-        if (copyReflectanceBands) {
-            for (Band band : reflProduct.getBands()) {
-                if (band.getName().startsWith(SensorConstants.OLCI_BRR_BAND_PREFIX)) {
-                    ProductUtils.copyBand(band.getName(), reflProduct, targetProduct, true);
-                    ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
-                }
-            }
-        }
 
         targetProduct.addBand(ALBEDO_BROADBAND_VIS_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(ALBEDO_BROADBAND_NIR_SPHERICAL_BAND_NAME, ProductData.TYPE_FLOAT32);
@@ -336,10 +334,25 @@ public class OlciSnowAlbedoOp extends Operator {
                         targetProduct.addBand(ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX + (int) wvl, ProductData.TYPE_FLOAT32);
                 planarBand.setSpectralWavelength((float) wvl);
                 planarBand.setSpectralBandIndex(spectralBandIndex);
-                final Band ppaBand =
-                        targetProduct.addBand(PPA_SPECTRAL_OUTPUT_PREFIX + (int) wvl, ProductData.TYPE_FLOAT32);
-                ppaBand.setSpectralWavelength((float) wvl);
-                ppaBand.setSpectralBandIndex(spectralBandIndex);
+                if (computePPA) {
+                    final Band ppaBand =
+                            targetProduct.addBand(PPA_SPECTRAL_OUTPUT_PREFIX + (int) wvl, ProductData.TYPE_FLOAT32);
+                    ppaBand.setSpectralWavelength((float) wvl);
+                    ppaBand.setSpectralBandIndex(spectralBandIndex);
+                }
+            }
+
+            if (copyReflectanceBands) {
+                final String[] allBrrBands = (String[]) ArrayUtils.addAll(requiredBrrBandNamesAlbedo,
+                                                                          requiredBrrBandNamesPPA);
+                for (Band band : reflProduct.getBands()) {
+                    for (String brrBandName : allBrrBands) {
+                        if (band.getName().equals(brrBandName) && !targetProduct.containsBand(brrBandName)) {
+                            ProductUtils.copyBand(band.getName(), reflProduct, targetProduct, true);
+                            ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
+                        }
+                    }
+                }
             }
         }
 
@@ -379,17 +392,17 @@ public class OlciSnowAlbedoOp extends Operator {
         }
     }
 
-    private void setTargetTilesSpectralPpa(double[] spectralPpa,
+    private void setTargetTilesSpectralPPA(double[] spectralPPA,
                                            String prefix,
                                            Map<Band, Tile> targetTiles,
                                            int x, int y) {
-        int spectralPpaBandIndex = 0;
+        int spectralPPABandIndex = 0;
         if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
             for (final String targetBand : spectralAlbedoTargetBands) {
                 final int spectralBandIndex = Integer.parseInt(targetBand.substring(2, 4));
                 final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[spectralBandIndex - 1] * 1000.0;
                 final Band spectralAlbedoBand = targetProduct.getBand(prefix + (int) wvl);
-                targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralPpa[spectralPpaBandIndex++]);
+                targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralPPA[spectralPPABandIndex++]);
             }
         }
     }
@@ -415,7 +428,7 @@ public class OlciSnowAlbedoOp extends Operator {
             isOlci = isValidRayleighCorrectedSourceProduct(sourceProduct);
             if (!isOlci) {
                 throw new OperatorException("Source product not applicable to this operator.\n" +
-                                                    "Only OLCI is currently supported");
+                                                    "Only OLCI L1b or Rayleigh corrected products are currently supported");
             }
         }
     }
@@ -432,13 +445,16 @@ public class OlciSnowAlbedoOp extends Operator {
 
     private boolean isValidRayleighCorrectedSourceProduct(Product sourceProduct) {
         final String[] allRequiredBrrBands = (String[]) ArrayUtils.addAll(requiredBrrBandNamesAlbedo,
-                                                                          requiredBrrBandNamesPpa);
-//        final String[] allRequiredBrrBands = SnowUtils.setupRcSourceBands(requiredBrrBandNamesAlbedo,
-//                                                                          requiredBrrBandNamesPpa);
-
+                                                                          requiredBrrBandNamesPPA);
         for (String bandName : allRequiredBrrBands) {
             if (!sourceProduct.containsBand(bandName)) {
-                return false;
+                if (!sourceProduct.containsBand(bandName)) {
+                    throw new OperatorException("Source product is not a valid L1b product and cannot be handled as " +
+                                                        "Rayleigh corrected product either, as it does not contain " +
+                                                        "mandatory band '" + bandName + "'. \n Mandatory bands are " +
+                                                        "'rBRR_*' for 440nm, 865 or 1020nm, and for all manually " +
+                                                        "selected wavelengths.");
+                }
             }
         }
         return true;

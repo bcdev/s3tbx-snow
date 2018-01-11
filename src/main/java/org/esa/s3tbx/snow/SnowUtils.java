@@ -93,9 +93,11 @@ public class SnowUtils {
     public static String[] setupRcSourceBands(String[] requiredRadianceBandNamesAlbedo, String[] requiredRadianceBandNamesPpa) {
         ArrayList<String> rcSourceBands = new ArrayList<>();
         Collections.addAll(rcSourceBands, requiredRadianceBandNamesAlbedo);
-        for (String bandName : requiredRadianceBandNamesPpa) {
-            if (!rcSourceBands.contains(bandName)) {
-                rcSourceBands.add(bandName);
+        if (requiredRadianceBandNamesPpa != null) {
+            for (String bandName : requiredRadianceBandNamesPpa) {
+                if (!rcSourceBands.contains(bandName)) {
+                    rcSourceBands.add(bandName);
+                }
             }
         }
         return rcSourceBands.toArray(new String[rcSourceBands.size()]);
