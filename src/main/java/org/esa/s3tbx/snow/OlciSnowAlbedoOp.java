@@ -76,7 +76,8 @@ public class OlciSnowAlbedoOp extends Operator {
     private SpectralAlbedoMode spectralAlbedoComputationMode = SpectralAlbedoMode.SIMPLE_APPROXIMATION;
 
     @Parameter(description = "The OLCI wavelengths for spectral snow quantities " +
-            "(spherical and planar albedos, PPA) which will be written to the target product.",
+            "(spherical and planar albedos, PPA) which will be written to the target product. " +
+            "Note that processing may become slow if many wavelenghts are selected.",
             label = "Select OLCI wavelengths for spectral snow quantities",
             valueSet = {
                     "Oa01 (400 nm)", "Oa02 (412.5 nm)", "Oa03 (442.5 nm)", "Oa04 (490 nm)", "Oa05 (510 nm)",
