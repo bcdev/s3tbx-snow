@@ -136,7 +136,16 @@ class OlciSnowAlbedoAlgorithm {
         return new double[]{pbbaVis, pbbaNir, pbbaSw};
     }
 
-
+    /**
+     * Computes probability of photon absorption (PPA) at considered wavelengths.
+     * Follows 'ppa_20171207.doc' (AK, 20171207)
+     *
+     * @param brr - Rayleigh reflectance
+     * @param sza - sun zenith angle
+     * @param vza - view zenith angle
+     *
+     * @return double [] ppa
+     */
     static double[] computeSpectralPPA(double[] brr, double sza, double vza) {
         double[] ppa = new double[brr.length];
 
@@ -157,7 +166,7 @@ class OlciSnowAlbedoAlgorithm {
 
     /**
      * Computes planar from spherical albedos at considered wavelengths.
-     * Follows 'snow_albedo_algorithm_1.docx' (AK, 20170519)
+     * Follows 'nov_20.doc' (AK, 20171120)
      *
      * @param sphericaAlbedo - the spherical albedo value
      * @param sza            - sun zenith angle
@@ -165,7 +174,7 @@ class OlciSnowAlbedoAlgorithm {
      */
     static double computePlanarFromSphericalAlbedo(double sphericaAlbedo,
                                                    double sza) {
-        // eq. (5):
+        // eq. (1):
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         return Math.pow(sphericaAlbedo, SnowUtils.computeU(mu_0));
     }
@@ -320,16 +329,6 @@ class OlciSnowAlbedoAlgorithm {
         }
     }
 
-    /**
-     * New algorithm from 'alex_sept_22_2017.pdf':
-     * Computes a spectral albedo in visible range for a given BRR from given BRR visible sub-spectrum.
-     *
-     * @param brr    - brr value
-     * @param brrVis - array of BRR values in VIS range (400-510nm)
-     * @param sza    - SZA
-     * @param vza    - VZA
-     * @return spectral albedo
-     */
     private static double computeSpectralAlbedoFromBrrVis(double brr, double[] brrVis, double sza, double vza) {
         // eq. (1):
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
@@ -352,14 +351,6 @@ class OlciSnowAlbedoAlgorithm {
         return Math.pow(brr / brrMax, 1.0 / x);
     }
 
-    /**
-     * Computes planar from spherical albedos at considered wavelengths.
-     * Follows 'snow_albedo_algorithm_1.docx' (AK, 20170519).
-     *
-     * @param sphericalAlbedos - the spherical albedos at considered wavelengths
-     * @param sza              - sun zenith angle
-     * @return array of planar albedos
-     */
     private static double[] computePlanarFromSphericalAlbedos(double[] sphericalAlbedos, double sza) {
         double[] planarAlbedos = new double[sphericalAlbedos.length];
         for (int i = 0; i < planarAlbedos.length; i++) {
