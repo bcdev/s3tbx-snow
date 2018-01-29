@@ -68,6 +68,7 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String[] ALBEDO_BROADBAND_SUFFIXES = {"vis", "nir", "sw"};
 
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
+    private static final String ICE_FLAG_BAND_NAME = "ice_flag";
 
 //    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
 //            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
@@ -152,18 +153,19 @@ public class OlciSnowAlbedoOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        // for SIMPLE_APPROXIMATION we need only OLCI gains for bands (1, 21) or (1, 17)
-        olciGains = new double[2];
-        olciGains[0] = olciGainBand1;
-
         requiredRadianceBandNamesAlbedo = new String[2];
         requiredBrrBandNamesAlbedo = new String[2];
 
         if (refWvl == 865.0) {
-            olciGains[1] = olciGainBand17;
-            requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa17_radiance"};
-            requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_17"};
+            olciGains = new double[3];
+            olciGains[0] = olciGainBand1;
+            olciGains[1] = olciGainBand21;
+            olciGains[2] = olciGainBand17;
+            requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa21_radiance", "Oa17_radiance"};
+            requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_21", "rBRR_17"};
         } else {
+            olciGains = new double[2];
+            olciGains[0] = olciGainBand1;
             olciGains[1] = olciGainBand21;
             requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa21_radiance"};
             requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_21"};
@@ -299,7 +301,16 @@ public class OlciSnowAlbedoOp extends Operator {
                         }
 
                         final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
-                        targetTiles.get(grainDiameterBand).setSample(x, y, grainDiam / 1000.0);  // in mm
+                        final double grainDiamNm = grainDiam / 1000.0;  // in mm
+                        targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamNm));
+
+                        final Band iceFlagBand = targetProduct.getBand(ICE_FLAG_BAND_NAME);
+                        double iceFlag = rhoToaAlbedo[0] / rhoToaAlbedo[1];
+                        if (iceFlag > 0.0 && iceFlag < 50.0) {
+                            targetTiles.get(iceFlagBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(iceFlag));
+                        } else {
+                            targetTiles.get(iceFlagBand).setSample(x, y, Double.NaN);
+                        }
                     } else {
                         setTargetTilesInvalid(targetTiles, x, y);
                     }
@@ -322,6 +333,7 @@ public class OlciSnowAlbedoOp extends Operator {
         targetProduct.addBand(ALBEDO_BROADBAND_SW_PLANAR_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(ICE_FLAG_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
             for (final String targetBand : spectralAlbedoTargetBands) {
@@ -388,7 +400,8 @@ public class OlciSnowAlbedoOp extends Operator {
                 final int spectralBandIndex = Integer.parseInt(targetBand.substring(2, 4));
                 final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[spectralBandIndex - 1] * 1000.0;
                 final Band spectralAlbedoBand = targetProduct.getBand(prefix + (int) wvl);
-                targetTiles.get(spectralAlbedoBand).setSample(x, y, spectralAlbedos[spectralBandIndex - 1]);
+                final double result = spectralAlbedos[spectralBandIndex - 1];
+                targetTiles.get(spectralAlbedoBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(result));
             }
         }
     }
@@ -413,7 +426,8 @@ public class OlciSnowAlbedoOp extends Operator {
         int index = 0;
         for (final String bbSuffix : ALBEDO_BROADBAND_SUFFIXES) {
             final Band targetBand = targetProduct.getBand(ALBEDO_BB_OUTPUT_PREFIX + bbMode + "_" + bbSuffix);
-            targetTiles.get(targetBand).setSample(x, y, bbAlbedos[index++]);
+            final double result = bbAlbedos[index++];
+            targetTiles.get(targetBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(result));
         }
     }
 

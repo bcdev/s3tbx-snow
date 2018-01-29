@@ -1,5 +1,6 @@
 package org.esa.s3tbx.snow;
 
+import junit.framework.Assert;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
@@ -38,5 +39,11 @@ public class SnowUtilsTest {
         assertEquals("Oa07_radiance", rcSourceBands[2]);
         assertEquals("Oa13_radiance", rcSourceBands[3]);
         assertEquals("Oa21_radiance", rcSourceBands[4]);
+    }
+
+    @Test
+    public void testRoundTo4DecimalPlaces() throws Exception {
+        assertEquals(1.2346, SnowUtils.cutTo4DecimalPlaces(1.2345678), 1.E-8);
+        assertEquals(7.6543, SnowUtils.cutTo4DecimalPlaces(7.654321), 1.E-8);
     }
 }

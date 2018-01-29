@@ -7,7 +7,7 @@
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
                 <attr name="operatorName" stringvalue="OLCI.SnowAlbedo"/>
                 <attr name="displayName" stringvalue="OLCI Snow Albedo"/>
-                <attr name="dialogTitle" stringvalue="OLCI Snow Albedo v1.5-SNAPSHOT"/>
+                <attr name="dialogTitle" stringvalue="OLCI Snow Albedo v1.51-SNAPSHOT"/>
                 <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
                 <attr name="targetProductNameSuffix" stringvalue="_albedo"/>
                 <attr name="ShortDescription" stringvalue="Provides snow albedo from OLCI measurements."/>

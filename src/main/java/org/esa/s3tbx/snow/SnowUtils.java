@@ -103,4 +103,10 @@ public class SnowUtils {
         return rcSourceBands.toArray(new String[rcSourceBands.size()]);
     }
 
+    public static double cutTo4DecimalPlaces(double value) {
+        final double x1 = value * 10000.0;
+        final double x2 = Math.round(x1);
+        return x2/10000.0;
+    }
+
 }
