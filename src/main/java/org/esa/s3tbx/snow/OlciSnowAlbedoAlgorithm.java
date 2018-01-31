@@ -55,6 +55,11 @@ class OlciSnowAlbedoAlgorithm {
     static double[] computeBroadbandAlbedo(double mu_0, double d,
                                                   RefractiveIndexTable refractiveIndexTable,
                                                   SolarSpectrumTable solarSpectrumTable) {
+
+        if (Double.isNaN(d)) {
+            return new double[]{Double.NaN, Double.NaN, Double.NaN};
+        }
+
         double pbbaVis;
         double pbbaNir;
         double pbbaSw;

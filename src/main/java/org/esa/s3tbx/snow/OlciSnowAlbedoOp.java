@@ -70,7 +70,7 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
     private static final String ICE_FLAG_BAND_NAME = "ice_flag";
 
-//    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
+    //    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
 //            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
 //    private SpectralAlbedoMode spectralAlbedoComputationMode;
     // AK, 20171127: no longer a user option, simple approx is best
@@ -278,7 +278,11 @@ public class OlciSnowAlbedoOp extends Operator {
                         final double refAlbedo = refWvl == 1020.0 ?
                                 spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1] :
                                 spectralSphericalAlbedos[spectralSphericalAlbedos.length - 5];
-                        final double grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
+
+                        double grainDiam = Double.NaN;
+                        if (refAlbedo > 0.0) {
+                            grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
+                        }
                         // todo: this is a test with 'manual' summation rather than Simpson integration.
                         // Check why Simpson is so slow!
                         final double[] broadbandPlanarAlbedo =
@@ -301,12 +305,16 @@ public class OlciSnowAlbedoOp extends Operator {
                         }
 
                         final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
-                        final double grainDiamNm = grainDiam / 1000.0;  // in mm
-                        targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamNm));
+                        if (!Double.isNaN(grainDiam)) {
+                            final double grainDiamNm = grainDiam / 1000.0;  // in mm
+                            targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamNm));
+                        } else {
+                            targetTiles.get(grainDiameterBand).setSample(x, y, Double.NaN);
+                        }
 
                         final Band iceFlagBand = targetProduct.getBand(ICE_FLAG_BAND_NAME);
-                        double iceFlag = rhoToaAlbedo[0] / rhoToaAlbedo[1];
-                        if (iceFlag > 0.0 && iceFlag < 50.0) {
+                        if (rhoToaAlbedo[0] > 0.0 && rhoToaAlbedo[1] > 0.0) {
+                            double iceFlag = rhoToaAlbedo[0] / rhoToaAlbedo[1];
                             targetTiles.get(iceFlagBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(iceFlag));
                         } else {
                             targetTiles.get(iceFlagBand).setSample(x, y, Double.NaN);

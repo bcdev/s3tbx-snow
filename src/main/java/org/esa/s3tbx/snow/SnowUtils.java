@@ -104,6 +104,9 @@ public class SnowUtils {
     }
 
     public static double cutTo4DecimalPlaces(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            return Double.NaN;
+        }
         final double x1 = value * 10000.0;
         final double x2 = Math.round(x1);
         return x2/10000.0;
