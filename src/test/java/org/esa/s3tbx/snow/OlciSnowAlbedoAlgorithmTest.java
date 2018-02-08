@@ -9,6 +9,7 @@ import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 
 public class OlciSnowAlbedoAlgorithmTest {
@@ -407,5 +408,71 @@ public class OlciSnowAlbedoAlgorithmTest {
         }
 
         System.out.println();
+    }
+
+    @Test
+    public void testComputePollutedSnowParms() throws Exception {
+
+        // test input provided by AK in 'input_soot.dat' (20180124):
+        final double sza = 42.3621;
+        final double vza = 2.561;
+        final double raa = 42.088;
+        final double brr400 = 0.5816;
+        final double brr1200 = 0.3704;
+
+        final double[] pollutedSnowParams =
+                OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1200, sza, vza, raa);
+        final double grainDiam = pollutedSnowParams[0];
+        final double soot = pollutedSnowParams[1];
+        // test results provided by AK in 'snow_properties_CHECKOUT.txt' (20180124), first line:
+        assertEquals(1.537, grainDiam, 1.E-3);
+        assertEquals(1.519, soot, 1.E-3);
+    }
+
+    @Test
+    public void testComputeSpectralAlbedosPolluted() throws Exception {
+
+        // test input provided by AK in 'input_soot.dat' (20180124):
+        final double sza = 42.3621;
+        final double grainDiam = 1.537;
+        final double soot = 1.519;
+        final double[] pollutedSnowParams = new double[]{grainDiam, soot};
+
+        final double[][] spectralAlbedosPolluted =
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
+        assertNotNull(spectralAlbedosPolluted);
+        final double[] sphericalAlbedos = spectralAlbedosPolluted[0];
+        assertNotNull(sphericalAlbedos);
+        final double[] planarAlbedos = spectralAlbedosPolluted[1];
+        assertNotNull(planarAlbedos);
+
+        // test results provided by AK in 'snow_properties_CHECKOUT.txt' (20180124), first line:
+        assertEquals(OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length, sphericalAlbedos.length);
+        assertEquals(OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length, planarAlbedos.length);
+
+        assertEquals(0.6377, sphericalAlbedos[0], 1.E-4);    // 400nm
+        assertEquals(0.6658, sphericalAlbedos[3], 1.E-4);    // 490nm
+        assertEquals(0.6710, sphericalAlbedos[4], 1.E-4);    // 510nm
+        assertEquals(0.6826, sphericalAlbedos[5], 1.E-4);    // 560nm
+        assertEquals(0.6934, sphericalAlbedos[6], 1.E-4);    // 620nm
+        assertEquals(0.6988, sphericalAlbedos[7], 1.E-4);    // 665nm  // interpolated
+        assertEquals(0.6676, sphericalAlbedos[16], 1.E-4);   // 865nm   // interpolated
+        assertEquals(0.6440, sphericalAlbedos[17], 1.E-4);   // 885nm   // interpolated
+        assertEquals(0.6344, sphericalAlbedos[18], 1.E-4);   // 900nm
+        assertEquals(0.6166, sphericalAlbedos[19], 1.E-4);   // 940nm
+        assertEquals(0.4512, sphericalAlbedos[20], 1.E-4);   // 1020nm
+
+        assertEquals(0.6202, planarAlbedos[0], 1.E-4);      // 400nm
+        assertEquals(0.6493, planarAlbedos[3], 1.E-4);      // 490nm
+        assertEquals(0.6547, planarAlbedos[4], 1.E-4);      // 510nm
+        assertEquals(0.6666, planarAlbedos[5], 1.E-4);      // 560nm
+        assertEquals(0.6779, planarAlbedos[6], 1.E-4);      // 620nm
+        assertEquals(0.6835, planarAlbedos[7], 1.E-4);      // 665nm // interpolated
+        assertEquals(0.6511, planarAlbedos[16], 1.E-4);     // 865nm  // interpolated
+        assertEquals(0.6267, planarAlbedos[17], 1.E-4);     // 885nm  // interpolated
+        assertEquals(0.6167, planarAlbedos[18], 1.E-4);     // 900nm
+        assertEquals(0.5984, planarAlbedos[19], 1.E-4);     // 940nm
+        assertEquals(0.4295, planarAlbedos[20], 1.E-4);     // 1020nm
+
     }
 }

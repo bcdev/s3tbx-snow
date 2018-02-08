@@ -11,7 +11,9 @@ public class SensorConstants {
     public static final int REFL_TYPE_BRR = 2;
 
     public static final String OLCI_SZA_NAME = "SZA";
+    public static final String OLCI_SAA_NAME = "SAA";
     public static final String OLCI_VZA_NAME = "OZA";
+    public static final String OLCI_VAA_NAME = "OAA";
     public static final String OLCI_L1B_FLAGS_NAME = "quality_flags";
     public static final int OLCI_INVALID_BIT = 25;
 

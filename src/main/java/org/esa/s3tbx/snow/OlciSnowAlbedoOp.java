@@ -68,7 +68,8 @@ public class OlciSnowAlbedoOp extends Operator {
     private static final String[] ALBEDO_BROADBAND_SUFFIXES = {"vis", "nir", "sw"};
 
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
-    private static final String ICE_FLAG_BAND_NAME = "ice_flag";
+    private static final String ICE_FLAG_BAND_NAME = "ice_indicator";
+    private static final String POLLUTION_MASK_BAND_NAME = "pollution_mask";
 
     //    @Parameter(label = "Spectral albedo computation mode", defaultValue = "SIMPLE_APPROXIMATION",
 //            description = "Spectral albedo computation mode (i.e. suitable way of curve fitting)")
@@ -107,6 +108,11 @@ public class OlciSnowAlbedoOp extends Operator {
             description = "OLCI reference wavelength used in computations of snow quantities",
             label = "OLCI reference wavelength (nm)")
     private double refWvl;
+
+    @Parameter(defaultValue = "0.1",
+            description = "Snow is regarded as polluted if snow reflectance at 400nm is smaller that R_0 - thresh.",
+            label = "Snow pollution threshold")
+    private double pollutionDelta;
 
     @Parameter(defaultValue = "0.9798",
             description = "OLCI SVC gain for band 1 (default value as provided by Sentinel-3A Product Notice – " +
@@ -230,7 +236,9 @@ public class OlciSnowAlbedoOp extends Operator {
             }
 
             Tile szaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSzaName()), targetRectangle);
+            Tile saaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSaaName()), targetRectangle);
             Tile vzaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getVzaName()), targetRectangle);
+            Tile vaaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getVaaName()), targetRectangle);
             Tile l1FlagsTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getL1bFlagsName()), targetRectangle);
 
             for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
@@ -253,22 +261,39 @@ public class OlciSnowAlbedoOp extends Operator {
                             }
                         }
 
-                        final double vza = vzaTile.getSampleDouble(x, y);
                         final double sza = szaTile.getSampleDouble(x, y);
+                        final double vza = vzaTile.getSampleDouble(x, y);
                         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+                        final double saa = saaTile.getSampleDouble(x, y);
+                        final double vaa = vaaTile.getSampleDouble(x, y);
+                        final double raa = SnowUtils.getRelAzi(saa, vaa);
+                        final double brr400 = rhoToaAlbedo[0];
 
                         // Sigma site in subset_0_of_S3A_OL_1_EFR____20170529T004035_20170529T004335_20170529T030013_0179_018_145_1260_SVL_O_NR_002_rayleigh.dim
-//                        if (x == 54 && y == 49) {
-//                            System.out.println("x = " + x);
-//                        }
+                        if (x == 54 && y == 49) {
+                            System.out.println("x = " + x);
+                        }
 
-                        // default is actually SIMPLE_APPROXIMATION (latest approach from AK, 20171120):
-                        final double[][] sphericalAlbedos =
-                                OlciSnowAlbedoAlgorithm.computeSphericalAlbedos(rhoToaAlbedo, sza, vza,
-                                                                                refWvl,
-                                                                                spectralAlbedoComputationMode);
-                        final double[] spectralSphericalAlbedos = sphericalAlbedos[0];
-                        final double[] spectralPlanarAlbedos = sphericalAlbedos[1];
+                        final double r0 = OlciSnowAlbedoAlgorithm.computeR0PollutionThresh(sza, vza, raa);
+                        final double pollutedSnowSeparationValue = r0 - pollutionDelta;
+                        boolean isPollutedSnow = brr400 < pollutedSnowSeparationValue;
+
+                        double[][] spectralAlbedos;
+                        if (isPollutedSnow) {
+
+                            final double brr1020 = rhoToaAlbedo[1];
+                            final double[] pollutedSnowParams =
+                                    OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1020, sza, vza, raa);
+                            spectralAlbedos =
+                                    OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
+                        } else {
+                            spectralAlbedos =
+                                    OlciSnowAlbedoAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
+                                                                                   refWvl,
+                                                                                   spectralAlbedoComputationMode);
+                        }
+                        final double[] spectralSphericalAlbedos = spectralAlbedos[0];
+                        final double[] spectralPlanarAlbedos = spectralAlbedos[1];
 
                         setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                       ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
@@ -319,6 +344,15 @@ public class OlciSnowAlbedoOp extends Operator {
                         } else {
                             targetTiles.get(iceFlagBand).setSample(x, y, Double.NaN);
                         }
+
+                        final Band pollutionMaskBand = targetProduct.getBand(POLLUTION_MASK_BAND_NAME);
+                        if (brr400 > 0.0 && !Double.isNaN(r0)) {
+                            int pollutionMask = isPollutedSnow ? 1 : 0;
+                            targetTiles.get(pollutionMaskBand).setSample(x, y, pollutionMask);
+                        } else {
+                            targetTiles.get(pollutionMaskBand).setSample(x, y, 0);
+                        }
+
                     } else {
                         setTargetTilesInvalid(targetTiles, x, y);
                     }
@@ -342,6 +376,7 @@ public class OlciSnowAlbedoOp extends Operator {
 
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(ICE_FLAG_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(POLLUTION_MASK_BAND_NAME, ProductData.TYPE_INT16);
 
         if (spectralAlbedoTargetBands != null && spectralAlbedoTargetBands.length > 0) {
             for (final String targetBand : spectralAlbedoTargetBands) {
@@ -383,6 +418,7 @@ public class OlciSnowAlbedoOp extends Operator {
             band.setNoDataValueUsed(true);
         }
         targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME).setUnit("mm");
+        targetProduct.getBand(POLLUTION_MASK_BAND_NAME).setNoDataValueUsed(false);
 
         for (String tpg : sensor.getTargetTpgs()) {
             if (!targetProduct.containsTiePointGrid(tpg)) {

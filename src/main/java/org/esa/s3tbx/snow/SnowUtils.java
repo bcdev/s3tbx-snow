@@ -2,6 +2,7 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.esa.snap.core.util.math.MathUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -111,5 +112,25 @@ public class SnowUtils {
         final double x2 = Math.round(x1);
         return x2/10000.0;
     }
+
+    public static double getRelAzi(double saa, double vaa) {
+        final double saaRad = Math.toRadians(saa);
+        final double vaaRad = Math.toRadians(vaa);
+        return Math.toDegrees(Math.acos(Math.cos(saaRad) * Math.cos(vaaRad) + Math.sin(saaRad) * Math.sin(vaaRad)));
+    }
+
+    public static double calcScatteringCos(double sza, double vza, double raa) {
+        final double sins = (float) Math.sin(sza * MathUtils.DTOR);
+        final double sinv = (float) Math.sin(vza * MathUtils.DTOR);
+        final double coss = (float) Math.cos(sza * MathUtils.DTOR);
+        final double cosv = (float) Math.cos(vza * MathUtils.DTOR);
+
+        // Compute the geometric conditions
+        final double cosphi = Math.cos((180. - raa) * MathUtils.DTOR);  // AK, manual_31_01_2018.docx: use 180 - raa !
+
+        // cos of scattering angle
+        return -coss * cosv - sins * sinv * cosphi;
+    }
+
 
 }

@@ -23,24 +23,60 @@ class OlciSnowAlbedoAlgorithm {
      * @param vza                 - view zenith angle (deg)
      * @param referenceWavelength - OLCI reference wavelength (1020 or 865 nm)
      * @param mode                - computation mode  @return double[][]{spectralSphericalAlbedo, spectralPlanarAlbedo}
+     *
+     * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
-    static double[][] computeSphericalAlbedos(double[] brr, double sza, double vza,
-                                              double referenceWavelength,
-                                              SpectralAlbedoMode mode) {
+    static double[][] computeSpectralAlbedos(double[] brr, double sza, double vza,
+                                             double referenceWavelength,
+                                             SpectralAlbedoMode mode) {
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
-        double[][] sphericalAlbedos = new double[2][numWvl];
+        double[][] spectralAlbedos = new double[2][numWvl];
 
         if (mode == SpectralAlbedoMode.SIMPLE_APPROXIMATION) {
             computeSpectralSphericalAlbedoWithSimpleApproximation(brr, sza, vza, numWvl,
-                                                                  referenceWavelength, sphericalAlbedos);
+                                                                  referenceWavelength, spectralAlbedos);
         } else {
             // we no longer support this
             throw new IllegalArgumentException("spectral albedo algoritm mode " + mode.getName() + " not supported");
         }
-        sphericalAlbedos[1] = computePlanarFromSphericalAlbedos(sphericalAlbedos[0], sza);
+        spectralAlbedos[1] = computePlanarFromSphericalAlbedos(spectralAlbedos[0], sza);
 
-        return sphericalAlbedos;
+        return spectralAlbedos;
     }
+
+    /**
+     * Computes spectral spherical and planar albedos in case of polluted snow
+     *
+     * @param pollutedSnowParams - double[]{grainDiam, soot}, the result from {@code computePollutedSnowParams}.
+     * @param sza - SZA
+     *
+     * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
+     *
+     * @see OlciSnowAlbedoAlgorithm#computePollutedSnowParams(double, double, double, double, double)
+     */
+    static double[][] computeSpectralAlbedosPolluted(double[] pollutedSnowParams, double sza) {
+        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        double[][] spectralAlbedos = new double[2][numWvl];
+
+        final double grainDiam = pollutedSnowParams[0] * 1000.0;  // in microns here
+        final double soot = pollutedSnowParams[1] * 1.E-6; // dimensionless here
+
+        final double akas = 0.46;
+        final double am0=Math.cos(Math.PI*sza/180.);
+        final double ak0=(3./7.) *(1.+2.*am0);
+
+        for (int i = 0; i < numWvl; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            final double p = 6.*4.*Math.PI*akas*soot*grainDiam/wvl;
+            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];   // chi = ak(i) in 'soot.f' breadboard
+            final double x = Math.sqrt (13.*4.*Math.PI*grainDiam*chi/wvl + p);
+            spectralAlbedos[0][i] = Math.exp(-x);  // spherical albedo
+            spectralAlbedos[1][i] = Math.pow(spectralAlbedos[0][i], ak0);  // planar albedo
+        }
+
+        return spectralAlbedos;
+    }
+
 
     /**
      * Computes broadband albedos following AK algorithm given in 'Technical note_BBA_DECEMBER_2017.doc' (20171204).
@@ -168,6 +204,89 @@ class OlciSnowAlbedoAlgorithm {
                 OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
         final double kappaRef = 4.0 * Math.PI * chiRef / (refWvl/1000.0);  // eq. (4)
         return Math.log(refAlbedo) * Math.log(refAlbedo) / (b * b * kappaRef);
+    }
+
+    /**
+     * Computes the snow grain diameter and soot concentration in case of polluted snow.
+     *
+     * @param brr400 - reflectance at 400nm
+     * @param brr1020 - reflectance at 1200nm
+     * @param sza - SZA
+     * @param vza - VZA
+     * @param raa - rel. azimuth
+     *
+     * @return double[] {grainDiam, soot} in mm and PPM
+     */
+    static double[] computePollutedSnowParams(double brr400, double brr1020,
+                                              double sza, double vza, double raa) {
+
+        // Wavelengths
+        final double alam1=0.4;
+        final double alam2=1.02;
+
+        // Im(m)
+        final double akas=0.46;
+        final double akai1=2.365e-11;
+        final double akai2=2.25e-6;
+
+        final double gi1=4.*Math.PI*akai1/alam1;
+        final double gi2=4.*Math.PI*akai2/alam2;
+        final double gs1=4.*Math.PI*akas/alam1;
+        final double gs2=4.*Math.PI*akas/alam2;
+
+        // Cosines
+        final double raa1=Math.abs(180.-raa);
+        final double am0=Math.cos(Math.PI*sza/180.);
+        final double am=Math.cos(Math.PI*vza/180.);
+        final double sam0=Math.sin(Math.PI*sza/180.);
+        final double sam=Math.sin(Math.PI*vza/180.);
+        final double cosazi=Math.cos(Math.PI*raa1/180.);
+        final double t=-am*am0+sam0*sam*cosazi;
+        final double scat=Math.acos(t);
+        final double theta=scat*180./Math.PI;
+
+        // K(mu)
+        final double ak0 = (3./7.) *(1.+2.*am0);
+        final double ak1 = (3./7.) *(1.+2.*am);
+
+        final double ax = 1.247;
+        final double bx = 1.186;
+        final double cx = 5.157;
+        final double s1 = ax+bx*(am+am0)+cx*am*am0;
+        final double s2 = 4.*(am+am0);
+        final double px = 11.1*Math.exp(-0.087*theta)+1.1*Math.exp(-0.014*theta);
+        final double r0 = (s1+px)/s2;
+
+        // Calculations
+        final double xx = r0/ak0/ak1;
+        final double yy1 = Math.log(brr400/r0);
+        final double yy2 = Math.log(brr1020/r0);
+        final double y1 = xx*xx * yy1*yy1;
+        final double y2 = xx*xx * yy2*yy2;
+        final double v = y1/y2;
+
+        // Impurity content (soot)
+        final double soot =(13./6.)*(gi2*v-gi1)/(gs1-gs2*v);
+
+        // Grain diameter
+        final double grainDiam = y2/(13.*gi2+6.*gs2*soot);
+
+        return new double[]{grainDiam/1000., soot*1.E6};  // in mm and PPM
+    }
+
+    static double computeR0PollutionThresh(double sza, double vza, double raa) {
+
+        final double A = 1.247;
+        final double B = 1.186;
+        final double C = 5.157;
+
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        final double mu = Math.cos(vza * MathUtils.DTOR);
+        final double cosTheta = SnowUtils.calcScatteringCos(sza, vza, raa);
+        final double theta = Math.acos(cosTheta) * MathUtils.RTOD;
+        final double p = 11.1*Math.exp(-0.087*theta) + 1.1*Math.exp(-0-014*theta);
+
+        return (A + B*(mu_0 + mu) + C*mu_0*mu + p)/(4.0*(mu_0 + mu));
     }
 
     /**

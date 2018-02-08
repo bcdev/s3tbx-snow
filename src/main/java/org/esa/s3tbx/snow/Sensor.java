@@ -9,19 +9,25 @@ import static org.esa.s3tbx.snow.SensorConstants.*;
  */
 public enum Sensor {
 
-    OLCI("OLCI", OLCI_SZA_NAME, OLCI_VZA_NAME, OLCI_L1B_FLAGS_NAME, OLCI_INVALID_BIT, OLCI_TARGET_TPGS);
+    OLCI("OLCI", OLCI_SZA_NAME, OLCI_VZA_NAME, OLCI_SAA_NAME, OLCI_VAA_NAME, OLCI_L1B_FLAGS_NAME,
+         OLCI_INVALID_BIT, OLCI_TARGET_TPGS);
 
     private String name;
     private String szaName;
+    private String saaName;
     private String vzaName;
+    private String vaaName;
     private String l1bFlagsName;
     private int invalidBit;
     private String[] targetTpgs;
 
-    Sensor(String name, String szaName, String vzaName, String l1bFlagsName, int invalidBit, String[] targetTpgs) {
+    Sensor(String name, String szaName, String vzaName, String saaName, String vaaName,
+           String l1bFlagsName, int invalidBit, String[] targetTpgs) {
         this.name = name;
         this.szaName = szaName;
+        this.saaName = saaName;
         this.vzaName = vzaName;
+        this.vaaName = vaaName;
         this.l1bFlagsName = l1bFlagsName;
         this.invalidBit = invalidBit;
         this.targetTpgs = targetTpgs;
@@ -37,6 +43,14 @@ public enum Sensor {
 
     public String getVzaName() {
         return vzaName;
+    }
+
+    public String getSaaName() {
+        return saaName;
+    }
+
+    public String getVaaName() {
+        return vaaName;
     }
 
     public String getL1bFlagsName() {
