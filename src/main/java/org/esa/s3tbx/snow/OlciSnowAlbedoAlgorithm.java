@@ -45,7 +45,8 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     /**
-     * Computes spectral spherical and planar albedos in case of polluted snow
+     * Computes spectral spherical and planar albedos in case of polluted snow.
+     * Algorithm Tech Note: 'Manual_31_01_2018.docx', AK 20180131
      *
      * @param pollutedSnowParams - double[]{grainDiam, soot}, the result from {@code computePollutedSnowParams}.
      * @param sza - SZA
@@ -208,6 +209,7 @@ class OlciSnowAlbedoAlgorithm {
 
     /**
      * Computes the snow grain diameter and soot concentration in case of polluted snow.
+     * Algorithm Tech Note: 'Manual_31_01_2018.docx', AK 20180131
      *
      * @param brr400 - reflectance at 400nm
      * @param brr1020 - reflectance at 1200nm
@@ -284,7 +286,7 @@ class OlciSnowAlbedoAlgorithm {
         final double mu = Math.cos(vza * MathUtils.DTOR);
         final double cosTheta = SnowUtils.calcScatteringCos(sza, vza, raa);
         final double theta = Math.acos(cosTheta) * MathUtils.RTOD;
-        final double p = 11.1*Math.exp(-0.087*theta) + 1.1*Math.exp(-0-014*theta);
+        final double p = 11.1*Math.exp(-0.087*theta) + 1.1*Math.exp(-0.014*theta);
 
         return (A + B*(mu_0 + mu) + C*mu_0*mu + p)/(4.0*(mu_0 + mu));
     }
