@@ -142,6 +142,11 @@ public class OlciSnowAlbedoOp extends Operator {
             label = "OLCI L1b or Rayleigh corrected product")
     private Product sourceProduct;
 
+    @SourceProduct(description = "OLCI IdePix classification product",
+            label = "OLCI IdePix classification product")
+    private Product idepixProduct;
+
+
     private Sensor sensor = Sensor.OLCI;
     private double[] olciGains;
 
