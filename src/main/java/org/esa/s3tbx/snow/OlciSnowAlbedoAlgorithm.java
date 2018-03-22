@@ -176,21 +176,6 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     /**
-     * Computes planar from spherical albedos at considered wavelengths.
-     * Follows 'nov_20.doc' (AK, 20171120)
-     *
-     * @param sphericaAlbedo - the spherical albedo value
-     * @param sza            - sun zenith angle
-     * @return theplanar albedo value
-     */
-    static double computePlanarFromSphericalAlbedo(double sphericaAlbedo,
-                                                   double sza) {
-        // eq. (1):
-        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
-        return Math.pow(sphericaAlbedo, SnowUtils.computeU(mu_0));
-    }
-
-    /**
      * Computes the snow grain diameter for given Rayleigh corrected reflectance at band 21 (1020nm).
      * Follows 'sgs_nov_20_865nm.doc' (AK, 20171120)
      *
@@ -340,6 +325,21 @@ class OlciSnowAlbedoAlgorithm {
 
             sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B * kappa));  // spectral spherical abledo
         }
+    }
+
+    /**
+     * Computes planar from spherical albedos at considered wavelengths.
+     * Follows 'nov_20.doc' (AK, 20171120)
+     *
+     * @param sphericaAlbedo - the spherical albedo value
+     * @param sza            - sun zenith angle
+     * @return theplanar albedo value
+     */
+    private static double computePlanarFromSphericalAlbedo(double sphericaAlbedo,
+                                                           double sza) {
+        // eq. (1):
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        return Math.pow(sphericaAlbedo, SnowUtils.computeU(mu_0));
     }
 
     private static double[] computePlanarFromSphericalAlbedos(double[] sphericalAlbedos, double sza) {
