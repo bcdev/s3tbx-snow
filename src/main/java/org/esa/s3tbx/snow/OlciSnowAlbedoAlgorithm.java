@@ -18,7 +18,7 @@ class OlciSnowAlbedoAlgorithm {
      * Computes spectral spherical and planar albedos using given computation mode from the ones proposed by AK.
      * Currently we only use SIMPLE_APPROXIMATION (20171120).
      *
-     * @param brr                 - subset of BRR spectrum
+     * @param brr                 - subset of BRR spectrum  (BRR_01, BRR_21, BRR_17)
      * @param sza                 - sun zenith angle (deg)
      * @param vza                 - view zenith angle (deg)
      * @param referenceWavelength - OLCI reference wavelength (1020 or 865 nm)
@@ -33,13 +33,15 @@ class OlciSnowAlbedoAlgorithm {
         double[][] spectralAlbedos = new double[2][numWvl];
 
         if (mode == SpectralAlbedoMode.SIMPLE_APPROXIMATION) {
-            computeSpectralSphericalAlbedoWithSimpleApproximation(brr, sza, vza, numWvl,
+            computeSpectralAlbedoWithSimpleApproximation(brr, sza, vza, numWvl,
                                                                   referenceWavelength, spectralAlbedos);
+
+            // new approach:
+            // computeSpectralAlbedoFromTwoWavelengths(brr, sza, vza, numWvl, spectralAlbedos);
         } else {
             // we no longer support this
             throw new IllegalArgumentException("spectral albedo algoritm mode " + mode.getName() + " not supported");
         }
-        spectralAlbedos[1] = computePlanarFromSphericalAlbedos(spectralAlbedos[0], sza);
 
         return spectralAlbedos;
     }
@@ -299,7 +301,7 @@ class OlciSnowAlbedoAlgorithm {
      * [1]: The simple approximation  for the spectral planar albedo. TN AK, 20171120. File: nov_20.doc.
      * [2]: The snow grain size determination. TN AK, 20171120. File: sgs_nov_20.doc.
      */
-    private static void computeSpectralSphericalAlbedoWithSimpleApproximation(double[] brr,
+    private static void computeSpectralAlbedoWithSimpleApproximation(double[] brr,
                                                                               double sza, double vza, int numWvl,
                                                                               double refWvl,
                                                                               double[][] sphericalAlbedos) {
@@ -325,7 +327,48 @@ class OlciSnowAlbedoAlgorithm {
 
             sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B * kappa));  // spectral spherical abledo
         }
+        sphericalAlbedos[1] = computePlanarFromSphericalAlbedos(sphericalAlbedos[0], sza);    // spectral planar abledo
     }
+
+    /**
+     * Computation of spectral spherical albedo following AK latest approach, 20180404.
+     * Currently used as default.
+     * <p>
+     * References:
+     * [1]: The determination of snow parameters using OLCI observations. TN AK, 20180404. File: Manual_04_04_2018-1.docx.
+     */
+    private static void computeSpectralAlbedoFromTwoWavelengths(double[] brr,
+                                                                              double sza, double vza, int numWvl,
+                                                                              double[][] sphericalAlbedos) {
+        final double brr_865 = brr[2];
+        final double brr_1020 = brr[1];
+
+        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+        final double mu = Math.cos(vza * MathUtils.DTOR);
+        final double k_mu_0 = SnowUtils.computeU(mu_0);
+        final double k_mu = SnowUtils.computeU(mu);
+
+        final double chi_1 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
+        final double chi_2 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
+        final double alpha_1 = 4.0 * Math.PI * chi_1 / 0.865;
+        final double alpha_2 = 4.0 * Math.PI * chi_2 / 1.02;
+        final double b = Math.sqrt(alpha_1/alpha_2);
+        final double eps_1 = 1.0/(1.0 - b);
+        final double eps_2 = 1.0/(1.0 - 1.0/b);
+        final double r_0 = Math.pow(brr_865, eps_1) * Math.pow(brr_1020, eps_2);
+        final double x = (k_mu_0 * k_mu)/r_0;   // [1], eq. (5)
+        final double l = 1.0/(x*x*alpha_2);
+
+        for (int i = 0; i < numWvl; i++) {
+            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
+            final double alpha_ice = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
+
+            sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(l * alpha_ice));  // spectral spherical abledo
+            sphericalAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(l * alpha_ice));  // spectral planar abledo
+        }
+    }
+
 
     /**
      * Computes planar from spherical albedos at considered wavelengths.

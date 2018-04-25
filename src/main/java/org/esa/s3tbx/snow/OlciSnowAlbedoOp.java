@@ -187,7 +187,6 @@ public class OlciSnowAlbedoOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
         String[] requiredRadianceBandNamesAlbedo;
-        requiredBrrBandNamesAlbedo = new String[2];
 
         olciGains = new double[3];
         olciGains[0] = olciGainBand1;
@@ -277,18 +276,18 @@ public class OlciSnowAlbedoOp extends Operator {
                             (cloudMaskTile == null ||
                                     (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0));
                     if (pixelIsValid) {
-                        double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];
+                        double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];   // now always 01, 21, 17
                         for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
                             rhoToaAlbedo[i] = olciGains[i] * rhoToaTilesAlbedo[i].getSampleDouble(x, y);
                             rhoToaAlbedo[i] = Math.max(0.0, rhoToaAlbedo[i]);
                         }
 
                         double brr400 = rhoToaAlbedo[0];
+                        final double brr1020 = rhoToaAlbedo[1];
+                        final double brr865 = rhoToaAlbedo[2];
                         double ndsi = Double.NaN;
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
-                            final double brr1020 = rhoToaAlbedo[1];
-                            final double brr865 = rhoToaAlbedo[2];
                             ndsi = (brr865 - brr1020)/(brr865 + brr1020);
                             if (ndsi <=ndsiThresh || brr400 <= 0.5) {
                                 validNdsi = false;
@@ -330,8 +329,6 @@ public class OlciSnowAlbedoOp extends Operator {
                                 isPollutedSnow = brr400 < pollutedSnowSeparationValue;
 
                                 if (isPollutedSnow) {
-
-                                    final double brr1020 = rhoToaAlbedo[1];
                                     final double[] pollutedSnowParams =
                                             OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1020, sza, vza, raa);
                                     spectralAlbedos =
