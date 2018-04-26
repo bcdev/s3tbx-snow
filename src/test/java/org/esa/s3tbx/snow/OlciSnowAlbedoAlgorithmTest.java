@@ -439,7 +439,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
 
         final double[][] spectralAlbedosPolluted =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza, Double.NaN, false);
         assertNotNull(spectralAlbedosPolluted);
         final double[] sphericalAlbedos = spectralAlbedosPolluted[0];
         assertNotNull(sphericalAlbedos);

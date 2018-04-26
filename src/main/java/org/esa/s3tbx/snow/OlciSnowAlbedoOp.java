@@ -142,6 +142,12 @@ public class OlciSnowAlbedoOp extends Operator {
             label = "OLCI SVC gain for band 1 (400nm)")
     private double olciGainBand1;
 
+    @Parameter(defaultValue = "0.9892",
+            description = "OLCI SVC gain for band 5 (default value as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gain for band 5 (560nm)")
+    private double olciGainBand5;
+
     @Parameter(defaultValue = "1.0",
             description = "OLCI SVC gain for band 17 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
@@ -162,6 +168,11 @@ public class OlciSnowAlbedoOp extends Operator {
             label = "Cloud mask product",
             optional = true)
     private Product cloudMaskProduct;
+
+    @Parameter(defaultValue = "false",
+            label = "Use new algorithm for spectral albedo (AK, 20180404)",
+            description = "If selected, new algorithm for spectral albedo (provided by AK, 20180404) is used.")
+    private boolean useAlgoApril2018;
 
 
     private Sensor sensor = Sensor.OLCI;
@@ -188,12 +199,13 @@ public class OlciSnowAlbedoOp extends Operator {
     public void initialize() throws OperatorException {
         String[] requiredRadianceBandNamesAlbedo;
 
-        olciGains = new double[3];
+        olciGains = new double[4];
         olciGains[0] = olciGainBand1;
-        olciGains[1] = olciGainBand21;
+        olciGains[1] = olciGainBand5;
         olciGains[2] = olciGainBand17;
-        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa21_radiance", "Oa17_radiance"};
-        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_21", "rBRR_17"};
+        olciGains[3] = olciGainBand21;
+        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa05_radiance", "Oa17_radiance", "Oa21_radiance"};
+        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_05", "rBRR_17", "rBRR_21"};
 
         // get required radiance / BRR bands for PPA computation
         if (spectralAlbedoTargetBands != null) {
@@ -276,15 +288,16 @@ public class OlciSnowAlbedoOp extends Operator {
                             (cloudMaskTile == null ||
                                     (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0));
                     if (pixelIsValid) {
-                        double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];   // now always 01, 21, 17
+                        double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];   // now always 01, 05, 17, 21
                         for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
                             rhoToaAlbedo[i] = olciGains[i] * rhoToaTilesAlbedo[i].getSampleDouble(x, y);
                             rhoToaAlbedo[i] = Math.max(0.0, rhoToaAlbedo[i]);
                         }
 
                         double brr400 = rhoToaAlbedo[0];
-                        final double brr1020 = rhoToaAlbedo[1];
+                        final double brr560 = rhoToaAlbedo[1];
                         final double brr865 = rhoToaAlbedo[2];
+                        final double brr1020 = rhoToaAlbedo[3];
                         double ndsi = Double.NaN;
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
@@ -332,18 +345,22 @@ public class OlciSnowAlbedoOp extends Operator {
                                     final double[] pollutedSnowParams =
                                             OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1020, sza, vza, raa);
                                     spectralAlbedos =
-                                            OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
+                                            OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams,
+                                                                                                   sza, vza,
+                                                                                                   useAlgoApril2018);
                                 } else {
                                     spectralAlbedos =
                                             OlciSnowAlbedoAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
                                                                                            refWvl,
-                                                                                           spectralAlbedoComputationMode);
+                                                                                           spectralAlbedoComputationMode,
+                                                                                           useAlgoApril2018);
                                 }
                             } else {
                                 spectralAlbedos =
                                         OlciSnowAlbedoAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
                                                                                        refWvl,
-                                                                                       spectralAlbedoComputationMode);
+                                                                                       spectralAlbedoComputationMode,
+                                                                                       useAlgoApril2018);
                             }
                             final double[] spectralSphericalAlbedos = spectralAlbedos[0];
                             final double[] spectralPlanarAlbedos = spectralAlbedos[1];
@@ -359,7 +376,14 @@ public class OlciSnowAlbedoOp extends Operator {
 
                             double grainDiam = Double.NaN;
                             if (refAlbedo > 0.0) {
-                                grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
+                                if (useAlgoApril2018) {
+                                    final double l = OlciSnowAlbedoAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
+                                                                                                        sza, vza);
+                                    grainDiam = l/13.08;
+                                    // todo: consider also polluted snow here
+                                } else {
+                                    grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
+                                }
                             }
                             // todo: this is a test with 'manual' summation rather than Simpson integration.
                             // Check why Simpson is so slow!
@@ -396,8 +420,8 @@ public class OlciSnowAlbedoOp extends Operator {
                             }
 
                             final Band iceFlagBand = targetProduct.getBand(ICE_FLAG_BAND_NAME);
-                            if (rhoToaAlbedo[0] > 0.0 && rhoToaAlbedo[1] > 0.0) {
-                                double iceFlag = rhoToaAlbedo[0] / rhoToaAlbedo[1];
+                            if (brr400 > 0.0 && brr1020 > 0.0) {
+                                double iceFlag = brr400 / brr1020;
                                 targetTiles.get(iceFlagBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(iceFlag));
                             } else {
                                 targetTiles.get(iceFlagBand).setSample(x, y, Double.NaN);
