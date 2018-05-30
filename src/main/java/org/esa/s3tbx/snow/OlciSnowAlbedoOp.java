@@ -47,7 +47,7 @@ import java.util.Map;
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
         copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0-SNAPSHOT")
+        version = "2.0.1-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 
@@ -410,9 +410,10 @@ public class OlciSnowAlbedoOp extends Operator {
                             final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
                             if (!Double.isNaN(grainDiam)) {
                                 final double grainDiamMillim = grainDiam / 1000.0;  // in mm
+                                final double grainDiamMetres = grainDiamMillim / 1000.0;  // in m
                                 targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamMillim));
 
-                                final double snowSpecificArea = 6.0 / (OlciSnowAlbedoConstants.RHO_ICE * grainDiamMillim);
+                                final double snowSpecificArea = 6.0 / (OlciSnowAlbedoConstants.RHO_ICE * grainDiamMetres);
                                 targetTiles.get(snowSpecificAreaBand).setSample(x, y, SnowUtils.cutTo7DecimalPlaces(snowSpecificArea));
                             } else {
                                 targetTiles.get(grainDiameterBand).setSample(x, y, Double.NaN);
@@ -520,7 +521,8 @@ public class OlciSnowAlbedoOp extends Operator {
             band.setNoDataValueUsed(true);
         }
         targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME).setUnit("mm");
-        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("mm");
+//        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("mm");
+        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("m");
 
         if (considerSnowPollution) {
             targetProduct.getBand(POLLUTION_MASK_BAND_NAME).setNoDataValueUsed(false);
