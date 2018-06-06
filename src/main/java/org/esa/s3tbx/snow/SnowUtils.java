@@ -7,23 +7,12 @@ import org.esa.snap.core.util.math.MathUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static org.esa.s3tbx.snow.OlciSnowAlbedoConstants.*;
-
 /**
  * S3 Snow utility class
  *
  * @author olafd
  */
 public class SnowUtils {
-
-    public static double computeKappa2(double wvl, int rangeIndex) {
-        if (rangeIndex < 0 || rangeIndex > 3) {
-            throw new IllegalArgumentException("rangeIndex must be in [0,3]");
-        }
-        return c0[rangeIndex] + c1[rangeIndex] * (wvl - LAMBDA_0[rangeIndex]) / H[rangeIndex] +
-                c2[rangeIndex] * Math.pow((wvl - LAMBDA_0[rangeIndex]) / H[rangeIndex], 2.0) +
-                c3[rangeIndex] * Math.pow((wvl - LAMBDA_0[rangeIndex]) / H[rangeIndex], 3.0);
-    }
 
     public static double computeU(double mu) {
         return 3.0 * (1.0 + 2.0 * mu) / 7.0;
@@ -44,17 +33,6 @@ public class SnowUtils {
         return refractiveIndexTableInterpolated;
     }
 
-    public static double getRefractiveIndex(RefractiveIndexTable refractiveIndexTable,
-                                            double wvl) {
-        final double[] wvlsTable = refractiveIndexTable.getWvl();
-        for (int i = 0; i < wvlsTable.length - 1; i++) {
-            if (wvl >= wvlsTable[i] && wvl < wvlsTable[i + 1]) {
-                return refractiveIndexTable.getRefractiveIndexImag(i);
-            }
-        }
-        return -1;
-    }
-
     public static double[] getFLambda(SolarSpectrumTable solarSpectrumTable) {
 
         final double[] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
@@ -67,17 +45,6 @@ public class SnowUtils {
         }
 
         return fLambda;
-    }
-
-    public static double getFLambda(SolarSpectrumTable solarSpectrumTable, double mu0, double wvl) {
-        final double[] fLambda = getFLambda(solarSpectrumTable);
-        final double[] wvlsTable = solarSpectrumTable.getWvl();
-        for (int i = 0; i < wvlsTable.length - 1; i++) {
-            if (wvl >= wvlsTable[i] && wvl < wvlsTable[i + 1]) {
-                return fLambda[i];
-            }
-        }
-        return -1;
     }
 
     public static double[] splineInterpolate(double[] x, double[] y, double[] xi) {
