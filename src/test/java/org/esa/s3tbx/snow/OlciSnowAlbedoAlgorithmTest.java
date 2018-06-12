@@ -438,12 +438,12 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double soot = 1.519;
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
 
-        final double[][] spectralAlbedosPolluted =
+        final OlciSnowAlbedoAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
                 OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza, Double.NaN, false);
         assertNotNull(spectralAlbedosPolluted);
-        final double[] sphericalAlbedos = spectralAlbedosPolluted[0];
+        final double[] sphericalAlbedos = spectralAlbedosPolluted.getSpectralAlbedos()[0];
         assertNotNull(sphericalAlbedos);
-        final double[] planarAlbedos = spectralAlbedosPolluted[1];
+        final double[] planarAlbedos = spectralAlbedosPolluted.getSpectralAlbedos()[1];
         assertNotNull(planarAlbedos);
 
         // test results provided by AK in 'snow_properties_CHECKOUT.txt' (20180124), first line:

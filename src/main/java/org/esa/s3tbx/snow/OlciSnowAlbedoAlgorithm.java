@@ -57,7 +57,7 @@ class OlciSnowAlbedoAlgorithm {
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      * @see OlciSnowAlbedoAlgorithm#computePollutedSnowParams(double, double, double, double, double)
      */
-    static double[][] computeSpectralAlbedosPolluted(double[] pollutedSnowParams,
+    static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] pollutedSnowParams,
                                                      double sza,
                                                      double vza,
                                                      boolean useAlgoApril2018) {
@@ -68,8 +68,7 @@ class OlciSnowAlbedoAlgorithm {
         }
     }
 
-
-    private static double[][] computeSpectralAlbedosPolluted(double[] pollutedSnowParams, double sza) {
+    private static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] pollutedSnowParams, double sza) {
         // todo: consider optional AK algo from April 2018
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
@@ -90,7 +89,8 @@ class OlciSnowAlbedoAlgorithm {
             spectralAlbedos[1][i] = Math.pow(spectralAlbedos[0][i], ak0);  // planar albedo
         }
 
-        return spectralAlbedos;
+//        return spectralAlbedos;
+        return new SpectralAlbedoResult(spectralAlbedos, 0, 0, 0, 0);
     }
 
 
@@ -385,7 +385,7 @@ class OlciSnowAlbedoAlgorithm {
         return Math.log(brr[3] / brr[2]) * Math.log(brr[3] / brr[2]) / (x * x * alpha_2);
     }
 
-    private static double[][] computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
+    private static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
                                                                                 double sza,
                                                                                 double vza) {
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
@@ -413,6 +413,7 @@ class OlciSnowAlbedoAlgorithm {
         final double wvl_2 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[5];
         final double m = Math.log(p_1 / p_2) / Math.log(wvl_1 / wvl_2);
         final double f = p_1 * Math.pow(wvl_1, m) / (x * x * l);
+        // todo: return also r_0, f, l, m and optionally write to target product (AK 20180607)
 
         for (int i = 0; i < numWvl; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
@@ -423,28 +424,8 @@ class OlciSnowAlbedoAlgorithm {
             spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(alpha_ice + f * Math.pow(wvl, -m)) * l);  // spectral planar abledo
         }
 
-        return spectralAlbedos;
-    }
-
-    public static double computeLFromFourWavelengths(double[] brr, double sza, double vza) {
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
-
-        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
-        final double mu = Math.cos(vza * MathUtils.DTOR);
-        final double k_mu_0 = SnowUtils.computeU(mu_0);
-        final double k_mu = SnowUtils.computeU(mu);
-
-        final double chi_3 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
-        final double chi_4 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
-        final double alpha_3 = 4.0 * Math.PI * chi_3 / 0.865;
-        final double alpha_4 = 4.0 * Math.PI * chi_4 / 1.02;
-        final double b = Math.sqrt(alpha_3 / alpha_4);
-        final double eps_1 = 1.0 / (1.0 - b);
-        final double eps_2 = 1.0 / (1.0 - 1.0 / b);
-        final double r_0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
-        final double x = (k_mu_0 * k_mu) / r_0;   // [1], eq. (5)
-
-        return Math.log(brr[3] / brr[0]) * Math.log(brr[3] / brr[0]) / (x * x * alpha_4);
+//        return spectralAlbedos;
+        return new SpectralAlbedoResult(spectralAlbedos, f, l, m, r_0);
     }
 
     /**
@@ -470,4 +451,39 @@ class OlciSnowAlbedoAlgorithm {
         return planarAlbedos;
     }
 
+    static class SpectralAlbedoResult {
+        private final double[][] spectralAlbedos;
+        private final double f;
+        private final double l;
+        private final double m;
+        private final double r_0;
+
+        public SpectralAlbedoResult(double[][] spectralAlbedos, double f, double l, double m, double r_0) {
+            this.spectralAlbedos = spectralAlbedos;
+            this.f = f;
+            this.l = l;
+            this.m = m;
+            this.r_0 = r_0;
+        }
+
+        public double[][] getSpectralAlbedos() {
+            return spectralAlbedos;
+        }
+
+        public double getF() {
+            return f;
+        }
+
+        public double getL() {
+            return l;
+        }
+
+        public double getM() {
+            return m;
+        }
+
+        public double getR_0() {
+            return r_0;
+        }
+    }
 }

@@ -47,7 +47,7 @@ import java.util.Map;
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
         copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.1-SNAPSHOT")
+        version = "2.0.2-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 
@@ -301,8 +301,8 @@ public class OlciSnowAlbedoOp extends Operator {
                         double ndsi = Double.NaN;
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
-                            ndsi = (brr865 - brr1020)/(brr865 + brr1020);
-                            if (ndsi <=ndsiThresh || brr400 <= 0.5) {
+                            ndsi = (brr865 - brr1020) / (brr865 + brr1020);
+                            if (ndsi <= ndsiThresh || brr400 <= 0.5) {
                                 validNdsi = false;
                             }
                         }
@@ -344,10 +344,14 @@ public class OlciSnowAlbedoOp extends Operator {
                                 if (isPollutedSnow) {
                                     final double[] pollutedSnowParams =
                                             OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1020, sza, vza, raa);
-                                    spectralAlbedos =
+                                    OlciSnowAlbedoAlgorithm.SpectralAlbedoResult spectralAlbedoPollutedResult =
                                             OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams,
                                                                                                    sza, vza,
                                                                                                    useAlgoApril2018);
+                                    spectralAlbedos = spectralAlbedoPollutedResult.getSpectralAlbedos();
+                                    if (useAlgoApril2018) {
+                                        // todo: f = ..., l = ..., m = ..., r_0 = ... and write to target product
+                                    }
                                 } else {
                                     spectralAlbedos =
                                             OlciSnowAlbedoAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
@@ -379,7 +383,7 @@ public class OlciSnowAlbedoOp extends Operator {
                                 if (useAlgoApril2018) {
                                     final double l = OlciSnowAlbedoAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
                                                                                                         sza, vza);
-                                    grainDiam = l/13.08;
+                                    grainDiam = l / 13.08;
                                     // todo: consider also polluted snow here
                                 } else {
                                     grainDiam = OlciSnowAlbedoAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
