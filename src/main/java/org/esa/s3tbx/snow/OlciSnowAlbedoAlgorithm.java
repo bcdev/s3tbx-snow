@@ -18,12 +18,12 @@ class OlciSnowAlbedoAlgorithm {
      * Computes spectral spherical and planar albedos using given computation mode from the ones proposed by AK.
      * Currently we only use SIMPLE_APPROXIMATION (20171120).
      *
-     * @param brr                 - subset of BRR spectrum  (BRR_01, BRR_21, BRR_17)
+     * @param brr                 - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
      * @param sza                 - sun zenith angle (deg)
      * @param vza                 - view zenith angle (deg)
      * @param referenceWavelength - OLCI reference wavelength (1020 or 865 nm)
      * @param mode                - computation mode  @return double[][]{spectralSphericalAlbedo, spectralPlanarAlbedo}
-     * @param useAlgoApril2018
+     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
     static double[][] computeSpectralAlbedos(double[] brr, double sza, double vza,
@@ -51,25 +51,29 @@ class OlciSnowAlbedoAlgorithm {
      * Computes spectral spherical and planar albedos in case of polluted snow.
      * Algorithm Tech Note: 'Manual_31_01_2018.docx', AK 20180131
      *
-     * @param pollutedSnowParams - double[]{grainDiam, soot}, the result from {@code computePollutedSnowParams}.
-     * @param sza                - SZA
-     * @param useAlgoApril2018
+     * @param brr - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
+     * @param pollutedSnowParams - parameters for polluted snow,
+     *                           see {@link OlciSnowAlbedoAlgorithm#computePollutedSnowParams
+     *                           (double, double, double, double, double)}
+     * @param sza - sun zenith angle (deg)
+     * @param vza - view zenith angle (deg)
+     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used
+     *
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
-     * @see OlciSnowAlbedoAlgorithm#computePollutedSnowParams(double, double, double, double, double)
      */
-    static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] pollutedSnowParams,
-                                                     double sza,
-                                                     double vza,
-                                                     boolean useAlgoApril2018) {
+    static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] brr,
+                                                               double[] pollutedSnowParams,
+                                                               double sza,
+                                                               double vza,
+                                                               boolean useAlgoApril2018) {
         if (useAlgoApril2018) {
-            return computeSpectralAlbedosPollutedFromFourWavelengths(pollutedSnowParams, sza, vza);
+            return computeSpectralAlbedosPollutedFromFourWavelengths(brr, sza, vza);
         } else {
             return computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
         }
     }
 
     private static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] pollutedSnowParams, double sza) {
-        // todo: consider optional AK algo from April 2018
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
@@ -90,7 +94,7 @@ class OlciSnowAlbedoAlgorithm {
         }
 
 //        return spectralAlbedos;
-        return new SpectralAlbedoResult(spectralAlbedos, 0, 0, 0, 0);
+        return new SpectralAlbedoResult(spectralAlbedos, 0, 0, 0);
     }
 
 
@@ -100,12 +104,14 @@ class OlciSnowAlbedoAlgorithm {
      * @param mu_0                 - mu0
      * @param d                    - snow grain diameter
      * @param refractiveIndexTable - table with refractive indices
-     * @param solarSpectrumTable   - table with solar spectrum
+     * @param solarSpectrumExtendedTable   - table with extended solar spectrum for sza = 0, 15, 30, 45, 60, 75 deg
      * @return double[]{pbbaVis, pbbaNir, pbbaSw};
      */
     static double[] computeBroadbandAlbedo(double mu_0, double d,
                                            RefractiveIndexTable refractiveIndexTable,
-                                           SolarSpectrumTable solarSpectrumTable) {
+//                                           SolarSpectrumTable solarSpectrumTable,
+                                           SolarSpectrumExtendedTable solarSpectrumExtendedTable,
+                                           double sza) {
 
         if (Double.isNaN(d)) {
             return new double[]{Double.NaN, Double.NaN, Double.NaN};
@@ -121,8 +127,9 @@ class OlciSnowAlbedoAlgorithm {
         double numeratorSw = 0.0;
         double denominatorSw = 0.0;
 
-        double[] wvlsFull = solarSpectrumTable.getWvl();
-        final double[] f_lambda = SnowUtils.getFLambda(solarSpectrumTable);
+        double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
+//        final double[] f_lambda = SnowUtils.getFLambda(solarSpectrumTable);
+        final double[] f_lambda = SnowUtils.getFLambda(solarSpectrumExtendedTable, sza);
 
         for (int i = 0; i < wvlsFull.length - 1; i++) {
             final double wvl = wvlsFull[i];
@@ -386,8 +393,8 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     private static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
-                                                                                double sza,
-                                                                                double vza) {
+                                                                                          double sza,
+                                                                                          double vza) {
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
@@ -406,7 +413,7 @@ class OlciSnowAlbedoAlgorithm {
         final double r_0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
         final double x = (k_mu_0 * k_mu) / r_0;   // [1], eq. (5)
         final double l = Math.log(brr[3] / brr[0]) * Math.log(brr[3] / brr[0]) / (x * x * alpha_4);
-        
+
         final double p_1 = Math.log(brr[0] / r_0) * Math.log(brr[0] / r_0);
         final double p_2 = Math.log(brr[1] / r_0) * Math.log(brr[1] / r_0);
         final double wvl_1 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[0];
@@ -425,7 +432,7 @@ class OlciSnowAlbedoAlgorithm {
         }
 
 //        return spectralAlbedos;
-        return new SpectralAlbedoResult(spectralAlbedos, f, l, m, r_0);
+        return new SpectralAlbedoResult(spectralAlbedos, f, l, m);
     }
 
     /**
@@ -456,14 +463,12 @@ class OlciSnowAlbedoAlgorithm {
         private final double f;
         private final double l;
         private final double m;
-        private final double r_0;
 
-        public SpectralAlbedoResult(double[][] spectralAlbedos, double f, double l, double m, double r_0) {
+        SpectralAlbedoResult(double[][] spectralAlbedos, double f, double l, double m) {
             this.spectralAlbedos = spectralAlbedos;
             this.f = f;
             this.l = l;
             this.m = m;
-            this.r_0 = r_0;
         }
 
         public double[][] getSpectralAlbedos() {
@@ -480,10 +485,6 @@ class OlciSnowAlbedoAlgorithm {
 
         public double getM() {
             return m;
-        }
-
-        public double getR_0() {
-            return r_0;
         }
     }
 }

@@ -19,8 +19,8 @@ public class SnowUtils {
     }
 
     public static RefractiveIndexTable getRefractiveIndexInterpolated(RefractiveIndexTable refractiveIndexTable,
-                                                                      SolarSpectrumTable solarSpectrumTable) {
-        double[] wvlsFull = solarSpectrumTable.getWvl();
+                                                                      SolarSpectrumExtendedTable solarSpectrumExtendedTable) {
+        double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
 
         RefractiveIndexTable refractiveIndexTableInterpolated = new RefractiveIndexTable(wvlsFull.length);
         refractiveIndexTableInterpolated.setWvl(wvlsFull);
@@ -33,19 +33,66 @@ public class SnowUtils {
         return refractiveIndexTableInterpolated;
     }
 
-    public static double[] getFLambda(SolarSpectrumTable solarSpectrumTable) {
+//    public static double[] getFLambda(SolarSpectrumTable solarSpectrumTable) {
+//
+//        final double[] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
+//
+//        double[] fLambda = new double[solarSpectrum.length];
+//
+//        for (int i = 0; i < fLambda.length; i++) {
+//            final double trans = 1.0;   // for the new solar spectrum
+//            fLambda[i] = trans * solarSpectrum[i] / 1000;
+//        }
+//
+//        return fLambda;
+//    }
 
-        final double[] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
+    public static double[] getFLambda(SolarSpectrumExtendedTable solarSpectrumTable, double sza) {
 
-        double[] fLambda = new double[solarSpectrum.length];
+        final double[][] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
+
+        final double[] solarSpectrumInterpolated = getSolarSpectrumInterpolated(solarSpectrum, sza);
+
+        double[] fLambda = new double[solarSpectrumInterpolated.length];
 
         for (int i = 0; i < fLambda.length; i++) {
             final double trans = 1.0;   // for the new solar spectrum
-            fLambda[i] = trans * solarSpectrum[i] / 1000;
+            fLambda[i] = trans * solarSpectrumInterpolated[i] / 1000;
         }
 
         return fLambda;
     }
+
+    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
+        // todo: write test!
+        int lowerIndex = (int) sza/15;   // 0, 1, 2, 3, 4, 5
+        int upperIndex = lowerIndex + 1;
+
+        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
+        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
+            if (upperIndex <= 5) {
+                final double cosLowerSza = Math.cos(15. * lowerIndex * MathUtils.DTOR);
+                final double cosUpperSza = Math.cos(15. * upperIndex * MathUtils.DTOR);
+                final double cosSza = Math.cos(sza * MathUtils.DTOR);
+                final double frac = (cosSza - cosLowerSza) / (cosUpperSza - cosLowerSza);
+                final double lowerFlux = solarSpectrum[lowerIndex][i];
+                final double upperFlux = solarSpectrum[upperIndex][i];
+                final double interpolFlux = lowerFlux + frac * (upperFlux - lowerFlux);
+                solarSpectrumInterpolated[i] = interpolFlux;
+            } else {
+                final double cosSza75 = Math.cos(75. * MathUtils.DTOR);
+                final double cosSza = Math.cos(sza * MathUtils.DTOR);
+                final double frac = (cosSza75 - cosSza) / cosSza75;  // sza = 90deg --> cos(sza) = 0
+                final double lowerFlux = solarSpectrum[5][i];
+                final double upperFlux = 0.0; // sza = 90deg
+                final double extrapolFlux = lowerFlux + frac * (upperFlux - lowerFlux);
+                solarSpectrumInterpolated[i] = extrapolFlux;
+            }
+        }
+
+        return solarSpectrumInterpolated;
+    }
+
 
     public static double[] splineInterpolate(double[] x, double[] y, double[] xi) {
         final LinearInterpolator linearInterpolator = new LinearInterpolator();

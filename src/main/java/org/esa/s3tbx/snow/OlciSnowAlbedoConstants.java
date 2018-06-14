@@ -33,12 +33,13 @@ public class OlciSnowAlbedoConstants {
     };
 
     // Table 1 from spectral_albedo_october_5_2017.doc:
-    static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
-    static final double[] H = {0.175, 0.175, 1.28, 0.4675};
-    static final double[] c0 = {3.85E-9, 2.2E-9, 1.30689, 1.27525};
-    static final double[] c1 = {-5.287E-9, 3.384E-9, -0.026, -0.026};
-    static final double[] c2 = {2.2594E-9, 6.41E-9, 0.017956, -0.00149};
-    static final double[] c3 = {1.38411E-9, 1.63665E-8, -0.024, -0.0128};
+    // no longer used
+//    static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
+//    static final double[] H = {0.175, 0.175, 1.28, 0.4675};
+//    static final double[] c0 = {3.85E-9, 2.2E-9, 1.30689, 1.27525};
+//    static final double[] c1 = {-5.287E-9, 3.384E-9, -0.026, -0.026};
+//    static final double[] c2 = {2.2594E-9, 6.41E-9, 0.017956, -0.00149};
+//    static final double[] c3 = {1.38411E-9, 1.63665E-8, -0.024, -0.0128};
 
     public static final double[] ICE_REFR_INDEX = {
             2.365E-011,2.669E-011,6.268E-011,4.172E-010,8.036E-010,
@@ -82,4 +83,7 @@ public class OlciSnowAlbedoConstants {
     public static final double BB_WVL_3 = 2.4;
 
     public static final double RHO_ICE = 917.0;  // in kg*m^-3
+
+    // define here, we do not want a dependency to Idepix just for this:
+    public static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
 }

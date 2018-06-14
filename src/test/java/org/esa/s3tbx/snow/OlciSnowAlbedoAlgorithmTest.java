@@ -367,6 +367,49 @@ public class OlciSnowAlbedoAlgorithmTest {
         System.out.println();
     }
 
+//    @Test
+//    public void testComputeBroadbandAlbedo() throws Exception {
+//        final double grainDiamMicrons = 200.0;
+//        final double sza = 60.0;
+//        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
+//        final RefractiveIndexTable refractiveIndexTable = new RefractiveIndexTable();
+//        refractiveIndexTable.readTableFromFile();
+//        final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();
+//        solarSpectrumTable.readTableFromFile();
+//
+//        RefractiveIndexTable refractiveIndexInterpolatedTable =
+//                SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
+//                                                         solarSpectrumTable);
+//
+//        double[] planarBroadbandAlbedo = null;
+//        for (int k=0; k<10000; k++) {
+//            planarBroadbandAlbedo =
+//                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0, grainDiamMicrons,
+//                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+//            if (k % 1000 == 0) {
+//                System.out.println("k1 = " + k);
+//            }
+//        }
+//        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
+//            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
+//        }
+//
+//        double[] sphericalBroadbandAlbedo = null;
+//        for (int k=0; k<10000; k++) {
+//            sphericalBroadbandAlbedo =
+//                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0, grainDiamMicrons,
+//                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+//            if (k % 1000 == 0) {
+//                System.out.println("k2 = " + k);
+//            }
+//        }
+//        for (double aSphericalBroadbandAlbedo : sphericalBroadbandAlbedo) {
+//            System.out.println("sphericalBroadbandAlbedo = " + aSphericalBroadbandAlbedo);
+//        }
+//
+//        System.out.println();
+//    }
+
     @Test
     public void testComputeBroadbandAlbedo() throws Exception {
         final double grainDiamMicrons = 200.0;
@@ -374,18 +417,18 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final RefractiveIndexTable refractiveIndexTable = new RefractiveIndexTable();
         refractiveIndexTable.readTableFromFile();
-        final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();
-        solarSpectrumTable.readTableFromFile();
+        final SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
+        solarSpectrumExtendedTable.readTableFromFile();
 
         RefractiveIndexTable refractiveIndexInterpolatedTable =
                 SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
-                                                         solarSpectrumTable);
+                                                         solarSpectrumExtendedTable);
 
         double[] planarBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             planarBroadbandAlbedo =
                     OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0, grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+                                                                   refractiveIndexInterpolatedTable, solarSpectrumExtendedTable, sza);
             if (k % 1000 == 0) {
                 System.out.println("k1 = " + k);
             }
@@ -398,7 +441,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         for (int k=0; k<10000; k++) {
             sphericalBroadbandAlbedo =
                     OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0, grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
+                                                                   refractiveIndexInterpolatedTable, solarSpectrumExtendedTable, sza);
             if (k % 1000 == 0) {
                 System.out.println("k2 = " + k);
             }
@@ -409,6 +452,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
         System.out.println();
     }
+
 
     @Test
     public void testComputePollutedSnowParms() throws Exception {
@@ -439,7 +483,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
 
         final OlciSnowAlbedoAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(pollutedSnowParams, sza, Double.NaN, false);
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN, false);
         assertNotNull(spectralAlbedosPolluted);
         final double[] sphericalAlbedos = spectralAlbedosPolluted.getSpectralAlbedos()[0];
         assertNotNull(sphericalAlbedos);

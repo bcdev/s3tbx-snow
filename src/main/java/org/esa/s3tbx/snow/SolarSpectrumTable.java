@@ -17,15 +17,15 @@ public class SolarSpectrumTable {
 
 //    public static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 7923;
 //    public static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "solar_spectrum.txt";
-    public static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 411;
-    public static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "solar_spectrum_2.txt";
+    private static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 411;
+    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "solar_spectrum_2.txt";
 
     private double[] wvl;
     private double[] solarSpectrum;
     private int length;
     private String filename;
 
-    public SolarSpectrumTable() {
+    SolarSpectrumTable() {
         length = SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH;
         filename = SOLAR_SPECTRUM_DEFAULT_FILE_NAME;
         wvl = new double[length];
@@ -33,7 +33,7 @@ public class SolarSpectrumTable {
         readTableFromFile();
     }
 
-    public void readTableFromFile() {
+    private void readTableFromFile() {
         final InputStream inputStream = getClass().getResourceAsStream(filename);
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -46,7 +46,8 @@ public class SolarSpectrumTable {
                 st = new StringTokenizer(line, ";", false);
 
                 if (st.hasMoreTokens()) {
-                    setWvl(i, Double.parseDouble(st.nextToken())/1000.0);  // in microns! For the moment we assume table has nm.
+                    String nextToken = st.nextToken();
+                    setWvl(i, Double.parseDouble(nextToken)/1000.0);  // in microns! For the moment we assume table has nm.
                 }
                 if (st.hasMoreTokens()) {
                     setSolarSpectrum(i, Double.parseDouble(st.nextToken()));
@@ -64,16 +65,12 @@ public class SolarSpectrumTable {
         }
     }
 
-    public void setWvl(int index, double wvl) {
+    private void setWvl(int index, double wvl) {
         this.wvl[index] = wvl;
     }
 
     public double getWvl(int index) {
         return wvl[index];
-    }
-
-    public double[] getWvl() {
-        return wvl;
     }
 
     public double[] getSolarSpectrum() {
@@ -84,7 +81,7 @@ public class SolarSpectrumTable {
         return solarSpectrum[index];
     }
 
-    public void setSolarSpectrum(int index, double spectrum) {
+    private void setSolarSpectrum(int index, double spectrum) {
         this.solarSpectrum[index] = spectrum;
     }
 
