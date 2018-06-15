@@ -25,7 +25,7 @@ public class SolarSpectrumExtendedTable {
     private int length;
     private String filename;
 
-    public SolarSpectrumExtendedTable() {
+    SolarSpectrumExtendedTable() {
         length = SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH;
         filename = SOLAR_SPECTRUM_DEFAULT_FILE_NAME;
         wvl = new double[length];
@@ -67,12 +67,12 @@ public class SolarSpectrumExtendedTable {
         }
     }
 
-    public void setWvl(int rowIndexndex, double wvl) {
-        this.wvl[rowIndexndex] = wvl;
+    private void setWvl(int rowIndex, double wvl) {
+        this.wvl[rowIndex] = wvl;
     }
 
-    public double getWvl(int rowIndexndex) {
-        return wvl[rowIndexndex];
+    public double getWvl(int rowIndex) {
+        return wvl[rowIndex];
     }
 
     public double[] getWvl() {
@@ -87,7 +87,7 @@ public class SolarSpectrumExtendedTable {
         return solarSpectrum[szaIndex][rowIndex];
     }
 
-    public void setSolarSpectrum(int szaIndex, int rowIndex, double spectrum) {
+    private void setSolarSpectrum(int szaIndex, int rowIndex, double spectrum) {
         this.solarSpectrum[szaIndex][rowIndex] = spectrum;
     }
 

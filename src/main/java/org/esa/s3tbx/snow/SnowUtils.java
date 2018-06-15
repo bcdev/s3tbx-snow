@@ -63,37 +63,6 @@ public class SnowUtils {
         return fLambda;
     }
 
-    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
-        // todo: write test!
-        int lowerIndex = (int) sza/15;   // 0, 1, 2, 3, 4, 5
-        int upperIndex = lowerIndex + 1;
-
-        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
-        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
-            if (upperIndex <= 5) {
-                final double cosLowerSza = Math.cos(15. * lowerIndex * MathUtils.DTOR);
-                final double cosUpperSza = Math.cos(15. * upperIndex * MathUtils.DTOR);
-                final double cosSza = Math.cos(sza * MathUtils.DTOR);
-                final double frac = (cosSza - cosLowerSza) / (cosUpperSza - cosLowerSza);
-                final double lowerFlux = solarSpectrum[lowerIndex][i];
-                final double upperFlux = solarSpectrum[upperIndex][i];
-                final double interpolFlux = lowerFlux + frac * (upperFlux - lowerFlux);
-                solarSpectrumInterpolated[i] = interpolFlux;
-            } else {
-                final double cosSza75 = Math.cos(75. * MathUtils.DTOR);
-                final double cosSza = Math.cos(sza * MathUtils.DTOR);
-                final double frac = (cosSza75 - cosSza) / cosSza75;  // sza = 90deg --> cos(sza) = 0
-                final double lowerFlux = solarSpectrum[5][i];
-                final double upperFlux = 0.0; // sza = 90deg
-                final double extrapolFlux = lowerFlux + frac * (upperFlux - lowerFlux);
-                solarSpectrumInterpolated[i] = extrapolFlux;
-            }
-        }
-
-        return solarSpectrumInterpolated;
-    }
-
-
     public static double[] splineInterpolate(double[] x, double[] y, double[] xi) {
         final LinearInterpolator linearInterpolator = new LinearInterpolator();
         PolynomialSplineFunction psf = linearInterpolator.interpolate(x, y);
@@ -155,5 +124,40 @@ public class SnowUtils {
         return -coss * cosv - sins * sinv * cosphi;
     }
 
+    static double getExtrapolFlux(double lowerFlux, double sza) {
+        final double cosSza75 = Math.cos(75. * MathUtils.DTOR);
+        final double cosSza = Math.cos(sza * MathUtils.DTOR);
+        final double frac = (cosSza75 - cosSza) / cosSza75;  // sza = 90deg --> cos(sza) = 0
+        final double upperFlux = 0.0; // sza = 90deg
+        return lowerFlux + frac * (upperFlux - lowerFlux);
+    }
+
+    static double getInterpolFlux(double[][] solarSpectrum, double sza, int lowerIndex, int upperIndex, int i) {
+        final double cosLowerSza = Math.cos(15. * lowerIndex * MathUtils.DTOR);
+        final double cosUpperSza = Math.cos(15. * upperIndex * MathUtils.DTOR);
+        final double cosSza = Math.cos(sza * MathUtils.DTOR);
+        final double frac = (cosSza - cosLowerSza) / (cosUpperSza - cosLowerSza);
+        final double lowerFlux = solarSpectrum[lowerIndex][i];
+        final double upperFlux = solarSpectrum[upperIndex][i];
+        return lowerFlux + frac * (upperFlux - lowerFlux);
+    }
+
+    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
+        int lowerIndex = (int) sza/15;   // 0, 1, 2, 3, 4, 5
+        int upperIndex = lowerIndex + 1;
+
+        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
+        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
+            if (upperIndex <= 5) {
+                final double interpolFlux = getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, i);
+                solarSpectrumInterpolated[i] = interpolFlux;
+            } else {
+                final double extrapolFlux = getExtrapolFlux(solarSpectrum[5][i], sza);
+                solarSpectrumInterpolated[i] = extrapolFlux;
+            }
+        }
+
+        return solarSpectrumInterpolated;
+    }
 
 }

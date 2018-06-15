@@ -1,6 +1,5 @@
 package org.esa.s3tbx.snow;
 
-import junit.framework.Assert;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
@@ -28,8 +27,8 @@ public class SnowUtilsTest {
     }
 
     @Test
-    public void testSetupRcSourceBandNames() throws Exception {
-        String[] namesAlbedo = new String[]{"Oa01_radiance", "Oa17_radiance"};;
+    public void testSetupRcSourceBandNames() {
+        String[] namesAlbedo = new String[]{"Oa01_radiance", "Oa17_radiance"};
         String[] namesPpa = new String[]{"Oa01_radiance", "Oa07_radiance", "Oa13_radiance", "Oa21_radiance"};
         final String[] rcSourceBands = SnowUtils.setupRcSourceBands(namesAlbedo, namesPpa);
         assertNotNull(rcSourceBands);
@@ -42,8 +41,85 @@ public class SnowUtilsTest {
     }
 
     @Test
-    public void testRoundTo4DecimalPlaces() throws Exception {
+    public void testRoundTo4DecimalPlaces() {
         assertEquals(1.2346, SnowUtils.cutTo4DecimalPlaces(1.2345678), 1.E-8);
         assertEquals(7.6543, SnowUtils.cutTo4DecimalPlaces(7.654321), 1.E-8);
+    }
+
+    @Test
+    public void testGetInterpolFlux() {
+        SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
+        double[][] solarSpectrum = solarSpectrumExtendedTable.getSolarSpectrum();
+
+        int wvlIndex = 0;   // first row in 'final_table_fluxes_angles.txt' file
+        double sza = 60.0;
+        int lowerIndex = (int) sza/15;
+        int upperIndex = lowerIndex + 1;
+
+        double interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(530.89, interpolFlux, 1.E-3);
+
+        sza = 65.0;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(366.816, interpolFlux, 1.E-3);
+
+        sza = 67.5;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(282.1417, interpolFlux, 1.E-3);
+
+        sza = 70.0;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(195.922, interpolFlux, 1.E-3);
+
+        sza = 74.999999;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(19.51, interpolFlux, 1.E-3);
+
+        wvlIndex = 73;   // some row in 'final_table_fluxes_angles.txt' file
+        sza = 15.0;
+        lowerIndex = (int) sza/15;
+        upperIndex = lowerIndex + 1;
+
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(1316.1, interpolFlux, 1.E-3);
+
+        sza = 20.0;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(1278.549, interpolFlux, 1.E-3);
+
+        sza = 22.5;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(1255.913, interpolFlux, 1.E-3);
+
+        sza = 25.;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(1230.761, interpolFlux, 1.E-3);
+
+        sza = 30.0;
+        interpolFlux = SnowUtils.getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, wvlIndex);
+        assertEquals(1173.1, interpolFlux, 1.E-3);
+    }
+
+    @Test
+    public void testGetExtrapolFlux() {
+        SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
+        double[][] solarSpectrum = solarSpectrumExtendedTable.getSolarSpectrum();
+
+        double sza = 75.0;
+        int lowerIndex = (int) sza/15;
+        double extrapolFlux = SnowUtils.getExtrapolFlux(solarSpectrum[lowerIndex][0], sza);
+        assertEquals(19.51, extrapolFlux, 1.E-3);
+
+        sza = 80.0;
+        extrapolFlux = SnowUtils.getExtrapolFlux(solarSpectrum[lowerIndex][0], sza);
+        assertEquals(13.089, extrapolFlux, 1.E-3);
+
+        sza = 85.0;
+        extrapolFlux = SnowUtils.getExtrapolFlux(solarSpectrum[lowerIndex][0], sza);
+        assertEquals(6.569, extrapolFlux, 1.E-3);
+
+        sza = 90.0;
+        extrapolFlux = SnowUtils.getExtrapolFlux(solarSpectrum[lowerIndex][0], sza);
+        assertEquals(0.0, extrapolFlux, 1.E-3);
     }
 }
