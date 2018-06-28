@@ -48,7 +48,7 @@ import java.util.Map;
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
         copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.2-SNAPSHOT")
+        version = "2.0.3-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 
@@ -121,7 +121,7 @@ public class OlciSnowAlbedoOp extends Operator {
             label = "Write additional parameters (f, l, m, R_0) in case of polluted snow (expert option)",
             description =
                     "If selected, additional parameters (f, l, m, R_0) will be written to the target product in case " +
-                            "of polluted snow. Useful for experts only.")
+                            "of polluted snow. Option 'Consider snow pollution' must be selected as well. Useful for experts only.")
     private boolean writeAdditionalSnowPollutionParms;
 
     @Parameter(defaultValue = "0.1",
@@ -181,10 +181,11 @@ public class OlciSnowAlbedoOp extends Operator {
             optional = true)
     private Product cloudMaskProduct;
 
-    @Parameter(defaultValue = "false",
-            label = "Use new algorithm for spectral albedo (AK, 20180404)",
-            description = "If selected, new algorithm for spectral albedo (provided by AK, 20180404) is used.")
-    private boolean useAlgoApril2018;
+//    @Parameter(defaultValue = "false",
+//            label = "Use new algorithm for spectral albedo (AK, 20180404)",
+//            description = "If selected, new algorithm for spectral albedo (provided by AK, 20180404) is used.")
+//    private boolean useAlgoApril2018;
+    private boolean useAlgoApril2018 = true;     // confirmed by AK, 20180628
 
 
     private Sensor sensor = Sensor.OLCI;
@@ -457,13 +458,13 @@ public class OlciSnowAlbedoOp extends Operator {
                                 }
                                 if (useAlgoApril2018 && writeAdditionalSnowPollutionParms) {
                                     final Band pollutionFBand = targetProduct.getBand(POLLUTION_F_BAND_NAME);
-                                    targetTiles.get(pollutionFBand).setSample(x, y, f);
+                                    targetTiles.get(pollutionFBand).setSample(x, y, isPollutedSnow ? f : Float.NaN);
                                     final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
-                                    targetTiles.get(pollutionLBand).setSample(x, y, l);
+                                    targetTiles.get(pollutionLBand).setSample(x, y, isPollutedSnow ? l : Float.NaN);
                                     final Band pollutionMBand = targetProduct.getBand(POLLUTION_M_BAND_NAME);
-                                    targetTiles.get(pollutionMBand).setSample(x, y, m);
+                                    targetTiles.get(pollutionMBand).setSample(x, y, isPollutedSnow ? m : Float.NaN);
                                     final Band pollutionR0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
-                                    targetTiles.get(pollutionR0Band).setSample(x, y, r0);
+                                    targetTiles.get(pollutionR0Band).setSample(x, y, isPollutedSnow ? r0 : Float.NaN);
                                 }
                             }
                             if (considerNdsiSnowMask) {
