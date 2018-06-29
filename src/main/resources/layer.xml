@@ -33,7 +33,8 @@
 
     <folder name="Services">
         <folder name="JavaHelp">
-            <file name="helpset.xml" url="helpset.xml">
+            <!--<file name="helpset.xml" url="helpset.xml">-->
+            <file name="org-esa-s3tbx-s3tbx-snow-helpset.xml" url="helpset.xml">
                 <attr name="position" intvalue="3600"/>
             </file>
         </folder>

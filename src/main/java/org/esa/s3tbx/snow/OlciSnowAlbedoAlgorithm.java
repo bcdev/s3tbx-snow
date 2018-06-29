@@ -57,7 +57,7 @@ class OlciSnowAlbedoAlgorithm {
      *                           (double, double, double, double, double)}
      * @param sza - sun zenith angle (deg)
      * @param vza - view zenith angle (deg)
-     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used
+     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used ('Manual_04_04_2018.docx')
      *
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
