@@ -15,13 +15,13 @@ import static org.junit.Assert.assertNotNull;
 public class OlciSnowAlbedoAlgorithmTest {
 
     @Test
-    public void testComputeGrainDiameter() throws Exception {
+    public void testComputeGrainDiameter() {
         final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274, 1020.0);
         assertEquals(255.819, grainDiameter, 1.E-2);
     }
 
     @Test
-    public void testIntegrateR_b2() throws Exception {
+    public void testIntegrateR_b2() {
 
         double r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(200.0);
         assertEquals(0.0947, r_b2, 1.E-2);
@@ -40,7 +40,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testPolynominalCurveFitting() throws Exception {
+    public void testPolynominalCurveFitting() {
         double[] initialGuess = {0., 0., 0., 0., 0.};
 
         PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
@@ -270,7 +270,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testSigmoidalCurveFitting() throws Exception {
+    public void testSigmoidalCurveFitting() {
 
         SigmoidalFitter curveFitter = new SigmoidalFitter(new LevenbergMarquardtOptimizer());
 
@@ -294,7 +294,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testExp4ParamCurveFitting() throws Exception {
+    public void testExp4ParamCurveFitting() {
 
         Exp4ParamFitter curveFitter = new Exp4ParamFitter(new LevenbergMarquardtOptimizer());
 
@@ -330,7 +330,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testExp4ParamCurveFitting_aoki() throws Exception {
+    public void testExp4ParamCurveFitting_aoki() {
 
         // this test refers to AK TN 20171010 !!!
 
@@ -367,51 +367,8 @@ public class OlciSnowAlbedoAlgorithmTest {
         System.out.println();
     }
 
-//    @Test
-//    public void testComputeBroadbandAlbedo() throws Exception {
-//        final double grainDiamMicrons = 200.0;
-//        final double sza = 60.0;
-//        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
-//        final RefractiveIndexTable refractiveIndexTable = new RefractiveIndexTable();
-//        refractiveIndexTable.readTableFromFile();
-//        final SolarSpectrumTable solarSpectrumTable = new SolarSpectrumTable();
-//        solarSpectrumTable.readTableFromFile();
-//
-//        RefractiveIndexTable refractiveIndexInterpolatedTable =
-//                SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
-//                                                         solarSpectrumTable);
-//
-//        double[] planarBroadbandAlbedo = null;
-//        for (int k=0; k<10000; k++) {
-//            planarBroadbandAlbedo =
-//                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0, grainDiamMicrons,
-//                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
-//            if (k % 1000 == 0) {
-//                System.out.println("k1 = " + k);
-//            }
-//        }
-//        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
-//            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
-//        }
-//
-//        double[] sphericalBroadbandAlbedo = null;
-//        for (int k=0; k<10000; k++) {
-//            sphericalBroadbandAlbedo =
-//                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0, grainDiamMicrons,
-//                                                                   refractiveIndexInterpolatedTable, solarSpectrumTable);
-//            if (k % 1000 == 0) {
-//                System.out.println("k2 = " + k);
-//            }
-//        }
-//        for (double aSphericalBroadbandAlbedo : sphericalBroadbandAlbedo) {
-//            System.out.println("sphericalBroadbandAlbedo = " + aSphericalBroadbandAlbedo);
-//        }
-//
-//        System.out.println();
-//    }
-
     @Test
-    public void testComputeBroadbandAlbedo() throws Exception {
+    public void testComputeBroadbandAlbedo() {
         final double grainDiamMicrons = 200.0;
         final double sza = 60.0;
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
@@ -455,7 +412,7 @@ public class OlciSnowAlbedoAlgorithmTest {
 
 
     @Test
-    public void testComputePollutedSnowParms() throws Exception {
+    public void testComputePollutedSnowParms() {
 
         // test input provided by AK in 'input_soot.dat' (20180124):
         final double sza = 42.3621;
@@ -474,7 +431,7 @@ public class OlciSnowAlbedoAlgorithmTest {
     }
 
     @Test
-    public void testComputeSpectralAlbedosPolluted() throws Exception {
+    public void testComputeSpectralAlbedosPolluted() {
 
         // test input provided by AK in 'input_soot.dat' (20180124):
         final double sza = 42.3621;
@@ -518,5 +475,41 @@ public class OlciSnowAlbedoAlgorithmTest {
         assertEquals(0.5984, planarAlbedos[19], 1.E-4);     // 940nm
         assertEquals(0.4295, planarAlbedos[20], 1.E-4);     // 1020nm
 
+    }
+
+    @Test
+    public void testComputeSpectralAlbedosPollutedFromFourWavelengths() {
+        // test input numbers taken from:
+        // subset_0_of_S3A_OL_1_EFR____20180424T100524_20180424T100824_20180425T140441_0179_030_236_2160_LN1_O_NT_002.dim
+        // results agree with AK Fortran test code: 'snow1.f'
+        // everything stored in F:\olafd\s3snow\from_maxime\bugs, 20180706
+
+        final double[] brr = new double[]{0.7, 0.8171, 0.7327, 0.3711};
+        final double sza = 36.9;
+        final double vza = 3.08;
+
+        OlciSnowAlbedoAlgorithm.SpectralAlbedoResult result =
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, sza, vza);
+        assertNotNull(result);
+        assertEquals(22.198, result.getL(), 1.E-3);
+        assertEquals(2.7343, result.getM(), 1.E-4);
+        assertEquals(0.3584E-03, result.getF(), 1.E-6);
+
+        assertNotNull(result.getSpectralAlbedos());
+        assertEquals(2, result.getSpectralAlbedos().length);
+        final double[] spectralAlbedosSpherical = result.getSpectralAlbedos()[0];
+        final double[] spectralAlbedosPlanar = result.getSpectralAlbedos()[1];
+
+        assertEquals(0.910854, spectralAlbedosSpherical[0], 1.E-6);
+        assertEquals(0.901209, spectralAlbedosPlanar[0], 1.E-6);
+
+        assertEquals(0.889936, spectralAlbedosSpherical[5], 1.E-6);
+        assertEquals(0.878183, spectralAlbedosPlanar[5], 1.E-6);
+
+        assertEquals(0.733311, spectralAlbedosSpherical[16], 1.E-6);
+        assertEquals(0.70783, spectralAlbedosPlanar[16], 1.E-6);
+
+        assertEquals(0.450026, spectralAlbedosSpherical[20], 1.E-6);
+        assertEquals(0.410867, spectralAlbedosPlanar[20], 1.E-6);
     }
 }

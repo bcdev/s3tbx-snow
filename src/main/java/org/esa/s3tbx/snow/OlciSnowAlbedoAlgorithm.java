@@ -392,7 +392,7 @@ class OlciSnowAlbedoAlgorithm {
         return Math.log(brr[3] / brr[2]) * Math.log(brr[3] / brr[2]) / (x * x * alpha_2);
     }
 
-    private static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
+    static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
                                                                                           double sza,
                                                                                           double vza) {
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
@@ -405,33 +405,46 @@ class OlciSnowAlbedoAlgorithm {
 
         final double chi_3 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
         final double chi_4 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
-        final double alpha_3 = 4.0 * Math.PI * chi_3 / 0.865;
-        final double alpha_4 = 4.0 * Math.PI * chi_4 / 1.02;
+//        final double alpha_3 = 4.0 * Math.PI * chi_3 / 0.865;
+//        final double alpha_4 = 4.0 * Math.PI * chi_4 / 1.02;
+        final double alpha_3 = 1.E-3 * 4.0 * Math.PI * chi_3 / 0.865;  // in mm!   (hint of AK, 20180705)
+        final double alpha_4 = 1.E-3 * 4.0 * Math.PI * chi_4 / 1.02;
         final double b = Math.sqrt(alpha_3 / alpha_4);
         final double eps_1 = 1.0 / (1.0 - b);
         final double eps_2 = 1.0 / (1.0 - 1.0 / b);
         final double r_0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
         final double x = (k_mu_0 * k_mu) / r_0;   // [1], eq. (5)
-        final double l = Math.log(brr[3] / brr[0]) * Math.log(brr[3] / brr[0]) / (x * x * alpha_4);
+//        final double l = Math.log(brr[3] / brr[0]) * Math.log(brr[3] / brr[0]) / (x * x * alpha_4);
+        final double l = 1.E-6 * Math.log(brr[3] / r_0) * Math.log(brr[3] / r_0) / (x * x * alpha_4); // in mm!
 
         final double p_1 = Math.log(brr[0] / r_0) * Math.log(brr[0] / r_0);
         final double p_2 = Math.log(brr[1] / r_0) * Math.log(brr[1] / r_0);
         final double wvl_1 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[0];
         final double wvl_2 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[5];
-        final double m = Math.log(p_1 / p_2) / Math.log(wvl_1 / wvl_2);
+//        final double m = Math.log(p_1 / p_2) / Math.log(wvl_1 / wvl_2);
+        final double m = Math.log(p_1 / p_2) / Math.log(wvl_2 / wvl_1);  // wrong sign!  (hint of AK, 20180705)
+//        final double f = p_1 * Math.pow(wvl_1, m) / (x * x * l);
         final double f = p_1 * Math.pow(wvl_1, m) / (x * x * l);
-        // todo: return also r_0, f, l, m and optionally write to target product (AK 20180607)
 
         for (int i = 0; i < numWvl; i++) {
             final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
             final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
-            final double alpha_ice = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
+//            final double alpha_ice = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
+            final double alpha_ice = 1.E3 * 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2) , wvl in mm !!
 
-            spectralAlbedos[0][i] = Math.exp(-Math.sqrt(alpha_ice + f * Math.pow(wvl, -m)) * l);  // spectral spherical abledo
-            spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(alpha_ice + f * Math.pow(wvl, -m)) * l);  // spectral planar abledo
+//            spectralAlbedos[0][i] = Math.exp(-Math.sqrt(alpha_ice + f * Math.pow(wvl, -m)) * l);  // spectral spherical albedo
+//            spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(alpha_ice + f * Math.pow(wvl, -m)) * l);  // spectral planar albedo
+
+            // l is under sqrt, found 20180706:
+//            spectralAlbedos[0][i] = Math.exp(-Math.sqrt((alpha_ice + f * Math.pow(wvl, -m)) * l));  // spectral spherical albedo
+//            spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt((alpha_ice + f * Math.pow(wvl, -m)) * l));  // spectral planar albedo
+
+            // AK code differs from tech note last eqs. on p.3:
+            final double beta = (alpha_ice + f * Math.pow(wvl, 1.0) * m) * l;
+            spectralAlbedos[0][i] = Math.exp(-Math.sqrt(beta));  // spectral spherical albedo
+            spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(beta));  // spectral planar albedo
         }
 
-//        return spectralAlbedos;
         return new SpectralAlbedoResult(spectralAlbedos, f, l, m);
     }
 

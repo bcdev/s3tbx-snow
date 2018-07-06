@@ -48,7 +48,7 @@ import java.util.Map;
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
         copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.3-SNAPSHOT")
+        version = "2.0.4-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 
@@ -342,6 +342,9 @@ public class OlciSnowAlbedoOp extends Operator {
                             double l = Double.NaN;
                             double m = Double.NaN;
                             boolean isPollutedSnow = false;
+                            if (x == 195 && y == 82) {
+                                System.out.println("x = " + x);
+                            }
                             if (considerSnowPollution) {
                                 final double saa = saaTile.getSampleDouble(x, y);
                                 final double vaa = vaaTile.getSampleDouble(x, y);
@@ -362,7 +365,7 @@ public class OlciSnowAlbedoOp extends Operator {
                                     spectralAlbedos = spectralAlbedoPollutedResult.getSpectralAlbedos();
                                     if (useAlgoApril2018) {
                                         f = spectralAlbedoPollutedResult.getF();
-                                        l = spectralAlbedoPollutedResult.getL();
+                                        l = spectralAlbedoPollutedResult.getL() * 1000.;
                                         m = spectralAlbedoPollutedResult.getM();
                                     }
                                 } else {
