@@ -48,7 +48,7 @@ import java.util.Map;
         authors = "Alexander Kokhanovsky (EUMETSAT),  Olaf Danne (Brockmann Consult)",
         copyright = "(c) 2017, 2018 by ESA, EUMETSAT, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.4-SNAPSHOT")
+        version = "2.0.5-SNAPSHOT")
 
 public class OlciSnowAlbedoOp extends Operator {
 

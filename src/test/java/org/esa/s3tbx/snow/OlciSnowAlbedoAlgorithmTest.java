@@ -500,16 +500,28 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double[] spectralAlbedosSpherical = result.getSpectralAlbedos()[0];
         final double[] spectralAlbedosPlanar = result.getSpectralAlbedos()[1];
 
-        assertEquals(0.910854, spectralAlbedosSpherical[0], 1.E-6);
-        assertEquals(0.901209, spectralAlbedosPlanar[0], 1.E-6);
+//        assertEquals(0.910854, spectralAlbedosSpherical[0], 1.E-6);
+//        assertEquals(0.901209, spectralAlbedosPlanar[0], 1.E-6);
+//
+//        assertEquals(0.889936, spectralAlbedosSpherical[5], 1.E-6);
+//        assertEquals(0.878183, spectralAlbedosPlanar[5], 1.E-6);
+//
+//        assertEquals(0.733311, spectralAlbedosSpherical[16], 1.E-6);
+//        assertEquals(0.70783, spectralAlbedosPlanar[16], 1.E-6);
+//
+//        assertEquals(0.450026, spectralAlbedosSpherical[20], 1.E-6);
+//        assertEquals(0.410867, spectralAlbedosPlanar[20], 1.E-6);
 
-        assertEquals(0.889936, spectralAlbedosSpherical[5], 1.E-6);
-        assertEquals(0.878183, spectralAlbedosPlanar[5], 1.E-6);
+        assertEquals(0.731832, spectralAlbedosSpherical[0], 1.E-6);
+        assertEquals(0.706239, spectralAlbedosPlanar[0], 1.E-6);
 
-        assertEquals(0.733311, spectralAlbedosSpherical[16], 1.E-6);
-        assertEquals(0.70783, spectralAlbedosPlanar[16], 1.E-6);
+        assertEquals(0.818218, spectralAlbedosSpherical[5], 1.E-6);
+        assertEquals(0.799714, spectralAlbedosPlanar[5], 1.E-6);
 
-        assertEquals(0.450026, spectralAlbedosSpherical[20], 1.E-6);
-        assertEquals(0.410867, spectralAlbedosPlanar[20], 1.E-6);
+        assertEquals(0.741778, spectralAlbedosSpherical[16], 1.E-6);
+        assertEquals(0.71694, spectralAlbedosPlanar[16], 1.E-6);
+
+        assertEquals(0.454199, spectralAlbedosSpherical[20], 1.E-6);
+        assertEquals(0.415113, spectralAlbedosPlanar[20], 1.E-6);
     }
 }

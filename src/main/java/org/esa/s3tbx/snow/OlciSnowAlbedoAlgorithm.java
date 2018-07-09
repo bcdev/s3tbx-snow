@@ -440,7 +440,8 @@ class OlciSnowAlbedoAlgorithm {
 //            spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt((alpha_ice + f * Math.pow(wvl, -m)) * l));  // spectral planar albedo
 
             // AK code differs from tech note last eqs. on p.3:
-            final double beta = (alpha_ice + f * Math.pow(wvl, 1.0) * m) * l;
+//            final double beta = (alpha_ice + f * Math.pow(wvl, 1.0) * m) * l;
+            final double beta = (alpha_ice + f * Math.pow(wvl, -m)) * l;     // switched again, AK 20180709
             spectralAlbedos[0][i] = Math.exp(-Math.sqrt(beta));  // spectral spherical albedo
             spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(beta));  // spectral planar albedo
         }
