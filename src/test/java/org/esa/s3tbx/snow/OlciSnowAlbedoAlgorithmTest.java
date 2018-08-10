@@ -384,8 +384,11 @@ public class OlciSnowAlbedoAlgorithmTest {
         double[] planarBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             planarBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0, grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable, solarSpectrumExtendedTable, sza);
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0,
+                                                                   grainDiamMicrons,
+                                                                   refractiveIndexInterpolatedTable,
+                                                                   solarSpectrumExtendedTable,
+                                                                   sza);
             if (k % 1000 == 0) {
                 System.out.println("k1 = " + k);
             }
@@ -397,8 +400,11 @@ public class OlciSnowAlbedoAlgorithmTest {
         double[] sphericalBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             sphericalBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0, grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable, solarSpectrumExtendedTable, sza);
+                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0,
+                                                                   grainDiamMicrons,
+                                                                   refractiveIndexInterpolatedTable,
+                                                                   solarSpectrumExtendedTable,
+                                                                   sza);
             if (k % 1000 == 0) {
                 System.out.println("k2 = " + k);
             }
@@ -438,9 +444,11 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double grainDiam = 1.537;
         final double soot = 1.519;
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
+        final double deltaBrr = 1.0;
 
         final OlciSnowAlbedoAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN, false);
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN,
+                                                                       deltaBrr, false);
         assertNotNull(spectralAlbedosPolluted);
         final double[] sphericalAlbedos = spectralAlbedosPolluted.getSpectralAlbedos()[0];
         assertNotNull(sphericalAlbedos);
@@ -485,11 +493,12 @@ public class OlciSnowAlbedoAlgorithmTest {
         // everything stored in F:\olafd\s3snow\from_maxime\bugs, 20180706
 
         final double[] brr = new double[]{0.7, 0.8171, 0.7327, 0.3711};
+        final double deltaBrr = 1.0;
         final double sza = 36.9;
         final double vza = 3.08;
 
         OlciSnowAlbedoAlgorithm.SpectralAlbedoResult result =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, sza, vza);
+                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
         assertNotNull(result);
         assertEquals(22.198, result.getL(), 1.E-3);
         assertEquals(2.7343, result.getM(), 1.E-4);

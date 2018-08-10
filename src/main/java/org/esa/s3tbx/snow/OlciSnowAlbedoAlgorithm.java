@@ -65,9 +65,10 @@ class OlciSnowAlbedoAlgorithm {
                                                                double[] pollutedSnowParams,
                                                                double sza,
                                                                double vza,
+                                                               double deltaBrr,
                                                                boolean useAlgoApril2018) {
         if (useAlgoApril2018) {
-            return computeSpectralAlbedosPollutedFromFourWavelengths(brr, sza, vza);
+            return computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
         } else {
             return computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
         }
@@ -93,8 +94,7 @@ class OlciSnowAlbedoAlgorithm {
             spectralAlbedos[1][i] = Math.pow(spectralAlbedos[0][i], ak0);  // planar albedo
         }
 
-//        return spectralAlbedos;
-        return new SpectralAlbedoResult(spectralAlbedos, 0, 0, 0);
+        return new SpectralAlbedoResult(spectralAlbedos, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
 
@@ -393,6 +393,7 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
+                                                                                          double deltaBrr,
                                                                                           double sza,
                                                                                           double vza) {
         final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
@@ -412,13 +413,13 @@ class OlciSnowAlbedoAlgorithm {
         final double b = Math.sqrt(alpha_3 / alpha_4);
         final double eps_1 = 1.0 / (1.0 - b);
         final double eps_2 = 1.0 / (1.0 - 1.0 / b);
-        final double r_0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
-        final double x = (k_mu_0 * k_mu) / r_0;   // [1], eq. (5)
+        final double r0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
+        final double x = (k_mu_0 * k_mu) / r0;   // [1], eq. (5)
 //        final double l = Math.log(brr[3] / brr[0]) * Math.log(brr[3] / brr[0]) / (x * x * alpha_4);
-        final double l = 1.E-6 * Math.log(brr[3] / r_0) * Math.log(brr[3] / r_0) / (x * x * alpha_4); // in mm!
+        final double l = 1.E-6 * Math.log(brr[3] / r0) * Math.log(brr[3] / r0) / (x * x * alpha_4); // in mm!
 
-        final double p_1 = Math.log(brr[0] / r_0) * Math.log(brr[0] / r_0);
-        final double p_2 = Math.log(brr[1] / r_0) * Math.log(brr[1] / r_0);
+        final double p_1 = Math.log(brr[0] / r0) * Math.log(brr[0] / r0);
+        final double p_2 = Math.log(brr[1] / r0) * Math.log(brr[1] / r0);
         final double wvl_1 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[0];
         final double wvl_2 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[5];
 //        final double m = Math.log(p_1 / p_2) / Math.log(wvl_1 / wvl_2);
@@ -446,7 +447,35 @@ class OlciSnowAlbedoAlgorithm {
             spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(beta));  // spectral planar albedo
         }
 
-        return new SpectralAlbedoResult(spectralAlbedos, f, l, m);
+        // relative error estimation...
+        double[] z = new double[4];
+        for (int i = 0; i < z.length; i++) {
+            z[i] = 1.0 / Math.log(brr[i] / r0);
+        }
+
+        final double s = 0.0; // todo: unreadable, check with AK, set to 0.0 in the meantime
+
+        final double nu_1 = 2.0*eps_1 - 2.0 * eps_1 * z[3];
+        final double nu_2 = 2.0*eps_2 + 2.0*eps_1*1.0/Math.log(brr[3] / r0);
+
+        double[] w = new double[4];
+        w[0] = 2.0*z[0] / (m*Math.log(wvl_2/wvl_1));
+        w[1] = -2.0*z[1] / (m*Math.log(wvl_2/wvl_1));
+        w[2] = -(w[0] + w[1])*eps_1;
+        w[3] = -(w[0] + w[1])*eps_2;
+
+        double[] h = new double[4];
+        h[0] = 2.0*(1.0 + s) *z[0];
+        h[1] = -2.0*s*z[1];
+        h[2] = -eps_1*(h[0] + h[1] + 2.0*z[3]);
+        h[3] = 2.0*eps_2*(z[3] + s*z[1] - (1.0 + s*z[0])*z[0]) - 2.0*z[3];
+
+        final double r0RelErr = computeR0RelErr(r0, brr, eps_1, eps_2, deltaBrr);
+        final double lRelErr = computeLRelErr(l, brr, nu_1, nu_2, deltaBrr);
+        final double mRelErr = computeMRelErr(m, brr, w, deltaBrr);
+        final double fRelErr = computeFRelErr(f, brr, h, deltaBrr);
+
+        return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, r0RelErr, fRelErr, lRelErr, mRelErr);
     }
 
     /**
@@ -472,21 +501,75 @@ class OlciSnowAlbedoAlgorithm {
         return planarAlbedos;
     }
 
+    private static double computeR0RelErr(double r0, double[] brr, double eps_1, double eps_2, double deltaBrr) {
+        // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
+        double r0RelErr = Math.sqrt(eps_1 * eps_1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
+                                            eps_2 * eps_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+        // make sure error is positive and does not exceed value itself
+        return Math.min(Math.abs(r0), Math.abs(r0RelErr));
+    }
+
+    private static double computeLRelErr(double l, double[] brr, double nu_1, double nu_2, double deltaBrr) {
+        // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
+        double lRelErr = Math.sqrt(nu_1 * nu_1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
+                                           nu_2 * nu_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+        // make sure error is positive and does not exceed value itself
+        return Math.min(Math.abs(l), Math.abs(lRelErr));
+    }
+
+    private static double computeMRelErr(double m, double[] brr, double[] w, double deltaBrr) {
+        // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
+        double sum = 0.0;
+        for (int i = 0; i < brr.length; i++) {
+            sum += w[i]*w[i]*deltaBrr*deltaBrr/(brr[i]*brr[i]);
+        }
+        final double mRelErr = Math.sqrt(sum);
+        // make sure error is positive and does not exceed value itself
+        return Math.min(Math.abs(m), Math.abs(mRelErr));
+    }
+
+    private static double computeFRelErr(double f, double[] brr, double[] h, double deltaBrr) {
+        // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
+        double sum = 0.0;
+        for (int i = 0; i < brr.length; i++) {
+            sum += h[i]*h[i]*deltaBrr*deltaBrr/(brr[i]*brr[i]);
+        }
+        final double fRelErr = Math.sqrt(sum);
+        return Math.min(Math.abs(f), Math.abs(fRelErr));
+    }
+
+    
     static class SpectralAlbedoResult {
         private final double[][] spectralAlbedos;
+        private final double r0;
         private final double f;
         private final double l;
         private final double m;
 
-        SpectralAlbedoResult(double[][] spectralAlbedos, double f, double l, double m) {
+        private final double r0RelErr;
+        private final double fRelErr;
+        private final double lRelErr;
+        private final double mRelErr;
+
+        SpectralAlbedoResult(double[][] spectralAlbedos, double r0, double f, double l, double m,
+                             double r0RelErr, double fRelErr, double lRelErr, double mRelErr) {
             this.spectralAlbedos = spectralAlbedos;
+            this.r0 = r0;
             this.f = f;
             this.l = l;
             this.m = m;
+            this.r0RelErr = r0RelErr;
+            this.fRelErr = fRelErr;
+            this.lRelErr = lRelErr;
+            this.mRelErr = mRelErr;
         }
 
         public double[][] getSpectralAlbedos() {
             return spectralAlbedos;
+        }
+
+        public double getR0() {
+            return r0;
         }
 
         public double getF() {
@@ -499,6 +582,22 @@ class OlciSnowAlbedoAlgorithm {
 
         public double getM() {
             return m;
+        }
+
+        public double getR0RelErr() {
+            return r0RelErr;
+        }
+
+        public double getfRelErr() {
+            return fRelErr;
+        }
+
+        public double getlRelErr() {
+            return lRelErr;
+        }
+
+        public double getmRelErr() {
+            return mRelErr;
         }
     }
 }
