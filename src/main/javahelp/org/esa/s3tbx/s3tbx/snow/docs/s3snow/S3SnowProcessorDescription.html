@@ -16,8 +16,9 @@
 
 <html>
 <head>
-    <title>SNAP Data Processors - Sentinel-3 Snow Processor Descriptions</title>
+    <title>SNAP Data Processors - Sentinel-3 Snow Processor Description</title>
     <link rel="stylesheet" href="../style.css">
+
 </head>
 
 <body>
@@ -25,16 +26,379 @@
 <table class="header">
     <tr class="header">
         <td class="header">&nbsp;
-            SNAP Data Processors - Sentinel-3 Snow Processor Descriptions
+            SNAP Data Processors - Sentinel-3 Snow Processor Description
         </td>
-        <td class="header" align="right"><a href="nbdocs://org.esa.snap.snap.help/org/esa/snap/snap/help/docs/general/overview/SnapOverview.html"><img src="../images/snap_header.jpg"
-                                                                                                                                                       border=0></a>
+        <td class="header" align="right"><a
+                href="nbdocs://org.esa.snap.snap.help/org/esa/snap/snap/help/docs/general/overview/SnapOverview.html"><img
+                src="../images/snap_header.jpg"
+                border=0></a>
         </td>
     </tr>
 </table>
 
-<!--todo: complete-->
-to be completed
+<h3>Processor Description</h3>
+
+<h4>I/O Parameters Tab</h4>
+
+<p align="center"><img src="../images/s3snow_io.png"></p>
+
+<h4>Source Product Group</h4>
+
+<p class="i1">
+    <b>OLCI L1b or Rayleigh corrected product: </b>
+    Used to select the OLCI L1b source product. The user can specify either an original L1b product, or a product which
+    has been Rayleigh corrected in a preprocessing step using the SNAP Rayleigh Correction processor. Using a Rayleigh
+    corrected product as input will save significant computation time for the snow property retrieval, but note that
+    the Rayleigh correction product MUST contain Rayleigh corrected reflectances for spectral bands 1, 5, 17
+    and 21 (400, 510, 865 and 1020nm), and in addition for all manually selected spectral wavelengths (see processing
+    parameter descriptions below). - If an original L1b product is set as input product, all required
+    Rayleigh corrected reflectances will be computed from an internal call of the SNAP
+    Rayleigh Correction processor.
+</p>
+<p class="i1">
+    Use the <b>...</b> button to open a data product currently not opened in the Sentinel Toolbox.
+</p>
+
+<p class="i1">
+    <b>Cloud mask product (optional): </b>
+    Used to select an optional source product providing a cloud mask. Usually this product should have been generated
+    in a preprocessing step using the IdePix pixel classification tool in the specific version provided
+    within the SEOM S3 for Snow project [1], but in principle this could be any kind
+    of product containing a mask with values 1.0 indicating cloudy pixels and 0.0 otherwise. A mandatory condition
+    to use this option is that the cloud mask product has been generated on the same raster (i.e. the same OLCI L1b
+    product) which is considered for the snow properties retrieval.
+</p>
+
+<h4>Target Product Group</h4>
+
+<p class="i1">
+    <b>Name:</b>
+    Used to specify the name of the target product.
+</p>
+
+<p class="i1">
+    <b>Save to:</b>
+    Used to specify whether the target product should be saved to the file system. The
+    combo box presents a list of file formats.
+</p>
+
+<p class="i1">
+    <b>Open in SNAP:</b>
+    Used to specify whether the target product should be opened in the Sentinel Toolbox.
+    When the target product is not saved, it is opened in the Sentinel Toolbox automatically.
+</p>
+
+
+<h3>The Processing Parameters</h3>
+
+<p align="center"><img src="../images/s3snow_procparms.png"></p>
+
+<p class="i1">
+    <b>Select OLCI wavelengths for spectral snow quantities: </b><br>
+    The OLCI wavelengths considered for the retrieval of spectral snow quantities. For the selected wavelengths,
+    the computed spectral snow quantities (i.e. spectral snow albedo, see description of processor output below)
+    will be written as corresponding band into the target product. If no band is selected, only broadband snow
+    quantities and other selected, wavelength-independent quantities are written to the target product.
+</p>
+
+<p class="i1">
+    <b>Name of binary mask band in cloud mask product (if present): </b><br>
+    The name of the binary mask band in cloud mask product (in case a cloud product was specified).
+    If the IdePix pixel classification tool has been used to generate this product (the usual case), the cloud mask
+    band has the default name 'cloud_over_snow'. If no cloud mask product was specified, this processing
+    parameter has no effect.
+</p>
+
+<p class="i1">
+    <b>Consider NDSI snow mask: </b><br>
+    If selected, an NDSI value will be computed from Rayleigh reflectances at wavelengths 865 and 1020nm:<br><br>
+
+    &emsp;&emsp; NDSI = (brr865 - brr1020) / (brr865 + brr1020) <br><br>
+
+    The considered pixel will be interpreted as snow pixel if
+</p>
+
+<ul class="i1">
+    <li>
+        the NDSI exceeds a threshold which is given in the
+        parameter below.
+    </li>
+    <li>
+        the Rayleigh reflectance at OLCI band 1 (400nm) is greater than 0.5.
+    </li>
+</ul>
+
+<p class="i1">
+    The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>NDSI threshold for snow identification: </b><br>
+    If an NDSI snow mask is considered (previous parameter), the considered pixel will be interpreted as snow pixel if
+    the NDSI exceeds the threshold specified here, and if the Rayleigh reflectance at OLCI band 1 (400nm) is greater
+    than 0.5. The default number is 0.03.
+</p>
+
+<p class="i1">
+    <b>Consider snow pollution: </b><br>
+    If selected, a test for snow pollution is applied for the considered snow pixel. The snow pixel is regarded as
+    'polluted' if the Rayleigh reflectance at OLCI band 1 (400nm) is lower than the difference of
+    a so-called 'R_0 threshold' and another user parameter 'snow pollution threshold' which is specified below. The
+    retrieval of the 'R_0 threshold' is described in detail in the ATBD [2]. - If the snow pixel is identified as polluted, a
+    specific snow property algorithm is applied which deviates from the clean snow retrieval. Details are described
+    in the ATBD [2].
+</p>
+
+<p class="i1">
+    <b>Write additional parameters (f, l, m, R_0) in case of polluted snow (expert option): </b><br>
+    If selected, additional parameters related to polluted snow will be computed for the pixels identified as
+    'polluted' (see above) and written to the target product. The interpretation of these parameters requires
+    detailed knowledge of the underlying algorithm, therefore this user parameter is considered as an 'expert option'.
+    The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>Write uncertainties of additional parameters in case of polluted snow (expert option): </b><br>
+    If selected together with the previous processing parameter, uncertainties of the additional parameters related to
+    polluted snow (see previous processing parameter) will be computed for the pixels identifies as 'polluted'
+    (see above) and written to the target product. The interpretation of these uncertainties requires
+    detailed knowledge of the underlying algorithm, therefore this user parameter is also considered as an 'expert option'.
+    The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>Assumed uncertainty of Rayleigh corrected reflectances: </b><br>
+    The assumed uncertainty of Rayleigh corrected reflectances, used for the error propagation applied with the previous
+    processing parameter. Default values is 0.01.
+</p>
+
+<p class="i1">
+    <b>Snow pollution threshold: </b><br>
+    Threshold for identification of polluted snow, as explained above with the processing parameter
+    'Consider snow pollution'. Default values is 0.1.
+</p>
+
+<p class="i1">
+    <b>Compute PPA: </b><br>
+    If selected, the spectral probability of photon absorption (PPA) is written to the target product
+    for each selected OLCI waveelngth. The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>Copy reflectance bands: </b><br>
+    If selected, the mandatory Rayleigh corrected reflectances for spectral bands 1, 5, 17
+    and 21 (400, 510, 865 and 1020nm), computed internally or provided with Rayleigh correction input product,
+    and in addition the Rayleigh corrected reflectances for all manually selected spectral wavelengths are
+    written to the target product. The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>OLCI reference wavelength: </b><br>
+    Reference wavelength used in the snow property algorithms. See the ATBD [2] for details. Default value is 1020nm.
+</p>
+
+<p class="i1">
+    <b>OLCI SVC gain for band 1 (400nm): </b><br>
+    OLCI system vicarious calibration (SVC) gain for band 1 (400nm). See [3] for details and explanations.
+    Default value is 0.9798, as proposed in [3], Table 2.
+</p>
+
+<p class="i1">
+    <b>OLCI SVC gain for band 5 (510nm): </b><br>
+    OLCI system vicarious calibration (SVC) gain for band 5 (510nm). See [3] for details and explanations.
+    Default value is 0.9892, as proposed in [3], Table 2.
+</p>
+
+<p class="i1">
+    <b>OLCI SVC gain for band 17 (865nm): </b><br>
+    OLCI system vicarious calibration (SVC) gain for band 17 (865nm). See [3] for details and explanations.
+    Default value is 1.0, as proposed in [3], Table 2.
+</p>
+
+<p class="i1">
+    <b>OLCI SVC gain for band 21 (1020nm): </b><br>
+    OLCI system vicarious calibration (SVC) gain for band 1 (400nm). See [3] for details and explanations.
+    Default value is 0.914, as proposed in [3], Table 2.
+</p>
+
+
+<h3>The Processor Output</h3>
+
+<p class="i1">
+    The processor provides a variable number of output bands, depending on the settings of the processing parameters.
+</p>
+
+<h4>Processor Output for default processing parameters</h4>
+
+<p align="center"><img src="../images/snow_product_default.png"></p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_vis: </b><br>
+    Spherical albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_nir: </b><br>
+    Spherical albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_sw: </b><br>
+    Spherical albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_vis: </b><br>
+    Planar albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_nir: </b><br>
+    Planar albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_sw: </b><br>
+    Planar albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>grain diameter: </b><br>
+    Diameter of snow grains in millimeters.
+</p>
+
+<p class="i1">
+    <b>snow_specific_area: </b><br>
+    The 'snow specific area' in square metres. See the ATBD [2] for more details.
+</p>
+
+<p class="i1">
+    <b>ice_indicator: </b><br>
+    The 'ice_indicator', which is just the ratio of Rayleigh corrected reflectances at 400 and 1020nm.
+</p>
+
+<p class="i1">
+    <b>quality_flags: </b><br>
+    The quality flags band from the OLCI L1b product.
+</p>
+
+
+<h4>Additional processor output for default processing parameters</h4>
+
+<p class="i1">
+The following case shows the processor output bands if 2 OLCI spectral wavelengths (bands 7 and 9, 620 and 673.75nm)
+were selected, and all boolean processing parameters explained above set to 'true'.
+
+<p align="center"><img src="../images/snow_product_allbands.png"></p>
+
+<p class="i1">
+    <b>rBRR_<i>n</i>: </b><br>
+    The Rayleigh corrected reflectances for band <i>n</i>. We have band 7 and 9, and in addition the bands
+    1, 5, 17 and 21 which are mandatory for the snow properties retrieval.
+</p>
+
+<p class="i1">
+    <b>albedo_spectral_spherical_<i>nnnn</i>: </b><br>
+    The spectral spherical albedo for the selected OLCI wavelengths <i>nnnn</i>.
+</p>
+
+<p class="i1">
+    <b>albedo_spectral_planar_<i>nnnn</i>: </b><br>
+    The spectral planar albedo for the selected OLCI wavelengths <i>nnnn</i>.
+</p>
+
+<p class="i1">
+    <b>ppa_spectral_<i>nnnn</i>: </b><br>
+    The spectral probability of photon absorption (PPA) for the selected OLCI wavelengths <i>nnnn</i>.
+</p>
+
+<p class="i1">
+    <b>pollution_mask: </b><br>
+    Mask band indicating polluted snow pixels (value 1.0, otherwise 0.0).
+</p>
+
+<p class="i1">
+    <b>f: </b><br>
+    Parameter 'f' derived from snow pollution algorithm. Physical meaning: snow impurity absorption coefficient.
+    See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>l: </b><br>
+    Parameter 'l' derived from snow pollution algorithm. Physical meaning: effective absorption length.
+    See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>m: </b><br>
+    Parameter 'm' derived from snow pollution algorithm. Physical meaning: absorption Angstrom parameter.
+    See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>r_0: </b><br>
+    Parameter 'r_0' derived from snow pollution algorithm. Physical meaning: reflectance of nonabsorbing snow layer.
+    See the ATBD [2] for more details.
+</p>
+
+<p class="i1">
+    <b>f_rel_err: </b><br>
+    Relative error of parameter 'f' derived from snow pollution algorithm. See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>l_rel_err: </b><br>
+    Relative error of parameter 'l' derived from snow pollution algorithm. See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>m_rel_err: </b><br>
+    Relative error of parameter 'm' derived from snow pollution algorithm. See the ATBD [2] for details.
+</p>
+
+<p class="i1">
+    <b>r_0_rel_err: </b><br>
+    Relative error of parameter 'r_0' derived from snow pollution algorithm. See the ATBD [2] for more details.
+</p>
+
+<p class="i1">
+    <b>surface_<i>n</i>: </b><br>
+    The rectified transmission  for band <i>n</i>, which would be measured without scattering ('surface transmission').
+    Useful only for comparison purposes.
+</p>
+
+<p class="i1">
+    <b>radiance_<i>n</i>: </b><br>
+    The corrected radiance (recomputed using the retrieved effective transmittance) for band <i>n</i>.
+</p>
+
+<p class="i1">
+    <b>ndsi: </b><br>
+    NDSI value.
+</p>
+
+<p class="i1">
+    <b>ndsi_mask: </b><br>
+    Mask band indicating snow pixels (value 1.0, otherwise 0.0) as identified from NDSI criterion.
+</p>
+
+<h3>References</h3>
+
+<p class="i1">
+
+    <b>[1]</b>
+    <a href="http://seom.esa.int/page_project032.php">
+        SEOM S3 for Snow project page</a><br><br>
+
+    <b>[2]</b>
+    Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
+    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 3.0, 30 April 2018.<br><br>
+
+    <b>[3]</b>
+    <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwjWg7ChtOrcAhXPfFAKHeIZCp4QFjAAegQICRAC&url=https%3A%2F%2Fwww.eumetsat.int%2Fwebsite%2Fwcm%2Fidc%2Fidcplg%3FIdcService%3DGET_FILE%26dDocName%3DPDF_S3A_PN_OLCI_L2%26RevisionSelectionMethod%3DLatestReleased%26Rendition%3DWeb&usg=AOvVaw3kklxm9qc0TSptA6fX1MOa">
+        Sentinel-3A Product Notice: OLCI Level-2 Ocean Colour</a><br><br>
+</p>
+<br>
 
 <hr>
 </body>

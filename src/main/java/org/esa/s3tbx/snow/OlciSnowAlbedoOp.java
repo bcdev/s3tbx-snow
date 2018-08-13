@@ -106,6 +106,7 @@ public class OlciSnowAlbedoOp extends Operator {
     private String cloudMaskBandName;
 
     @Parameter(defaultValue = "false",
+            label = "Consider NDSI snow mask",
             description =
                     "If selected, NDSI will be computed from 865 and 1020nm for snow identification. " +
                             "Then, only snow pixels will be considered for albedo computation.")
@@ -136,6 +137,11 @@ public class OlciSnowAlbedoOp extends Operator {
                             "(f, l, m, R_0)...' must be selected as well. Useful for experts only.")
     private boolean writeUncertaintiesOfAdditionalSnowPollutionParms;
 
+    @Parameter(defaultValue = "0.01",
+            description = "Assumed uncertainty in Rayleigh corrected reflectances",
+            label = "Assumed uncertainty of Rayleigh corrected reflectances")
+    private double deltaBrr;
+
     @Parameter(defaultValue = "0.1",
             description = "Snow is regarded as polluted if snow reflectance at 400nm is smaller that R_0 - thresh. " +
                     "See algorithm descriptions for more details.",
@@ -154,11 +160,6 @@ public class OlciSnowAlbedoOp extends Operator {
                     "If selected, Rayleigh corrected reflectances at selected OLCI wavelengths are written to target product")
     private boolean copyReflectanceBands;
 
-    @Parameter(defaultValue = "0.01",
-            description = "Assumed uncertainty in Rayleigh corrected reflectances",
-            label = "Assumed uncertainty of Rayleigh corrected reflectances")
-    private double deltaBrr;
-
     @Parameter(defaultValue = "1020.0",
             valueSet = {"1020.0", "865.0"},
             description = "OLCI reference wavelength used in computations of snow quantities",
@@ -174,7 +175,7 @@ public class OlciSnowAlbedoOp extends Operator {
     @Parameter(defaultValue = "0.9892",
             description = "OLCI SVC gain for band 5 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gain for band 5 (560nm)")
+            label = "OLCI SVC gain for band 5 (510nm)")
     private double olciGainBand5;
 
     @Parameter(defaultValue = "1.0",
@@ -724,8 +725,8 @@ public class OlciSnowAlbedoOp extends Operator {
                     throw new OperatorException("Source product is not a valid L1b product and cannot be handled as " +
                                                         "Rayleigh corrected product either, as it does not contain " +
                                                         "mandatory band '" + bandName + "'. \n Mandatory bands are " +
-                                                        "'rBRR_*' for 440nm, 865 or 1020nm, and for all manually " +
-                                                        "selected wavelengths.");
+                                                        "'rBRR_*' for 440nm, 510, 865 and 1020nm, and in addition for " +
+                                                        "all manually selected wavelengths.");
                 }
             }
         }

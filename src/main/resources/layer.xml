@@ -18,8 +18,8 @@
     <folder name="Menu">
         <folder name="Optical">
             <folder name="Thematic Land Processing">
-                <folder name="Sentinel-3 Snow Processors">
-                    <attr name="displayName" stringvalue="Sentinel-3 Snow Processors"/>
+                <folder name="Sentinel-3 Snow Processor">
+                    <attr name="displayName" stringvalue="Sentinel-3 Snow Processor"/>
                     <attr name="position" intvalue="311"/>
                     <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.shadow">
                         <attr name="originalFile"
