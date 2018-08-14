@@ -237,7 +237,7 @@ latex_additional_files = ["mystyle.sty"]
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'S3-SNOW_D2.3_SUM.tex', 'S3-SNOW D2.3: Software User Manual',
+  (master_doc, 'SEOM_S3_SNOW_D2.3_SUM.tex', 'SEOM S3-SNOW: Software User Manual',
    r'Brockmann Consult GmbH', 'howto'),
 ]
 
