@@ -81,6 +81,7 @@ language = None
 #today = ''
 # Else, today_fmt is used as the format for a strftime call.
 #today_fmt = '%B %d, %Y'
+today_fmt = '%d %B %Y'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -237,7 +238,7 @@ latex_additional_files = ["mystyle.sty"]
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'SEOM_S3_SNOW_D2.3_SUM.tex', 'SEOM S3-SNOW: Software User Manual',
+  (master_doc, 'SEOM_S3_SNOW_D2.3_SUM.tex', 'SEOM S3 for Snow - Software User Manual',
    r'Brockmann Consult GmbH', 'howto'),
 ]
 

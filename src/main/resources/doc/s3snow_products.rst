@@ -7,11 +7,11 @@
    <br />
 
 .. index:: SNAP Cawa Products
-.. _cawa_products:
+.. _s3snow_products:
 
-======================
-The SNAP CAWA Products
-======================
+=========================
+The SNAP S3-SNOW Products
+=========================
 
 Overview
 ========
@@ -152,7 +152,7 @@ standard L1b product is given in [`13 <intro.html#References>`_].
 
 |vspace| |br|
 
-In the CAWA TCWV processing, the following bands and tie point grids from the MERIS L1b products are used:
+In the S3-SNOW TCWV processing, the following bands and tie point grids from the MERIS L1b products are used:
 
 - radiance_13 (converted to TOA reflectance)
 - radiance_14 (converted to TOA reflectance)
@@ -162,7 +162,7 @@ In the CAWA TCWV processing, the following bands and tie point grids from the ME
 - view_zenith
 - view_azimuth
 
-In the CAWA CTP processing, the following bands and tie point grids from the MERIS L1b products are used:
+In the S3-SNOW CTP processing, the following bands and tie point grids from the MERIS L1b products are used:
 
 - radiance_10
 - radiance_11
@@ -177,7 +177,7 @@ In the CAWA CTP processing, the following bands and tie point grids from the MER
 MODIS MYD021 TOA Reflectance Products
 -------------------------------------
 
-For the 'OLCI-like' TCWV processing in CAWA, MODIS Aqua L1b data from MYD021KM products were used. These products
+For the 'OLCI-like' TCWV processing in S3-SNOW, MODIS Aqua L1b data from MYD021KM products were used. These products
 contain calibrated Earth view TOA reflectance data at 1km resolution, including the 250m and 500m resolution bands
 aggregated to 1km resolution. The datasets are described in detail in the MODIS Level 1B Product User's Guide
 [`14 <intro.html#References>`_]. :numref:`modis_tpgs` gives an overview of the reflective and emissive
@@ -235,7 +235,7 @@ Here, "RefSB" stands for "Reflective Solar Band" and "Emissive" stands for therm
 
 |vspace| |br|
 
-In the CAWA TCWV processing, the following bands and tie point grids from these products are used:
+In the S3-SNOW TCWV processing, the following bands and tie point grids from these products are used:
 
 - EV_250_Aggr1km_RefSB_2
 - EV_250_Aggr1km_RefSB_5
@@ -256,7 +256,7 @@ Intermediate Products
 ERA-Interim Products (optional)
 -------------------------------
 
-The CAWA TCWV algorithm uses the following prior variables:
+The S3-SNOW TCWV algorithm uses the following prior variables:
 
 - temperature at 2m
 - mean sea level pressure
@@ -265,11 +265,11 @@ The CAWA TCWV algorithm uses the following prior variables:
 - windspeed at 10m, v-component
 
 As said, the way of providing these prior variables to the algorithms is somewhat arbitrary.
-In the CAWA TCWV processing on the BC Calvalus cluster, the variables were taken from available ERA-Interim
+In the S3-SNOW TCWV processing on the BC Calvalus cluster, the variables were taken from available ERA-Interim
 reanalysis datasets. The ERA-Interim data extraction and preparation was done with specific scripts which were
 developed in the frame of other projects and which are running on Calvalus, making use of the collection of
 Climate Data Operators (CDO) developed at Max-Planck-Institute for Meteorology Hamburg [`15 <intro.html#References>`_].
-All these components are not part of the CAWA software package.
+All these components are not part of the S3-SNOW software package.
 However, the content of the ERA-Interim products being resampled and collocated with the MERIS/MODIS L1b input
 products is given in Table :numref:`erainterim_bands`.
 
@@ -307,7 +307,7 @@ processing. In fact it is an 'extended' classification product containing the fo
 
 - radiance/reflectance bands needed for TCWV/CTP retrieval
 - pixel classification flag band
-- prior variables in case of TCWV processing(for CAWA, obtained from collocation with ERA-Interim product described above)
+- prior variables in case of TCWV processing(for S3-SNOW, obtained from collocation with ERA-Interim product described above)
 - L1b flags and tie point grids
 
 
@@ -353,17 +353,17 @@ given in the :ref:`annex`.
 Final Products
 ==============
 
-CAWA TCWV Products
-------------------
+S3-SNOW TCWV Products
+---------------------
 
-The CAWA TCWV final products are generated in CF-compliant NetCDF4 format. They just contain the TCWV, a simple
+The S3-SNOW TCWV final products are generated in CF-compliant NetCDF4 format. They just contain the TCWV, a simple
 TCWV flag and the pixel classification flag copied from the IdePix product (:numref:`tcwv_bands`).
 An example of the NetCDF header of a TCWV product is given in the :ref:`annex`.
 
 |vspace| |br|
 
 .. _tcwv_bands:
-.. table:: Bands in final CAWA TCWV product
+.. table:: Bands in final S3-SNOW TCWV product
 
     +-----------------------------+---------------------+------------+-----------------------------+
     |     **Name in product**     |       **Unit**      |   **Type** |        **Description**      |
@@ -377,27 +377,6 @@ An example of the NetCDF header of a TCWV product is given in the :ref:`annex`.
 
 |vspace| |br|
 
-CAWA CTP Products
------------------
-
-The CAWA CTP final products are generated in CF-compliant NetCDF4 format. They just contain the CTP, a simple
-CTP flag and the pixel classification flag copied from the IdePix product (:numref:`ctp_bands`).
-An example of the NetCDF header of a CTP product is given in the :ref:`annex`.
-
-|vspace| |br|
-
-.. _ctp_bands:
-.. table:: Bands in final CAWA CTP product
-
-    +-----------------------------+---------------------+------------+-----------------------------+
-    |     **Name in product**     |       **Unit**      |   **Type** |        **Description**      |
-    +=============================+=====================+============+=============================+
-    |         ctp                 | mm                  | float32    | Cloud top pressure          |
-    +-----------------------------+---------------------+------------+-----------------------------+
-    |       ctp _flags            | dl                  | uint8      | CTP flags                   |
-    +-----------------------------+---------------------+------------+-----------------------------+
-    |    pixel_classif_flags      | dl                  | int16      | Pixel classification flags  |
-    +-----------------------------+---------------------+------------+-----------------------------+
 
 
 

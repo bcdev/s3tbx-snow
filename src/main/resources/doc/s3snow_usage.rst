@@ -7,16 +7,16 @@
    <br />
 
 
-.. _cawa_usage:
+.. _s3snow_usage:
 
-=======================================
-How to run the CAWA Processing Software
-=======================================
+==========================================
+How to run the S3-SNOW Processing Software
+==========================================
 
 Test of the Installation
 ========================
 
-If all installation steps described in :ref:`cawa_installation` were finished successfully, the CAWA TCWV and CTP
+If all installation steps described in :ref:`s3snow_installation` were finished successfully, the S3-SNOW TCWV and CTP
 GPF processors are now ready to run. First, test their availability with:
 ::
 
@@ -73,7 +73,7 @@ must be set as they deviate from the default (:numref:`idepix_params`):
 |vspace| |br|
 
 .. _idepix_params:
-.. table:: Processing parameters deviating from defaults for CAWA IdePix classification step.
+.. table:: Processing parameters deviating from defaults for S3-SNOW IdePix classification step.
 
     +-----------------------------+-----------------+----------------------------------------------+
     |     **Operator**            |  **Parameter**  |   **Value**                                  |
@@ -112,7 +112,7 @@ IdePix MODIS TCWV:
 TCWV Processing
 ===============
 
-The TCWV processing is applied on the 'extended' IdePix products as described in :ref:`cawa_products`.
+The TCWV processing is applied on the 'extended' IdePix products as described in :ref:`s3snow_products`.
 The gpt command in :numref:`gpt_h_tcwv_modis` and :numref:`gpt_h_tcwv_modis` shows the possible TCWV processing
 parameters for MERIS and MODIS, respectively.
 
@@ -143,10 +143,10 @@ The operators for MERIS and MODIS
 do not require any non-default parameters and are invoked via the SNAP gpt tool like:
 ::
 
-    <operator-name> -SsourceProduct=<path-to-IdePix-product> -f NetCDF4-CAWA -t
+    <operator-name> -SsourceProduct=<path-to-IdePix-product> -f NetCDF4-S3-SNOW -t
     <path-to-target-product>
 
-However, as discussed in :ref:`cawa_products`, it is strongly recommended to use IdePix 'extended' products
+However, as discussed in :ref:`s3snow_products`, it is strongly recommended to use IdePix 'extended' products
 containing ERA-Interim data which provides more realistic prior variables. If these are not available, the processor
 will use processor parameters for prior 2m temperature, mean sea level pressure and AOT. They can be explicitly
 provided by the user, so a TCWV processor call may look like:
@@ -154,7 +154,7 @@ provided by the user, so a TCWV processor call may look like:
 
     CawaTCWV.Meris -SsourceProduct=<path-to-IdePix-product> -Ptemperature=285.0
     -Ppressure=990.0 -Paot_13=0.25
-    -f NetCDF4-CAWA -t <path-to-target-product>
+    -f NetCDF4-S3-SNOW -t <path-to-target-product>
 
 However, these values would be constant for all pixels of the given scene, so the resulting TCWV retrieval may be poor.
 
@@ -162,7 +162,7 @@ However, these values would be constant for all pixels of the given scene, so th
 CTP Processing
 ==============
 
-The CTP MERIS processing is applied on the 'extended' IdePix products as described in :ref:`cawa_products`.
+The CTP MERIS processing is applied on the 'extended' IdePix products as described in :ref:`s3snow_products`.
 The gpt command in :numref:`gpt_h_ctp_meris` shows the possible CTP MERIS processing options.
 
 .. _gpt_h_ctp_meris:
@@ -182,7 +182,7 @@ The operators for MERIS
 does not require any non-default parameters and is invoked via the SNAP gpt tool like:
 ::
 
-    CawaCTP.Meris -SsourceProduct=<path-to-IdePix-product> -f NetCDF4-CAWA
+    CawaCTP.Meris -SsourceProduct=<path-to-IdePix-product> -f NetCDF4-S3-SNOW
     -t <path-to-target-product>
 
 
@@ -192,7 +192,7 @@ Data Analysis Tools
 SNAP Desktop Application
 ------------------------
 
-The TCWV and CTP products generated within the CAWA project are provided in CFcompliant
+The TCWV and CTP products generated within the S3-SNOW project are provided in CFcompliant
 NetCDF-4/HDF5 format, which is supported by a variety of tools for further
 scientific analysis and processing. One of the important tools are the BEAM toolbox
 and its successor SNAP.
@@ -204,7 +204,7 @@ However, it is more recommended to use the latest version of the
 SNAP toolboxes which do not only provide most of all existing BEAM functionalities and
 product support, but also various new features as well as support for the new sensors
 onboard the Sentinel-x satellites. The SNAP desktop application is directly available after having installed SNAP as
-described in :ref:`cawa_installation`.
+described in :ref:`s3snow_installation`.
 
 .. _gpt_h_snap_desktop:
 .. figure::  pix/snap_desktop.png
