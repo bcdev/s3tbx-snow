@@ -41,8 +41,8 @@ References
 2.  Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
     Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 3.0, 30 April 2018.
 
-3.  Retrieval of Cloud Top Pressure from MERIS and  OLCI O2 A-Band Measurements. s3snow CTP ATBD,
-    available at: https://earth.esa.int/web/sppa/activities/s3snow/projects-documents
+3.  Sentinel-3 OLCI User Guide,
+    available at: https://sentinel.esa.int/web/sentinel/user-guides/sentinel-3-olci
 
 4.  S3-SNOW Project Web Site,
     available at: http://seom.esa.int/page_project032.php
@@ -80,17 +80,27 @@ BRR                      Bottom-of-Rayleigh Reflectance
 -----------------------  ---------------------------------------------------------------------------------------------
 CCI                      Climate Change Initiative
 -----------------------  ---------------------------------------------------------------------------------------------
+DEM                      Digital Elevation Model
+-----------------------  ---------------------------------------------------------------------------------------------
 ESA                      European Space Agency
 -----------------------  ---------------------------------------------------------------------------------------------
+GIMP                     Greenland Ice Mapping Project
+-----------------------  ---------------------------------------------------------------------------------------------
 GPF                      Graph Processing Framework
+-----------------------  ---------------------------------------------------------------------------------------------
+IdePix                   Identification of Pixels
 -----------------------  ---------------------------------------------------------------------------------------------
 JDK                      Java Development Kit
 -----------------------  ---------------------------------------------------------------------------------------------
 MERIS                    Medium Resolution Imaging Spectrometer
 -----------------------  ---------------------------------------------------------------------------------------------
+NDSI                     Normalised Difference Snow Index
+-----------------------  ---------------------------------------------------------------------------------------------
 NetCDF                   Network Common Data Form
 -----------------------  ---------------------------------------------------------------------------------------------
 OLCI                     Ocean and Land Colour Instrument
+-----------------------  ---------------------------------------------------------------------------------------------
+PPA                      Probability of Photon Absorption
 -----------------------  ---------------------------------------------------------------------------------------------
 SEOM                     Scientific Exploitation of Operational Missions
 -----------------------  ---------------------------------------------------------------------------------------------

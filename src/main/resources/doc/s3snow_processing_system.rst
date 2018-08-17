@@ -5,9 +5,9 @@
 
 .. _s3snow_processing_system:
 
-============================================
+===========================
 The SNAP S3-SNOW Processors
-============================================
+===========================
 
 Overview
 ========
@@ -163,7 +163,19 @@ and aspect are often useful information for the validation of snow properties.
 The GIMP Digital Elevation Model for Greenland
 ----------------------------------------------
 
-todo
+A Digital Elevation Model for Greenland has been generated within the GIMP project. This product has been post-processed
+by BC and is provided in GeoTIFF format with a resolution of ~90m. As only layer in this product, the DEM altitude
+given in metres is provided. The altitude is e.g. used as input by the OLCI O2 Correction Processor.
+The GIMP DEM product is illustrated in :numref:`gimp_dem`.
+
+.. _gimp_dem:
+.. figure::  pix/gimp_dem.png
+   :align:   center
+   :scale: 80 %
+    
+   Illustration of the GIMP DEM for Greenland.
+
+Using the SNAP Slope Processor, this product can be used as input to derive the corresponding slope and aspect.
 
 
 Lookup Tables
@@ -179,51 +191,37 @@ OLCI O2 correction processor plugin.
 Processing Flow
 ===============
 
-IdePix OLCI Pixel Classification Processor
-------------------------------------------
+The overall processing flow and the interaction of the S3-SNOW processors are illustrated in :numref:`processing_flow`.
 
-todo
-
-OLCI O2 Correction Processor
-----------------------------
-
-todo
-
-S3-SNOW Snow Properties Processor
----------------------------------
-
-The overall processing flow of the SNAP TCWV processor is shown in :numref:`tcwv_chain`.
-
-.. _tcwv_chain:
-.. figure::  pix/tcwv_chain.png
+.. _processing_flow:
+.. figure::  pix/processing_flow.png
    :align:   center
    :scale: 80 %
 
-   Processing flow of the SNAP TCWV processor.
+   Processing flow of the S3-SNOW processors. See text for details.
 
-As mentioned, L1b products from MERIS or MODIS are used as input. These products are pre-processed with the IdePix
-pixel classification module. Idepix provides a classification flag and the reflectance bands (converted from radiances
-in case of MERIS) needed for the TCWV retrieval. Further optional input (per pixel) are prior values for temperature,
-pressure, wind speed, and an initial TCWV guess. Ideally, these priors are taken from an external data source to provide
-values of good quality. For the S3-SNOW TCWV processing on Calvalus, these data were taken from ERA-Interim
-[`12 <intro.html#References>`_] products
-which were interpolated and collocated onto the initial L1b/IdePix product grid. If no priors are provided, the
-processor will use reasonable constant values, but this is not recommended for good TCWV retrievals.
+The colour and arrow scheme in the diagram has the following meaning:
 
-The IdePix products (optionally including the prior bands) are the input for the TCWV processing step, which
-provides the final TCWV products (TCWV + flag band).
+- **red** : The standard processing flow for snow properties retrieval. The red boxes indicate the mandatory input products
+  and processing modules: An OLCI L1b radiances product is used as input product for the Snow Properties Processor.
+  Internally, BRRs are computed from a call of the SNAP Rayleigh Correction Processor, which in return are used for the
+  retrieval of the various snow properties.
+- **orange** : Alternative processing flow for snow properties retrieval: An OLCI BRR product is used as input product
+  for the Snow Properties Processor. This BRR product has been computed independently in a preprocessing step, directly
+  using the Rayleigh Correction Processor.
+- **green** : Optional processing, i.e. cloud classification: An OLCI L1b radiances product is used as input product
+  for the IdePix Pixel Classification Processor. The IdePix output product can then be used as optional second input
+  product for the Snow Properties Processor. Internally, IdePix calls the O2 Correction Processor to obtain the
+  O2 band transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
+  DEM product can be used as input for the O2 Correction Processor. If no DEM is specified by the user, the altitude band
+  from the Olci L1b product is used.
+- **grey** : Additional processing options, not directly used in the snow properties retrieval: The O2 Correction Processor
+  can be used as standalone SNAP processor, which then generates an 'O2 correction' product as separate output. This
+  option might be useful mainly for developers or scientists for possible fixes and improvements of the O2 correction
+  algorithm.
+- **solid arrows** : indicate input/output to/from a processing module
+- **dashed arrows** : indicate internal calls of one processing module into another
 
-SNAP Slope Processor
---------------------
-
-The overall processing flow of the SNAP CTP processor is shown in :numref:`ctp_chain`.
-
-.. _ctp_chain:
-.. figure::  pix/ctp_chain.png
-    :align:   center
-    :scale: 80 %
-
-    Processing flow of the SNAP CTP processor.
 
 
 
