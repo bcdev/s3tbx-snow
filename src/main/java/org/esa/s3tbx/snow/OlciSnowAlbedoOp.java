@@ -725,7 +725,8 @@ public class OlciSnowAlbedoOp extends Operator {
                     throw new OperatorException("Source product is not a valid L1b product and cannot be handled as " +
                                                         "Rayleigh corrected product either, as it does not contain " +
                                                         "mandatory band '" + bandName + "'. \n Mandatory bands are " +
-                                                        "'rBRR_*' for 440nm, 510, 865 and 1020nm, and in addition for " +
+                                                        "'rBRR_*' for indices 1, 5, 17, 21 " +
+                                                        "(400nm, 510, 865 and 1020nm), and in addition for " +
                                                         "all manually selected wavelengths.");
                 }
             }

@@ -194,7 +194,7 @@ Processing Flow
 The overall processing flow and the interaction of the S3-SNOW processors are illustrated in :numref:`processing_flow`.
 
 .. _processing_flow:
-.. figure::  pix/processing_flow.png
+.. figure::  pix/processing_flow_2.png
    :align:   center
    :scale: 80 %
 
@@ -215,10 +215,8 @@ The colour and arrow scheme in the diagram has the following meaning:
   O2 band transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
   DEM product can be used as input for the O2 Correction Processor. If no DEM is specified by the user, the altitude band
   from the Olci L1b product is used.
-- **grey** : Additional processing options, not directly used in the snow properties retrieval: The O2 Correction Processor
-  can be used as standalone SNAP processor, which then generates an 'O2 correction' product as separate output. This
-  option might be useful mainly for developers or scientists for possible fixes and improvements of the O2 correction
-  algorithm.
+- **grey** : Additional processing options, not directly used in the snow properties retrieval. I.e., O2 correction
+  and slope/aspect computation, as outlined above.
 - **solid arrows** : indicate input/output to/from a processing module
 - **dashed arrows** : indicate internal calls of one processing module into another
 
