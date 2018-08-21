@@ -1,5 +1,10 @@
 .. _intro:
 
+.. raw:: latex
+
+   \listoffigures
+   \listoftables
+
 ============
 Introduction
 ============
