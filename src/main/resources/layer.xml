@@ -5,12 +5,12 @@
             <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
-                <attr name="operatorName" stringvalue="OLCI.SnowAlbedo"/>
-                <attr name="displayName" stringvalue="OLCI Snow Albedo"/>
-                <attr name="dialogTitle" stringvalue="OLCI Snow Albedo v2.0.6-SNAPSHOT"/>
+                <attr name="operatorName" stringvalue="OLCI.SnowProperties"/>
+                <attr name="displayName" stringvalue="OLCI Snow Properties"/>
+                <attr name="dialogTitle" stringvalue="OLCI Snow Properties v2.0.6-SNAPSHOT"/>
                 <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
-                <attr name="targetProductNameSuffix" stringvalue="_albedo"/>
-                <attr name="ShortDescription" stringvalue="Provides snow albedo from OLCI measurements."/>
+                <attr name="targetProductNameSuffix" stringvalue="_snow"/>
+                <attr name="ShortDescription" stringvalue="Provides snow properties from OLCI measurements."/>
             </file>
         </folder>
     </folder>

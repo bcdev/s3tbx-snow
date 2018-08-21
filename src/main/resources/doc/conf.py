@@ -230,6 +230,7 @@ latex_elements = {
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
+'figure_align': 'H',
 }
 
 latex_additional_files = ["mystyle.sty"]

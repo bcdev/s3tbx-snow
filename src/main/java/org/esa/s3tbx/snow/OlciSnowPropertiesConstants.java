@@ -5,7 +5,7 @@ package org.esa.s3tbx.snow;
  *
  * @author olafd
  */
-public class OlciSnowAlbedoConstants {
+public class OlciSnowPropertiesConstants {
 
 
     public static final double[] WAVELENGTH_GRID_OLCI = {

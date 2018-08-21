@@ -284,9 +284,9 @@ The IdePix OLCI classification flag coding is given in :numref:`idepix_flagcodin
     +------------+------------------------+-------------------------------------------------------------+
     | 1          | IDEPIX_CLOUD           | Pixel is either 'cloud sure' or 'cloud ambiguous'           |
     +------------+------------------------+-------------------------------------------------------------+
-    | 2          | IDEPIX_CLOUD_AMBIGUOUS | Semi-transparent clouds, or cloud detection is uncertain    |
+    | 2          | IDEPIX_CLOUD_AMBIGUOUS | Semi-transparent clouds, or detection is uncertain          |
     +------------+------------------------+-------------------------------------------------------------+
-    | 3          | IDEPIX_CLOUD_SURE      | Fully opaque clouds with full confidence of their detection |
+    | 3          | IDEPIX_CLOUD_SURE      | Fully opaque clouds with full confidence of detection       |
     +------------+------------------------+-------------------------------------------------------------+
     | 4          | IDEPIX_CLOUD_BUFFER    | A buffer of N pixels (user option) around a cloud           |
     +------------+------------------------+-------------------------------------------------------------+
@@ -308,7 +308,7 @@ O2 Correction Product
 ---------------------
 
 The O2 correction step is done as part of the IdePix pixel classification. The results of this step are
- used by IdePix internally, and no separate products are written in the S3-SNOW processing flow. However, as the
+used by IdePix internally, and no separate products are written in the S3-SNOW processing flow. However, as the
 O2 correction is also available as a standalone SNAP plugin with a separate target product, its contents are
 listed in :numref:`o2corr_bands` for completeness.
 
@@ -331,7 +331,7 @@ listed in :numref:`o2corr_bands` for completeness.
 Slope Product
 -------------
 
-A slope product is the output of the SNAP Slope Processor introduced in :ref:`s3snow_processing_system`.
+A slope product is the output of the SNAP Slope Processor introduced in chapter :doc:`s3snow_processing_system`.
 As mentioned, this is an optional product which is not directly used in the S3-SNOW processing flow.
 For completeness, its contents are listed in :numref:`slope_bands`.
 

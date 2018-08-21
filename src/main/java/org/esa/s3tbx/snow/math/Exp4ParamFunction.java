@@ -6,7 +6,7 @@ import org.apache.commons.math3.exception.NoDataException;
 import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.exception.util.LocalizedFormats;
 import org.apache.commons.math3.util.MathUtils;
-import org.esa.s3tbx.snow.OlciSnowAlbedoConstants;
+import org.esa.s3tbx.snow.OlciSnowPropertiesConstants;
 
 /**
  * Implementation of exponential function with 4 parameters as:
@@ -61,11 +61,11 @@ public class Exp4ParamFunction implements ParametricUnivariateFunction {
 
     private static double[] getKappaCoeffs(double x) {
         if (x >= 0.4 && x < 0.525) {
-            return OlciSnowAlbedoConstants.KAPPA_2_SPLINE_COEFFS[0];
+            return OlciSnowPropertiesConstants.KAPPA_2_SPLINE_COEFFS[0];
         } else if (x >= 0.525 && x < 0.7) {
-            return OlciSnowAlbedoConstants.KAPPA_2_SPLINE_COEFFS[1];
+            return OlciSnowPropertiesConstants.KAPPA_2_SPLINE_COEFFS[1];
         } else if (x >= 0.7 && x <= 1.02) {
-            return OlciSnowAlbedoConstants.KAPPA_2_SPLINE_COEFFS[2];
+            return OlciSnowPropertiesConstants.KAPPA_2_SPLINE_COEFFS[2];
         } else {
             throw new IllegalArgumentException("x must be in range [0.4, 1.02");
         }

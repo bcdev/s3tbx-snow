@@ -1,9 +1,9 @@
 .. index:: S3-SNOW Processor Installation
 .. _s3snow_installation:
 
-================================
-Processing Software Installation
-================================
+=====================
+Software Installation
+=====================
 
 .. BC
 

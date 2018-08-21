@@ -12,30 +12,30 @@ import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 
-public class OlciSnowAlbedoAlgorithmTest {
+public class OlciSnowPropertiesAlgorithmTest {
 
     @Test
     public void testComputeGrainDiameter() {
-        final double grainDiameter = OlciSnowAlbedoAlgorithm.computeGrainDiameter(0.7372415128980274, 1020.0);
+        final double grainDiameter = OlciSnowPropertiesAlgorithm.computeGrainDiameter(0.7372415128980274, 1020.0);
         assertEquals(255.819, grainDiameter, 1.E-2);
     }
 
     @Test
     public void testIntegrateR_b2() {
 
-        double r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(200.0);
+        double r_b2 = OlciSnowPropertiesAlgorithm.integrateR_b2(200.0);
         assertEquals(0.0947, r_b2, 1.E-2);
 
-        r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(50.0);
+        r_b2 = OlciSnowPropertiesAlgorithm.integrateR_b2(50.0);
         assertEquals(0.1289, r_b2, 1.E-2);
 
-        r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(100.0);
+        r_b2 = OlciSnowPropertiesAlgorithm.integrateR_b2(100.0);
         assertEquals(0.1118, r_b2, 1.E-2);
 
-        r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(400.0);
+        r_b2 = OlciSnowPropertiesAlgorithm.integrateR_b2(400.0);
         assertEquals(0.077, r_b2, 1.E-2);
 
-        r_b2 = OlciSnowAlbedoAlgorithm.integrateR_b2(800.0);
+        r_b2 = OlciSnowPropertiesAlgorithm.integrateR_b2(800.0);
         assertEquals(0.0604, r_b2, 1.E-2);
     }
 
@@ -314,10 +314,10 @@ public class OlciSnowAlbedoAlgorithmTest {
             System.out.printf("Exp4Param 4 parameter fit: %d,%s%n", i, fit[i]);
         }
 
-        final double[] spectralSphericalAlbedos = new double[OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length];
+        final double[] spectralSphericalAlbedos = new double[OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
         final Exp4ParamFunction exp4ParamFunction = new Exp4ParamFunction();
         for (int i = 0; i < spectralSphericalAlbedos.length; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
             spectralSphericalAlbedos[i] = exp4ParamFunction.value(wvl, fit);
         }
 
@@ -384,11 +384,11 @@ public class OlciSnowAlbedoAlgorithmTest {
         double[] planarBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             planarBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(mu_0,
-                                                                   grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable,
-                                                                   solarSpectrumExtendedTable,
-                                                                   sza);
+                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
+                                                                       grainDiamMicrons,
+                                                                       refractiveIndexInterpolatedTable,
+                                                                       solarSpectrumExtendedTable,
+                                                                       sza);
             if (k % 1000 == 0) {
                 System.out.println("k1 = " + k);
             }
@@ -400,11 +400,11 @@ public class OlciSnowAlbedoAlgorithmTest {
         double[] sphericalBroadbandAlbedo = null;
         for (int k=0; k<10000; k++) {
             sphericalBroadbandAlbedo =
-                    OlciSnowAlbedoAlgorithm.computeBroadbandAlbedo(1.0,
-                                                                   grainDiamMicrons,
-                                                                   refractiveIndexInterpolatedTable,
-                                                                   solarSpectrumExtendedTable,
-                                                                   sza);
+                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
+                                                                       grainDiamMicrons,
+                                                                       refractiveIndexInterpolatedTable,
+                                                                       solarSpectrumExtendedTable,
+                                                                       sza);
             if (k % 1000 == 0) {
                 System.out.println("k2 = " + k);
             }
@@ -428,7 +428,7 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double brr1200 = 0.3704;
 
         final double[] pollutedSnowParams =
-                OlciSnowAlbedoAlgorithm.computePollutedSnowParams(brr400, brr1200, sza, vza, raa);
+                OlciSnowPropertiesAlgorithm.computePollutedSnowParams(brr400, brr1200, sza, vza, raa);
         final double grainDiam = pollutedSnowParams[0];
         final double soot = pollutedSnowParams[1];
         // test results provided by AK in 'snow_properties_CHECKOUT.txt' (20180124), first line:
@@ -446,9 +446,9 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
         final double deltaBrr = 1.0;
 
-        final OlciSnowAlbedoAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN,
-                                                                       deltaBrr, false);
+        final OlciSnowPropertiesAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN,
+                                                                           deltaBrr, false);
         assertNotNull(spectralAlbedosPolluted);
         final double[] sphericalAlbedos = spectralAlbedosPolluted.getSpectralAlbedos()[0];
         assertNotNull(sphericalAlbedos);
@@ -456,8 +456,8 @@ public class OlciSnowAlbedoAlgorithmTest {
         assertNotNull(planarAlbedos);
 
         // test results provided by AK in 'snow_properties_CHECKOUT.txt' (20180124), first line:
-        assertEquals(OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length, sphericalAlbedos.length);
-        assertEquals(OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length, planarAlbedos.length);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, sphericalAlbedos.length);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, planarAlbedos.length);
 
         assertEquals(0.6377, sphericalAlbedos[0], 1.E-4);    // 400nm
         assertEquals(0.6658, sphericalAlbedos[3], 1.E-4);    // 490nm
@@ -497,8 +497,8 @@ public class OlciSnowAlbedoAlgorithmTest {
         final double sza = 36.9;
         final double vza = 3.08;
 
-        OlciSnowAlbedoAlgorithm.SpectralAlbedoResult result =
-                OlciSnowAlbedoAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
+        OlciSnowPropertiesAlgorithm.SpectralAlbedoResult result =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
         assertNotNull(result);
         assertEquals(22.198, result.getL(), 1.E-3);
         assertEquals(2.7343, result.getM(), 1.E-4);

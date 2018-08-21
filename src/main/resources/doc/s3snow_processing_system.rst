@@ -19,7 +19,7 @@ During the implementation process, all processing software was distributed withi
 for the purpose of a comprehensive validation from an appropriate OLCI database containing products covering a variety of
 selected snow-covered areas. All SNAP
 S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
-(Windows, Linus, MacOS). The procedure for installation and operation is described in this chapter.
+(Windows, Linus, MacOS). The :underline:`procedure` for installation and operation is described in this chapter.
 
 .. index:: Theoretical Background Summary
 
@@ -37,7 +37,7 @@ Processing Environment
 
 As said, the S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
 (Windows, Linus, MacOS).
-Section :ref:`s3snow_installation` describes in more detail how to install the plugins in SNAP.
+The chapter :doc:`s3snow_installation` describes in more detail how to install the plugins in SNAP.
 
 .. index:: Processing Components
 
@@ -136,7 +136,7 @@ transmittances in O2A bands 13, 14 and 15 to their values which would be measure
 nominal bandwidth. The corresponding algorithm was provided by R.Preusker (Spectral Earth, Berlin) and is described
 in detail in [`2 <intro.html#References>`_]. Among various outputs, the processor provides the rectified and desmiled
 transmission for OLCI band 13 (761.25nm) which is used by the IdePix classification for the retrieval of clouds
-over snow (previous section).
+over snow (previous subsection).
 
 The OLCI Snow Properties Processor
 ----------------------------------
@@ -149,7 +149,7 @@ in detail in [`2 <intro.html#References>`_].
 As input, the processor requires an OLCI L1b product (original or being Rayleigh corrected in a preprocessing step).
 Optionally, an IdePix pixel classification product can be provided as additional input. The output is an amount of
 snow properties of interest, defined by the user via processing parameters. This is described in detail in
-(...s3snow_usage.rst...).
+the chapter :doc:`s3snow_usage`.
 
 
 The SNAP Slope Processor
@@ -191,7 +191,7 @@ OLCI O2 correction processor plugin.
 Processing Flow
 ===============
 
-The overall processing flow and the interaction of the S3-SNOW processors are illustrated in :numref:`processing_flow`.
+The overall processing flow and the interaction of the S3-SNOW components are illustrated in :numref:`processing_flow`.
 
 .. _processing_flow:
 .. figure::  pix/processing_flow_2.png

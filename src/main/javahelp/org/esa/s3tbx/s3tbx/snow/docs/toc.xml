@@ -10,6 +10,7 @@
                 <tocitem text="Sentinel-3 Toolbox Snow Processor" target="s3SnowDoc">
                     <tocitem text="Algorithm Specifications" target="s3SnowAlgorithmSpecification"/>
                     <tocitem text="Processor Description" target="s3SnowProcessorDescription"/>
+                    <tocitem text="Command Line Processing" target="s3SnowCommandLine"/>
                 </tocitem>
             </tocitem>
         </tocitem>

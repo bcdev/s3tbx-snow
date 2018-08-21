@@ -1,3 +1,13 @@
+@import url("myStyle.css");
+
+.red {
+    color: red;
+}
+
+span.caption-text {
+    color: blue;
+}
+
 .strike {
     text-decoration: line-through;
 }

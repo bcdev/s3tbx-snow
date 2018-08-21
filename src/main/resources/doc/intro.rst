@@ -26,10 +26,9 @@ The explicit structure of the document is as follows:
 
 * Chapter 1 is this introduction.
 * `Chapter 2 <s3snow_processing_system.html>`_ gives an overview of the SNAP S3-SNOW processors.
-* `Chapter 3 <s3snow_products.html>`_ describes all relevant SNAP S3-SNOW products.
+* `Chapter 3 <s3snow_products.html>`_ describes all relevant S3-SNOW products.
 * `Chapter 4 <s3snow_installation.html>`_ explains how to get and install the processing software.
 * `Chapter 5 <s3snow_usage.html>`_ explains how to run the processing software.
-* `The Annex <annex.html>`_ contains various annexes.
 
 References
 ==========
@@ -80,6 +79,8 @@ BRR                      Bottom-of-Rayleigh Reflectance
 -----------------------  ---------------------------------------------------------------------------------------------
 CCI                      Climate Change Initiative
 -----------------------  ---------------------------------------------------------------------------------------------
+CLI                      Command Line Interface
+-----------------------  ---------------------------------------------------------------------------------------------
 DEM                      Digital Elevation Model
 -----------------------  ---------------------------------------------------------------------------------------------
 ESA                      European Space Agency
@@ -88,13 +89,15 @@ GIMP                     Greenland Ice Mapping Project
 -----------------------  ---------------------------------------------------------------------------------------------
 GPF                      Graph Processing Framework
 -----------------------  ---------------------------------------------------------------------------------------------
+GUI                      Graphical User Interface
+-----------------------  ---------------------------------------------------------------------------------------------
 IdePix                   Identification of Pixels
 -----------------------  ---------------------------------------------------------------------------------------------
 JDK                      Java Development Kit
 -----------------------  ---------------------------------------------------------------------------------------------
 MERIS                    Medium Resolution Imaging Spectrometer
 -----------------------  ---------------------------------------------------------------------------------------------
-nbm                      Netbeans module
+NBM                      NetBeans Module
 -----------------------  ---------------------------------------------------------------------------------------------
 NDSI                     Normalised Difference Snow Index
 -----------------------  ---------------------------------------------------------------------------------------------
@@ -107,6 +110,8 @@ PPA                      Probability of Photon Absorption
 SEOM                     Scientific Exploitation of Operational Missions
 -----------------------  ---------------------------------------------------------------------------------------------
 SNAP                     Sentinel Application Platform
+-----------------------  ---------------------------------------------------------------------------------------------
+SUM                      Software User Manual
 -----------------------  ---------------------------------------------------------------------------------------------
 TOA                      Top Of Atmosphere
 =======================  =============================================================================================

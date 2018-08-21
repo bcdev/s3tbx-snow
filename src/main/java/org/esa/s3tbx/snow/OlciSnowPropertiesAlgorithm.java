@@ -12,7 +12,7 @@ import org.esa.snap.core.util.math.MathUtils;
  *
  * @author olafd
  */
-class OlciSnowAlbedoAlgorithm {
+class OlciSnowPropertiesAlgorithm {
 
     /**
      * Computes spectral spherical and planar albedos using given computation mode from the ones proposed by AK.
@@ -29,7 +29,7 @@ class OlciSnowAlbedoAlgorithm {
     static double[][] computeSpectralAlbedos(double[] brr, double sza, double vza,
                                              double referenceWavelength,
                                              SpectralAlbedoMode mode, boolean useAlgoApril2018) {
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
         if (mode == SpectralAlbedoMode.SIMPLE_APPROXIMATION) {
@@ -53,7 +53,7 @@ class OlciSnowAlbedoAlgorithm {
      *
      * @param brr - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
      * @param pollutedSnowParams - parameters for polluted snow,
-     *                           see {@link OlciSnowAlbedoAlgorithm#computePollutedSnowParams
+     *                           see {@link OlciSnowPropertiesAlgorithm#computePollutedSnowParams
      *                           (double, double, double, double, double)}
      * @param sza - sun zenith angle (deg)
      * @param vza - view zenith angle (deg)
@@ -75,7 +75,7 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     private static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] pollutedSnowParams, double sza) {
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
         final double grainDiam = pollutedSnowParams[0] * 1000.0;  // in microns here
@@ -86,9 +86,9 @@ class OlciSnowAlbedoAlgorithm {
         final double ak0 = (3. / 7.) * (1. + 2. * am0);
 
         for (int i = 0; i < numWvl; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
             final double p = 6. * 4. * Math.PI * akas * soot * grainDiam / wvl;
-            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];   // chi = ak(i) in 'soot.f' breadboard
+            final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];   // chi = ak(i) in 'soot.f' breadboard
             final double x = Math.sqrt(13. * 4. * Math.PI * grainDiam * chi / wvl + p);
             spectralAlbedos[0][i] = Math.exp(-x);  // spherical albedo
             spectralAlbedos[1][i] = Math.pow(spectralAlbedos[0][i], ak0);  // planar albedo
@@ -145,17 +145,17 @@ class OlciSnowAlbedoAlgorithm {
 
             double dx = wvlsFull[i + 1] - wvl;
             // VIS 0.3-0.7
-            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_2) {
+            if (wvl > OlciSnowPropertiesConstants.BB_WVL_1 && wvl < OlciSnowPropertiesConstants.BB_WVL_2) {
                 numeratorVis += planarSpectralAlbedo * f_lambda[i] * dx;
                 denominatorVis += f_lambda[i] * dx;
             }
             // NIR 0.7-2.4
-            if (wvl > OlciSnowAlbedoConstants.BB_WVL_2 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+            if (wvl > OlciSnowPropertiesConstants.BB_WVL_2 && wvl < OlciSnowPropertiesConstants.BB_WVL_3) {
                 numeratorNir += planarSpectralAlbedo * f_lambda[i] * dx;
                 denominatorNir += f_lambda[i] * dx;
             }
             // SW 0.3-2.4
-            if (wvl > OlciSnowAlbedoConstants.BB_WVL_1 && wvl < OlciSnowAlbedoConstants.BB_WVL_3) {
+            if (wvl > OlciSnowPropertiesConstants.BB_WVL_1 && wvl < OlciSnowPropertiesConstants.BB_WVL_3) {
                 numeratorSw += planarSpectralAlbedo * f_lambda[i] * dx;
                 denominatorSw += f_lambda[i] * dx;
             }
@@ -205,9 +205,9 @@ class OlciSnowAlbedoAlgorithm {
      */
     static double computeGrainDiameter(double refAlbedo, double refWvl) {
         final double b = 3.62;
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
-        final double chiRef = refWvl == 1020.0 ? OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1] :
-                OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
+        final double chiRef = refWvl == 1020.0 ? OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 1] :
+                OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 5];
         final double kappaRef = 4.0 * Math.PI * chiRef / (refWvl / 1000.0);  // eq. (4)
         return Math.log(refAlbedo) * Math.log(refAlbedo) / (b * b * kappaRef);
     }
@@ -332,14 +332,14 @@ class OlciSnowAlbedoAlgorithm {
         final double brr_ref = refWvl == 1020.0 ? brr[3] : brr[2];
         final double r_ref = Math.pow(brr_ref / brr_400, xi); // [1], eq. (5)
         final double wvl_ref = refWvl / 1000.0;  // in microns!
-        final double chi_ref = refWvl == 1020.0 ? OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1] :
-                OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
+        final double chi_ref = refWvl == 1020.0 ? OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 1] :
+                OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 5];
         final double kappa_ref = 4.0 * Math.PI * chi_ref / wvl_ref;  // [2], eqs. (1), (2)
         final double B = Math.log(r_ref) * Math.log(r_ref) / kappa_ref;  // [2], eq. (2) transformed
 
         for (int i = 0; i < numWvl; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
             final double kappa = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
 
             sphericalAlbedos[0][i] = Math.exp(-Math.sqrt(B * kappa));  // spectral spherical abledo
@@ -362,8 +362,8 @@ class OlciSnowAlbedoAlgorithm {
         final double k_mu_0 = SnowUtils.computeU(mu_0);
 
         for (int i = 0; i < numWvl; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
             final double alpha_ice = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
 
             spectralAlbedos[0][i] = Math.exp(-Math.sqrt(l * alpha_ice));  // spectral spherical abledo
@@ -372,15 +372,15 @@ class OlciSnowAlbedoAlgorithm {
     }
 
     public static double computeLFromTwoWavelengths(double[] brr, double sza, double vza) {
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
 
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double mu = Math.cos(vza * MathUtils.DTOR);
         final double k_mu_0 = SnowUtils.computeU(mu_0);
         final double k_mu = SnowUtils.computeU(mu);
 
-        final double chi_1 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
-        final double chi_2 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
+        final double chi_1 = OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 5];
+        final double chi_2 = OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 1];
         final double alpha_1 = 4.0 * Math.PI * chi_1 / 0.865;
         final double alpha_2 = 4.0 * Math.PI * chi_2 / 1.02;
         final double b = Math.sqrt(alpha_1 / alpha_2);
@@ -396,7 +396,7 @@ class OlciSnowAlbedoAlgorithm {
                                                                                           double deltaBrr,
                                                                                           double sza,
                                                                                           double vza) {
-        final int numWvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI.length;
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
@@ -404,8 +404,8 @@ class OlciSnowAlbedoAlgorithm {
         final double k_mu_0 = SnowUtils.computeU(mu_0);
         final double k_mu = SnowUtils.computeU(mu);
 
-        final double chi_3 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 5];
-        final double chi_4 = OlciSnowAlbedoConstants.ICE_REFR_INDEX[numWvl - 1];
+        final double chi_3 = OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 5];
+        final double chi_4 = OlciSnowPropertiesConstants.ICE_REFR_INDEX[numWvl - 1];
 //        final double alpha_3 = 4.0 * Math.PI * chi_3 / 0.865;
 //        final double alpha_4 = 4.0 * Math.PI * chi_4 / 1.02;
         final double alpha_3 = 1.E-3 * 4.0 * Math.PI * chi_3 / 0.865;  // in mm!   (hint of AK, 20180705)
@@ -420,16 +420,16 @@ class OlciSnowAlbedoAlgorithm {
 
         final double p_1 = Math.log(brr[0] / r0) * Math.log(brr[0] / r0);
         final double p_2 = Math.log(brr[1] / r0) * Math.log(brr[1] / r0);
-        final double wvl_1 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[0];
-        final double wvl_2 = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[5];
+        final double wvl_1 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
+        final double wvl_2 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
 //        final double m = Math.log(p_1 / p_2) / Math.log(wvl_1 / wvl_2);
         final double m = Math.log(p_1 / p_2) / Math.log(wvl_2 / wvl_1);  // wrong sign!  (hint of AK, 20180705)
 //        final double f = p_1 * Math.pow(wvl_1, m) / (x * x * l);
         final double f = p_1 * Math.pow(wvl_1, m) / (x * x * l);
 
         for (int i = 0; i < numWvl; i++) {
-            final double wvl = OlciSnowAlbedoConstants.WAVELENGTH_GRID_OLCI[i];
-            final double chi = OlciSnowAlbedoConstants.ICE_REFR_INDEX[i];
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
 //            final double alpha_ice = 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2)
             final double alpha_ice = 1.E3 * 4.0 * Math.PI * chi / wvl;  // [2], eqs. (1), (2) , wvl in mm !!
 

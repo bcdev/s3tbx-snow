@@ -8,6 +8,7 @@
     <mapID target="s3SnowDoc" url="s3snow/S3Snow.html"/>
     <mapID target="s3SnowAlgorithmSpecification" url="s3snow/S3SnowAlgorithmSpecification.html"/>
     <mapID target="s3SnowProcessorDescription" url="s3snow/S3SnowProcessorDescription.html"/>
+    <mapID target="s3SnowCommandLine" url="s3Snow/S3SnowCommandLine.html"/>
     <!-- add more here -->
 
 </map>
