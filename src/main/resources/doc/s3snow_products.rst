@@ -313,7 +313,7 @@ O2 correction is also available as a standalone SNAP plugin with a separate targ
 listed in :numref:`o2corr_bands` for completeness.
 
 .. _o2corr_bands:
-.. table:: Bands in O2 Correction target product for default processing options
+.. table:: Bands in O2 Correction target product
 
     +-------------------------+---------------------+------------+-------------------------------------------------+
     |     **Name in product** |       **Unit**      |   **Type** |        **Description**                          |

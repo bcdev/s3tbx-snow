@@ -93,6 +93,19 @@ reduces the amount of source code to write while drastically improving its reada
 Much more detailed information on the SNAP GPF is provided by
 the specific GPF help documentation integrated in the SNAP desktop application.
 
+The OLCI Snow Properties Processor
+----------------------------------
+
+The Snow Properties processor is the key component for the processing in S3-SNOW. The processor provides the
+implementation
+of the algorithms for the various snow properties of interest. These algorithms are also described
+in detail in [`2 <intro.html#References>`_].
+
+As input, the processor requires an OLCI L1b product (original or being Rayleigh corrected in a preprocessing step).
+Optionally, an IdePix pixel classification product (see below) can be provided as additional input. The output is an amount of
+snow properties of interest, defined by the user via processing parameters. This is described in detail in
+the chapter :doc:`s3snow_usage`.
+
 The IdePix OLCI Pixel Classification Processor
 ----------------------------------------------
 
@@ -137,20 +150,6 @@ nominal bandwidth. The corresponding algorithm was provided by R.Preusker (Spect
 in detail in [`2 <intro.html#References>`_]. Among various outputs, the processor provides the rectified and desmiled
 transmission for OLCI band 13 (761.25nm) which is used by the IdePix classification for the retrieval of clouds
 over snow (previous subsection).
-
-The OLCI Snow Properties Processor
-----------------------------------
-
-The Snow Properties processor is the key component for the processing in S3-SNOW. The processor provides the
-implementation
-of the algorithms for the various snow properties of interest. These algorithms are also described
-in detail in [`2 <intro.html#References>`_].
-
-As input, the processor requires an OLCI L1b product (original or being Rayleigh corrected in a preprocessing step).
-Optionally, an IdePix pixel classification product can be provided as additional input. The output is an amount of
-snow properties of interest, defined by the user via processing parameters. This is described in detail in
-the chapter :doc:`s3snow_usage`.
-
 
 The SNAP Slope Processor
 ------------------------
