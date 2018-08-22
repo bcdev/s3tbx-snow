@@ -182,7 +182,7 @@ Lookup Tables
 
 Various lookup tables are used for the OLCI O2 correction, which in return is part of the IdePix OLCI
 pixel classification, all described in more detail in
-[`2 <intro.html#References>`_]. These lookup table are not provided separately, bus as an internal part of the
+[`2 <intro.html#References>`_]. These lookup table are not provided separately, but as an internal part of the
 OLCI O2 correction processor plugin.
 
 .. index:: Processing Flow

@@ -73,10 +73,10 @@ processor can also be displayed (:numref:`s3snow_help_about`).
 
 .. _s3snow_help_about:
 .. figure::  pix/s3snow_help_about.png
-:align:   center
+   :align:   center
    :scale: 60 %
 
-      The SNAP Snow Properties Processor: 'About' dialog window.
+   The SNAP Snow Properties Processor: 'About' dialog window.
 
 Also from the main menu bar of the processor dialog window, the SNAP specific help documentation for this processor can
 be invoked (:numref:`s3snow_help_from_menu`, :numref:`s3snow_help`). This documentation contains some general information,
