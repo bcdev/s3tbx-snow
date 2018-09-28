@@ -117,7 +117,7 @@ public class OlciSnowPropertiesOp extends Operator {
             label = "NDSI threshold for snow identification")
     private double ndsiThresh;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description =
                     "If selected, polluted snow will be retrieved and specific algorithms for albedo retrieval will be used.")
     private boolean considerSnowPollution;
@@ -435,8 +435,6 @@ public class OlciSnowPropertiesOp extends Operator {
                                     grainDiam = OlciSnowPropertiesAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
                                 }
                             }
-                            // todo: this is a test with 'manual' summation rather than Simpson integration.
-                            // Check why Simpson is so slow!
                             final double[] broadbandPlanarAlbedo =
                                     OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
                                                                                        grainDiam,
