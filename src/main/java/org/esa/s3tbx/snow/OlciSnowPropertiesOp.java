@@ -48,7 +48,7 @@ import java.util.Map;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.6-SNAPSHOT")
+        version = "2.0.7-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -70,7 +70,7 @@ public class OlciSnowPropertiesOp extends Operator {
 
     private static final String GRAIN_DIAMETER_BAND_NAME = "grain_diameter";
     private static final String SNOW_SPECIFIC_AREA_BAND_NAME = "snow_specific_area";
-    private static final String ICE_FLAG_BAND_NAME = "ice_indicator";
+    private static final String NDBI_BAND_NAME = "ndbi";
     private static final String POLLUTION_MASK_BAND_NAME = "pollution_mask";
     private static final String POLLUTION_F_BAND_NAME = "f";
     private static final String POLLUTION_L_BAND_NAME = "l";
@@ -199,7 +199,7 @@ public class OlciSnowPropertiesOp extends Operator {
             optional = true)
     private Product cloudMaskProduct;
 
-//    @Parameter(defaultValue = "false",
+    //    @Parameter(defaultValue = "false",
 //            label = "Use new algorithm for spectral albedo (AK, 20180404)",
 //            description = "If selected, new algorithm for spectral albedo (provided by AK, 20180404) is used.")
 //    private boolean useAlgoApril2018;
@@ -222,7 +222,7 @@ public class OlciSnowPropertiesOp extends Operator {
     private int width;
     private int height;
 
-//    private SolarSpectrumTable solarSpectrumTable;
+    //    private SolarSpectrumTable solarSpectrumTable;
     private SolarSpectrumExtendedTable solarSpectrumExtendedTable;
     private RefractiveIndexTable refractiveIndexInterpolatedTable;
 
@@ -316,19 +316,41 @@ public class OlciSnowPropertiesOp extends Operator {
             for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                    final boolean pixelIsValid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit()) &&
-                            (cloudMaskTile == null ||
-                                    (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0));
+
+                    double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];   // now always 01, 05, 17, 21
+                    for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
+                        rhoToaAlbedo[i] = olciGains[i] * rhoToaTilesAlbedo[i].getSampleDouble(x, y);
+                        rhoToaAlbedo[i] = Math.max(0.0, rhoToaAlbedo[i]);
+                    }
+
+                    double brr400 = rhoToaAlbedo[0];
+                    final double brr865 = rhoToaAlbedo[2];
+                    final double brr1020 = rhoToaAlbedo[3];
+
+                    double ndbi = Double.NaN;
+                    boolean isBareIce = false;
+                    if (brr400 > 0.0 && brr1020 > 0.0) {
+                        final double iceIndicator = brr400 / brr1020;
+                        ndbi = (iceIndicator - 1) / (iceIndicator + 1);
+                        isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
+                    }
+
+                    final boolean l1Valid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit());
+                    final boolean isLandOrBareIce = l1FlagsTile.getSampleBit(x, y, sensor.getLandBit()) || isBareIce;
+                    final boolean isNotCloud = cloudMaskTile == null ||
+                            (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0);
+
+                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud;
+
                     if (pixelIsValid) {
-                        double[] rhoToaAlbedo = new double[requiredBrrBandNamesAlbedo.length];   // now always 01, 05, 17, 21
-                        for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
-                            rhoToaAlbedo[i] = olciGains[i] * rhoToaTilesAlbedo[i].getSampleDouble(x, y);
-                            rhoToaAlbedo[i] = Math.max(0.0, rhoToaAlbedo[i]);
+
+                        final Band ndbiBand = targetProduct.getBand(NDBI_BAND_NAME);
+                        if (!Double.isNaN(ndbi)) {
+                            targetTiles.get(ndbiBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(ndbi));
+                        } else {
+                            targetTiles.get(ndbiBand).setSample(x, y, ndbi);
                         }
 
-                        double brr400 = rhoToaAlbedo[0];
-                        final double brr865 = rhoToaAlbedo[2];
-                        final double brr1020 = rhoToaAlbedo[3];
                         double ndsi = Double.NaN;
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
@@ -470,14 +492,6 @@ public class OlciSnowPropertiesOp extends Operator {
                                 targetTiles.get(snowSpecificAreaBand).setSample(x, y, Double.NaN);
                             }
 
-                            final Band iceFlagBand = targetProduct.getBand(ICE_FLAG_BAND_NAME);
-                            if (brr400 > 0.0 && brr1020 > 0.0) {
-                                double iceFlag = brr400 / brr1020;
-                                targetTiles.get(iceFlagBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(iceFlag));
-                            } else {
-                                targetTiles.get(iceFlagBand).setSample(x, y, Double.NaN);
-                            }
-
                             if (considerSnowPollution) {
                                 final Band pollutionMaskBand = targetProduct.getBand(POLLUTION_MASK_BAND_NAME);
                                 if (brr400 > 0.0 && !Double.isNaN(r0)) {
@@ -541,7 +555,8 @@ public class OlciSnowPropertiesOp extends Operator {
 
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(SNOW_SPECIFIC_AREA_BAND_NAME, ProductData.TYPE_FLOAT32);
-        targetProduct.addBand(ICE_FLAG_BAND_NAME, ProductData.TYPE_FLOAT32);
+//        targetProduct.addBand(ICE_INDICATOR_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(NDBI_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         if (considerSnowPollution) {
             targetProduct.addBand(POLLUTION_MASK_BAND_NAME, ProductData.TYPE_INT16);

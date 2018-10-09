@@ -84,6 +84,8 @@ public class OlciSnowPropertiesConstants {
 
     public static final double RHO_ICE = 917.0;  // in kg*m^-3
 
+    public static final double BARE_ICE_THRESH = 1./3.;   // AK, 20181001
+
     // define here, we do not want a dependency to Idepix just for this:
     public static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
 }
