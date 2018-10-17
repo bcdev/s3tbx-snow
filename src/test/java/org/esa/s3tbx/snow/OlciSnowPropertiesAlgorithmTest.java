@@ -533,4 +533,171 @@ public class OlciSnowPropertiesAlgorithmTest {
         assertEquals(0.454199, spectralAlbedosSpherical[20], 1.E-6);
         assertEquals(0.415113, spectralAlbedosPlanar[20], 1.E-6);
     }
+
+    @Test
+    public void testNewAlgorithmOct2018() {
+        final double sza = 36.9;
+        final double vza = 3.08;
+//        final double relazi = 39.22;
+
+        double brr400 = 0.68;
+        double brr560 = 0.8623;
+        double brr865 = 0.7378;
+        double brr1020 = 0.4087;
+
+        brr400 *= 0.9798;
+        brr560 *= 0.9892;
+        brr1020 *= 0.914;
+
+        final double[] brr = new double[]{brr400, brr560, brr865, brr1020};
+
+        final double amu1 = Math.cos(sza*MathUtils.DTOR);
+        final double amu2 = Math.cos(vza*MathUtils.DTOR);
+
+        final double[] wvl = new double[]{400., 560., 865., 1020.};
+        final double[] akappa = new double[]{2.365e-11, 2.839e-9, 2.3877e-7, 2.25e-6};
+        double[] alpha = new double[4];
+        for (int i = 0; i < alpha.length; i++) {
+            alpha[i] = 4.0*Math.PI*akappa[i]/wvl[i];
+        }
+
+        // KOKHANOVSKY et al. (2018) paper:
+
+        final double consb = 0.3537;
+        final double eps1 = 1./(1. - consb);
+        final double eps2 = 1. - eps1;
+
+        // R0=RR00
+        final double rr00 = Math.pow(brr865, eps1) * Math.pow(brr1020, eps2);
+
+        final double p1 = Math.log(brr[0]/rr00) * Math.log(brr[0]/rr00);
+        final double p2 = Math.log(brr[1]/rr00) * Math.log(brr[1]/rr00);
+        final double am = Math.log(p1/p2) / Math.log(wvl[1]/wvl[0]);
+
+        final double u1 = SnowUtils.computeU(amu1);
+        final double u2 = SnowUtils.computeU(amu2);
+
+        final double x = u1 * u1 * u2 * u2 / (rr00*rr00);
+
+        final double dlina = Math.log(brr[3]/rr00) * Math.log(brr[3]/rr00) / (x * x * alpha[3]);
+
+        // dlina in mm:
+        final double AL = 1.E-6 * dlina;
+        final double aksi = 16.0 * 1.6 / 2.25;
+
+        // diameter of grains (in mm):
+        final double grainDiam = AL/aksi;
+
+        // f (in 1/mm):
+        final double SK = wvl[0] / wvl[3];
+        final double f = p1 * Math.pow(SK, am) / (x * x * AL);    // todo: AL = al ??
+
+        // results in ice_refl_output_par.dat:
+        // write(21,12)  rr00,al,am,f,diamet:
+        // 0.1071E+01  0.1255E+02  0.4371E+01  0.9399E-04  0.1103E+01
+        assertEquals(1.07, rr00, 1.E-2);
+        assertEquals(12.55, AL, 1.E-2);
+        assertEquals(4.371, am, 1.E-3);
+        assertEquals(0.9399E-04, f, 1.E-6);
+        assertEquals(1.103, grainDiam, 1.E-3);
+
+        // reflectance calculation at 4 points:
+        double[] ar = new double[4];
+        double[] ad = new double[4];
+        for (int i = 0; i < ar.length; i++) {
+            final double t = alpha[i]*1.E6 + f * Math.pow(wvl[i]/wvl[3], -am);
+            ar[i] = rr00 * Math.exp(-x * Math.sqrt(t*AL));
+            ad[i] = 100.0 * (ar[i] - brr[i]) / brr[i];
+        }
+
+        final double rssk = 0.4087;
+        // ddd=alog(rssk)*alog(rssk)/3.62**2./alfa(4)  /1.e+6:
+        final double ddd = Math.log(rssk) * Math.log(rssk) / (3.62 * 3.62 * alpha[3] * 1.E6);
+
+        final double cvf = rr00 / u2;
+        final double rplane = Math.pow(brr[3]/rr00, cvf);
+
+        // results in ice_refl_output.dat:
+        // write(22,12)ar(1),refk1,ar(2),refk2,ar(3), refk3,ar(4),refk4
+        // 0.6662E+00  0.6663E+00  0.8483E+00  0.8530E+00  0.7303E+00  0.7378E+00  0.3729E+00  0.3736E+00
+        assertEquals(0.6662, ar[0], 1.E-4);
+        assertEquals(0.6663, brr[0], 1.E-4);
+        assertEquals(0.8483, ar[1], 1.E-4);
+        assertEquals(0.853, brr[1], 1.E-3);
+        assertEquals(0.7303, ar[2], 1.E-4);
+        assertEquals(0.7378, brr[2], 1.E-4);
+        assertEquals(0.3729, ar[3], 1.E-4);
+        assertEquals(0.3736, brr[3], 1.E-4);
+
+        // write(22,12) ad1,ad2,ad3,ad4
+        // -0.3131E-02 -0.5521E+00 -0.1023E+01 -0.1782E+00
+        assertEquals(-0.3131E-02, ad[0], 1.E-4);
+        assertEquals(-0.5521, ad[1], 1.E-4);
+        assertEquals(-0.1023E+01, ad[2], 1.E-3);
+        assertEquals(-0.1782, ad[3], 1.E-4);
+
+        // write(22,12) ddd
+        // 0.2204E+01
+        assertEquals(0.2204E+01, ddd, 1.E-4);
+        // write(22,12) rplane,cvf,rr00
+        // 0.4157E+00  0.8336E+00  0.1071E+01
+        assertEquals(0.4157, rplane, 1.E-4);
+        assertEquals(0.8336, cvf, 1.E-4);
+
+    }
+
+    @Test
+    public void testComputeSpectralAlbedos() {
+        final double sza = 36.9;
+        final double vza = 3.08;
+
+        double brr400 = 0.68;
+        double brr560 = 0.8623;
+        double brr865 = 0.7378;
+        double brr1020 = 0.4087;
+
+        brr400 *= 0.9798;
+        brr560 *= 0.9892;
+        brr1020 *= 0.914;
+
+        final double[] brr = new double[]{brr400, brr560, brr865, brr1020};
+
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
+        double[][] spectralAlbedos = new double[2][numWvl];
+
+        // clean snow
+        OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, sza, vza, numWvl, spectralAlbedos);
+        assertNotNull(spectralAlbedos);
+    }
+
+    @Test
+    public void testComputeSpectralAlbedosOct2018() {
+        final double sza = 36.9;
+        final double vza = 3.08;
+
+        double brr400 = 0.68;
+        double brr560 = 0.8623;
+        double brr865 = 0.7378;
+        double brr1020 = 0.4087;
+
+        brr400 *= 0.9798;
+        brr560 *= 0.9892;
+        brr1020 *= 0.914;
+
+        final double[] brr = new double[]{brr400, brr560, brr865, brr1020};
+
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
+        double[][] spectralAlbedos = new double[2][numWvl];
+
+        // clean snow
+        OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, sza, vza, numWvl, false,
+                                                                                    spectralAlbedos);
+        assertNotNull(spectralAlbedos);
+
+        // polluted snow
+        OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, sza, vza, numWvl, true,
+                                                                                    spectralAlbedos);
+        assertNotNull(spectralAlbedos);
+
+    }
 }

@@ -354,7 +354,7 @@ class OlciSnowPropertiesAlgorithm {
      * References:
      * [1]: The determination of snow parameters using OLCI observations. TN AK, 20180404. File: Manual_04_04_2018-1.docx.
      */
-    private static void computeSpectralAlbedoFromTwoWavelengths(double[] brr,
+    static void computeSpectralAlbedoFromTwoWavelengths(double[] brr,
                                                                 double sza, double vza, int numWvl,
                                                                 double[][] spectralAlbedos) {
         final double l = computeLFromTwoWavelengths(brr, sza, vza);
@@ -368,6 +368,79 @@ class OlciSnowPropertiesAlgorithm {
 
             spectralAlbedos[0][i] = Math.exp(-Math.sqrt(l * alpha_ice));  // spectral spherical abledo
             spectralAlbedos[1][i] = Math.exp(-k_mu_0 * Math.sqrt(l * alpha_ice));  // spectral planar abledo
+        }
+    }
+
+
+    static void computeSpectralAlbedoFromTwoWavelengths_Oct2018(double[] brr,
+                                                                double sza, double vza, int numWvl,
+                                                                boolean polluted,
+                                                                double[][] spectralAlbedos) {
+
+        final double[] refWvl = new double[]{400., 560., 865., 1020.};
+        final double[] akappa = new double[]{2.365e-11, 2.839e-9, 2.3877e-7, 2.25e-6};
+        double[] alpha = new double[4];
+        for (int i = 0; i < alpha.length; i++) {
+            alpha[i] = 4.0*Math.PI*akappa[i]/refWvl[i];
+        }
+
+        final double consb = 0.3537;
+        final double eps1 = 1./(1. - consb);
+        final double eps2 = 1. - eps1;
+
+        final double rr00 = Math.pow(brr[2], eps1) * Math.pow(brr[3], eps2);
+
+        final double p1 = Math.log(brr[0]/rr00) * Math.log(brr[0]/rr00);
+        final double p2 = Math.log(brr[1]/rr00) * Math.log(brr[1]/rr00);
+        final double am = Math.log(p1/p2) / Math.log(refWvl[1]/refWvl[0]);
+
+        final double amu1 = Math.cos(sza*MathUtils.DTOR);
+        final double amu2 = Math.cos(vza*MathUtils.DTOR);
+
+        final double u1 = SnowUtils.computeU(amu1);
+        final double u2 = SnowUtils.computeU(amu2);
+
+        final double x = u1 * u1 * u2 * u2 / (rr00*rr00);
+
+        final double dlina = Math.log(brr[3]/rr00) * Math.log(brr[3]/rr00) / (x * x * alpha[3]);
+
+        // dlina in mm:
+        final double AL = 1.E-6 * dlina;
+        final double aksi = 16.0 * 1.6 / 2.25;
+
+        // diameter of grains (in mm):
+        final double grainDiam = AL/aksi;
+
+        // f (in 1/mm):
+        final double SK = refWvl[0] / refWvl[3];
+        final double f = p1 * Math.pow(SK, am) / (x * x * AL);
+
+
+        for (int i = 0; i < numWvl; i++) {
+            final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
+            final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
+            final double wvlNm = 1000. * wvl;
+            final double alka = 4.0 * Math.PI * chi / wvlNm;
+            if (polluted) {
+                // sd9=f*(wsk/ws(4))**(-am)
+                // TT(j)=alka(j)*1.e+6+sd9
+                // arr(j)=rr00*exp(-x*sqrt(TT(j)*AL))
+                // plane1= (arr(j)/rr00)**(rr00/u2)
+                // spher1=(arr(j)/rr00)**(rr00/u2/u1)
+                final double sd9 = f * Math.pow(wvlNm/refWvl[3], -am);
+                final double tt = alka*1.E6 + sd9;
+                final double arr = rr00 * Math.exp(-x*Math.sqrt(tt*AL));
+                spectralAlbedos[0][i] = Math.pow(arr/rr00, rr00/(u1*u2));   // spectral spherical albedo
+                spectralAlbedos[1][i] = Math.pow(arr/rr00, rr00/u2);        // spectral planar albedo
+            } else {
+                // TT(j)=alka(j)*1.e+6
+                // arr(j)=rr00*exp(-x*sqrt(TT(j)*AL))
+                // plane=exp(-u1*sqrt(TT(j)*AL))
+                // spher=exp(-sqrt(TT(j)*AL))
+                final double tt = alka*1.E6;
+                spectralAlbedos[0][i] = Math.exp(-Math.sqrt(tt*AL));        // spectral spherical albedo
+                spectralAlbedos[1][i] = Math.exp(-u1*Math.sqrt(tt*AL));     // spectral planar albedo
+            }
         }
     }
 
