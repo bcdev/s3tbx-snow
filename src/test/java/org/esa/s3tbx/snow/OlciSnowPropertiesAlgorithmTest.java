@@ -446,7 +446,7 @@ public class OlciSnowPropertiesAlgorithmTest {
         final double[] pollutedSnowParams = new double[]{grainDiam, soot};
         final double deltaBrr = 1.0;
 
-        final OlciSnowPropertiesAlgorithm.SpectralAlbedoResult spectralAlbedosPolluted =
+        final SpectralAlbedoResult spectralAlbedosPolluted =
                 OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPolluted(null, pollutedSnowParams, sza, Double.NaN,
                                                                            deltaBrr, false);
         assertNotNull(spectralAlbedosPolluted);
@@ -497,7 +497,7 @@ public class OlciSnowPropertiesAlgorithmTest {
         final double sza = 36.9;
         final double vza = 3.08;
 
-        OlciSnowPropertiesAlgorithm.SpectralAlbedoResult result =
+        SpectralAlbedoResult result =
                 OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
         assertNotNull(result);
         assertEquals(22.198, result.getL(), 1.E-3);
@@ -508,18 +508,6 @@ public class OlciSnowPropertiesAlgorithmTest {
         assertEquals(2, result.getSpectralAlbedos().length);
         final double[] spectralAlbedosSpherical = result.getSpectralAlbedos()[0];
         final double[] spectralAlbedosPlanar = result.getSpectralAlbedos()[1];
-
-//        assertEquals(0.910854, spectralAlbedosSpherical[0], 1.E-6);
-//        assertEquals(0.901209, spectralAlbedosPlanar[0], 1.E-6);
-//
-//        assertEquals(0.889936, spectralAlbedosSpherical[5], 1.E-6);
-//        assertEquals(0.878183, spectralAlbedosPlanar[5], 1.E-6);
-//
-//        assertEquals(0.733311, spectralAlbedosSpherical[16], 1.E-6);
-//        assertEquals(0.70783, spectralAlbedosPlanar[16], 1.E-6);
-//
-//        assertEquals(0.450026, spectralAlbedosSpherical[20], 1.E-6);
-//        assertEquals(0.410867, spectralAlbedosPlanar[20], 1.E-6);
 
         assertEquals(0.731832, spectralAlbedosSpherical[0], 1.E-6);
         assertEquals(0.706239, spectralAlbedosPlanar[0], 1.E-6);
@@ -690,14 +678,16 @@ public class OlciSnowPropertiesAlgorithmTest {
         double[][] spectralAlbedos = new double[2][numWvl];
 
         // clean snow
-        OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, sza, vza, numWvl, false,
-                                                                                    spectralAlbedos);
-        assertNotNull(spectralAlbedos);
+        SpectralAlbedoResult spectralAlbedoResult =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, 0.01, sza, vza, false);
+
+        assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 
         // polluted snow
-        OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, sza, vza, numWvl, true,
-                                                                                    spectralAlbedos);
-        assertNotNull(spectralAlbedos);
+        spectralAlbedoResult =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, 0.01, sza, vza, true);
+
+        assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 
     }
 }

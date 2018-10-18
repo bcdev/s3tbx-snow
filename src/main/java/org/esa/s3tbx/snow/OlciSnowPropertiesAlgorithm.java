@@ -23,42 +23,55 @@ class OlciSnowPropertiesAlgorithm {
      * @param vza                 - view zenith angle (deg)
      * @param referenceWavelength - OLCI reference wavelength (1020 or 865 nm)
      * @param mode                - computation mode  @return double[][]{spectralSphericalAlbedo, spectralPlanarAlbedo}
-     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used
+     * @param useAlgoApril2018    - true if new AK algorithm from April 2018 is used
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
-    static double[][] computeSpectralAlbedos(double[] brr, double sza, double vza,
-                                             double referenceWavelength,
-                                             SpectralAlbedoMode mode, boolean useAlgoApril2018) {
-        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
-        double[][] spectralAlbedos = new double[2][numWvl];
+//    static double[][] computeSpectralAlbedos(double[] brr, double sza, double vza,
+//                                             double referenceWavelength,
+//                                             SpectralAlbedoMode mode, boolean useAlgoApril2018) {
+//        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
+//        double[][] spectralAlbedos = new double[2][numWvl];
+//
+//        if (mode == SpectralAlbedoMode.SIMPLE_APPROXIMATION) {
+//            if (useAlgoApril2018) {
+//                computeSpectralAlbedoFromTwoWavelengths(brr, sza, vza, numWvl, spectralAlbedos);
+//            } else {
+//                computeSpectralAlbedoWithSimpleApproximation(brr, sza, vza, numWvl,
+//                                                             referenceWavelength, spectralAlbedos);
+//            }
+//        } else {
+//            // we no longer support this
+//            throw new IllegalArgumentException("spectral albedo algoritm mode " + mode.getName() + " not supported");
+//        }
+//
+//        return spectralAlbedos;
+//    }
 
-        if (mode == SpectralAlbedoMode.SIMPLE_APPROXIMATION) {
-            if (useAlgoApril2018) {
-                computeSpectralAlbedoFromTwoWavelengths(brr, sza, vza, numWvl, spectralAlbedos);
-            } else {
-                computeSpectralAlbedoWithSimpleApproximation(brr, sza, vza, numWvl,
-                                                             referenceWavelength, spectralAlbedos);
-            }
-        } else {
-            // we no longer support this
-            throw new IllegalArgumentException("spectral albedo algoritm mode " + mode.getName() + " not supported");
-        }
-
-        return spectralAlbedos;
+    /**
+     * Computes spectral spherical and planar albedos for CLEAN snow using AK latest algo from Oct 2018
+     *
+     * @param brr  - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
+     * @param deltaBrr - assumed uncertainty in Rayleigh corrected reflectances
+     * @param sza - sun zenith angle (deg)
+     * @param vza - view zenith angle (deg)
+     *
+     * @return SpectralAlbedoResult
+     */
+    static SpectralAlbedoResult computeSpectralAlbedos(double[] brr, double deltaBrr, double sza, double vza) {
+        return computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, deltaBrr, sza, vza, false);
     }
 
     /**
      * Computes spectral spherical and planar albedos in case of polluted snow.
      * Algorithm Tech Note: 'Manual_31_01_2018.docx', AK 20180131
      *
-     * @param brr - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
+     * @param brr                - subset of BRR spectrum  (BRR_01, BRR_05, BRR_21, BRR_17)
      * @param pollutedSnowParams - parameters for polluted snow,
      *                           see {@link OlciSnowPropertiesAlgorithm#computePollutedSnowParams
      *                           (double, double, double, double, double)}
-     * @param sza - sun zenith angle (deg)
-     * @param vza - view zenith angle (deg)
-     * @param useAlgoApril2018 - true if new AK algorithm from April 2018 is used ('Manual_04_04_2018.docx')
-     *
+     * @param sza                - sun zenith angle (deg)
+     * @param vza                - view zenith angle (deg)
+     * @param useAlgoApril2018   - true if new AK algorithm from April 2018 is used ('Manual_04_04_2018.docx')
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
     static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] brr,
@@ -67,8 +80,11 @@ class OlciSnowPropertiesAlgorithm {
                                                                double vza,
                                                                double deltaBrr,
                                                                boolean useAlgoApril2018) {
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         if (useAlgoApril2018) {
-            return computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
+//            return computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
+            // now using AK latest algo from Oct 2018:
+            return computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, deltaBrr, sza, vza, true);
         } else {
             return computeSpectralAlbedosPolluted(pollutedSnowParams, sza);
         }
@@ -101,10 +117,10 @@ class OlciSnowPropertiesAlgorithm {
     /**
      * Computes broadband albedos following AK algorithm given in 'Technical note_BBA_DECEMBER_2017.doc' (20171204).
      *
-     * @param mu_0                 - mu0
-     * @param d                    - snow grain diameter
-     * @param refractiveIndexTable - table with refractive indices
-     * @param solarSpectrumExtendedTable   - table with extended solar spectrum for sza = 0, 15, 30, 45, 60, 75 deg
+     * @param mu_0                       - mu0
+     * @param d                          - snow grain diameter
+     * @param refractiveIndexTable       - table with refractive indices
+     * @param solarSpectrumExtendedTable - table with extended solar spectrum for sza = 0, 15, 30, 45, 60, 75 deg
      * @return double[]{pbbaVis, pbbaNir, pbbaSw};
      */
     static double[] computeBroadbandAlbedo(double mu_0, double d,
@@ -355,8 +371,8 @@ class OlciSnowPropertiesAlgorithm {
      * [1]: The determination of snow parameters using OLCI observations. TN AK, 20180404. File: Manual_04_04_2018-1.docx.
      */
     static void computeSpectralAlbedoFromTwoWavelengths(double[] brr,
-                                                                double sza, double vza, int numWvl,
-                                                                double[][] spectralAlbedos) {
+                                                        double sza, double vza, int numWvl,
+                                                        double[][] spectralAlbedos) {
         final double l = computeLFromTwoWavelengths(brr, sza, vza);
         final double mu_0 = Math.cos(sza * MathUtils.DTOR);
         final double k_mu_0 = SnowUtils.computeU(mu_0);
@@ -372,48 +388,49 @@ class OlciSnowPropertiesAlgorithm {
     }
 
 
-    static void computeSpectralAlbedoFromTwoWavelengths_Oct2018(double[] brr,
-                                                                double sza, double vza, int numWvl,
-                                                                boolean polluted,
-                                                                double[][] spectralAlbedos) {
+    static SpectralAlbedoResult computeSpectralAlbedoFromTwoWavelengths_Oct2018(double[] brr, double deltaBrr,
+                                                                                double sza, double vza,
+                                                                                boolean polluted) {
+
+        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
+        double[][] spectralAlbedos = new double[2][numWvl];
 
         final double[] refWvl = new double[]{400., 560., 865., 1020.};
         final double[] akappa = new double[]{2.365e-11, 2.839e-9, 2.3877e-7, 2.25e-6};
         double[] alpha = new double[4];
         for (int i = 0; i < alpha.length; i++) {
-            alpha[i] = 4.0*Math.PI*akappa[i]/refWvl[i];
+            alpha[i] = 4.0 * Math.PI * akappa[i] / refWvl[i];
         }
 
         final double consb = 0.3537;
-        final double eps1 = 1./(1. - consb);
-        final double eps2 = 1. - eps1;
+        final double eps_1 = 1. / (1. - consb);
+        final double eps_2 = 1. - eps_1;
 
-        final double rr00 = Math.pow(brr[2], eps1) * Math.pow(brr[3], eps2);
+        final double r0 = Math.pow(brr[2], eps_1) * Math.pow(brr[3], eps_2);
 
-        final double p1 = Math.log(brr[0]/rr00) * Math.log(brr[0]/rr00);
-        final double p2 = Math.log(brr[1]/rr00) * Math.log(brr[1]/rr00);
-        final double am = Math.log(p1/p2) / Math.log(refWvl[1]/refWvl[0]);
+        final double p1 = Math.log(brr[0] / r0) * Math.log(brr[0] / r0);
+        final double p2 = Math.log(brr[1] / r0) * Math.log(brr[1] / r0);
+        final double m = Math.log(p1 / p2) / Math.log(refWvl[1] / refWvl[0]);
 
-        final double amu1 = Math.cos(sza*MathUtils.DTOR);
-        final double amu2 = Math.cos(vza*MathUtils.DTOR);
+        final double amu1 = Math.cos(sza * MathUtils.DTOR);
+        final double amu2 = Math.cos(vza * MathUtils.DTOR);
 
         final double u1 = SnowUtils.computeU(amu1);
         final double u2 = SnowUtils.computeU(amu2);
 
-        final double x = u1 * u1 * u2 * u2 / (rr00*rr00);
+        final double x = u1 * u1 * u2 * u2 / (r0 * r0);
 
-        final double dlina = Math.log(brr[3]/rr00) * Math.log(brr[3]/rr00) / (x * x * alpha[3]);
+        final double dlina = Math.log(brr[3] / r0) * Math.log(brr[3] / r0) / (x * x * alpha[3]);
 
         // dlina in mm:
-        final double AL = 1.E-6 * dlina;
-        final double aksi = 16.0 * 1.6 / 2.25;
-
+        final double l = 1.E-6 * dlina;
         // diameter of grains (in mm):
-        final double grainDiam = AL/aksi;
+//        final double aksi = 16.0 * 1.6 / 2.25;     --> 11.38
+//        final double grainDiam = l / aksi;
 
         // f (in 1/mm):
         final double SK = refWvl[0] / refWvl[3];
-        final double f = p1 * Math.pow(SK, am) / (x * x * AL);
+        final double f = p1 * Math.pow(SK, m) / (x * x * l);
 
 
         for (int i = 0; i < numWvl; i++) {
@@ -422,25 +439,61 @@ class OlciSnowPropertiesAlgorithm {
             final double wvlNm = 1000. * wvl;
             final double alka = 4.0 * Math.PI * chi / wvlNm;
             if (polluted) {
-                // sd9=f*(wsk/ws(4))**(-am)
+                // sd9=f*(wsk/ws(4))**(-m)
                 // TT(j)=alka(j)*1.e+6+sd9
-                // arr(j)=rr00*exp(-x*sqrt(TT(j)*AL))
-                // plane1= (arr(j)/rr00)**(rr00/u2)
-                // spher1=(arr(j)/rr00)**(rr00/u2/u1)
-                final double sd9 = f * Math.pow(wvlNm/refWvl[3], -am);
-                final double tt = alka*1.E6 + sd9;
-                final double arr = rr00 * Math.exp(-x*Math.sqrt(tt*AL));
-                spectralAlbedos[0][i] = Math.pow(arr/rr00, rr00/(u1*u2));   // spectral spherical albedo
-                spectralAlbedos[1][i] = Math.pow(arr/rr00, rr00/u2);        // spectral planar albedo
+                // arr(j)=r0*exp(-x*sqrt(TT(j)*l))
+                // plane1= (arr(j)/r0)**(r0/u2)
+                // spher1=(arr(j)/r0)**(r0/u2/u1)
+                final double sd9 = f * Math.pow(wvlNm / refWvl[3], -m);
+                final double tt = alka * 1.E6 + sd9;
+                final double arr = r0 * Math.exp(-x * Math.sqrt(tt * l));
+                spectralAlbedos[0][i] = Math.pow(arr / r0, r0 / (u1 * u2));   // spectral spherical albedo
+                spectralAlbedos[1][i] = Math.pow(arr / r0, r0 / u2);        // spectral planar albedo
             } else {
                 // TT(j)=alka(j)*1.e+6
-                // arr(j)=rr00*exp(-x*sqrt(TT(j)*AL))
-                // plane=exp(-u1*sqrt(TT(j)*AL))
-                // spher=exp(-sqrt(TT(j)*AL))
-                final double tt = alka*1.E6;
-                spectralAlbedos[0][i] = Math.exp(-Math.sqrt(tt*AL));        // spectral spherical albedo
-                spectralAlbedos[1][i] = Math.exp(-u1*Math.sqrt(tt*AL));     // spectral planar albedo
+                // arr(j)=r0*exp(-x*sqrt(TT(j)*l))
+                // plane=exp(-u1*sqrt(TT(j)*l))
+                // spher=exp(-sqrt(TT(j)*l))
+                final double tt = alka * 1.E6;
+                spectralAlbedos[0][i] = Math.exp(-Math.sqrt(tt * l));        // spectral spherical albedo
+                spectralAlbedos[1][i] = Math.exp(-u1 * Math.sqrt(tt * l));     // spectral planar albedo
             }
+        }
+
+        // relative error estimation for polluted snow following AK...
+        if (polluted) {
+            final double wvl_1 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
+            final double wvl_2 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
+            double[] z = new double[4];
+            for (int i = 0; i < z.length; i++) {
+                z[i] = 1.0 / Math.log(brr[i] / r0);
+            }
+
+            final double s = 0.0; // todo: unreadable, check with AK, set to 0.0 in the meantime
+
+            final double nu_1 = 2.0 * eps_1 - 2.0 * eps_1 * z[3];
+            final double nu_2 = 2.0 * eps_2 + 2.0 * eps_1 * 1.0 / Math.log(brr[3] / r0);
+
+            double[] w = new double[4];
+            w[0] = 2.0 * z[0] / (m * Math.log(wvl_2 / wvl_1));
+            w[1] = -2.0 * z[1] / (m * Math.log(wvl_2 / wvl_1));
+            w[2] = -(w[0] + w[1]) * eps_1;
+            w[3] = -(w[0] + w[1]) * eps_2;
+
+            double[] h = new double[4];
+            h[0] = 2.0 * (1.0 + s) * z[0];
+            h[1] = -2.0 * s * z[1];
+            h[2] = -eps_1 * (h[0] + h[1] + 2.0 * z[3]);
+            h[3] = 2.0 * eps_2 * (z[3] + s * z[1] - (1.0 + s * z[0]) * z[0]) - 2.0 * z[3];
+
+            final double r0RelErr = computeR0RelErr(r0, brr, eps_1, eps_2, deltaBrr);
+            final double lRelErr = computeLRelErr(l, brr, nu_1, nu_2, deltaBrr);
+            final double mRelErr = computeMRelErr(m, brr, w, deltaBrr);
+            final double fRelErr = computeFRelErr(f, brr, h, deltaBrr);
+
+            return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, r0RelErr, fRelErr, lRelErr, mRelErr);
+        } else {
+            return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, 0.0, 0.0, 0.0, 0.0);
         }
     }
 
@@ -466,9 +519,9 @@ class OlciSnowPropertiesAlgorithm {
     }
 
     static SpectralAlbedoResult computeSpectralAlbedosPollutedFromFourWavelengths(double[] brr,
-                                                                                          double deltaBrr,
-                                                                                          double sza,
-                                                                                          double vza) {
+                                                                                  double deltaBrr,
+                                                                                  double sza,
+                                                                                  double vza) {
         final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
 
@@ -528,20 +581,20 @@ class OlciSnowPropertiesAlgorithm {
 
         final double s = 0.0; // todo: unreadable, check with AK, set to 0.0 in the meantime
 
-        final double nu_1 = 2.0*eps_1 - 2.0 * eps_1 * z[3];
-        final double nu_2 = 2.0*eps_2 + 2.0*eps_1*1.0/Math.log(brr[3] / r0);
+        final double nu_1 = 2.0 * eps_1 - 2.0 * eps_1 * z[3];
+        final double nu_2 = 2.0 * eps_2 + 2.0 * eps_1 * 1.0 / Math.log(brr[3] / r0);
 
         double[] w = new double[4];
-        w[0] = 2.0*z[0] / (m*Math.log(wvl_2/wvl_1));
-        w[1] = -2.0*z[1] / (m*Math.log(wvl_2/wvl_1));
-        w[2] = -(w[0] + w[1])*eps_1;
-        w[3] = -(w[0] + w[1])*eps_2;
+        w[0] = 2.0 * z[0] / (m * Math.log(wvl_2 / wvl_1));
+        w[1] = -2.0 * z[1] / (m * Math.log(wvl_2 / wvl_1));
+        w[2] = -(w[0] + w[1]) * eps_1;
+        w[3] = -(w[0] + w[1]) * eps_2;
 
         double[] h = new double[4];
-        h[0] = 2.0*(1.0 + s) *z[0];
-        h[1] = -2.0*s*z[1];
-        h[2] = -eps_1*(h[0] + h[1] + 2.0*z[3]);
-        h[3] = 2.0*eps_2*(z[3] + s*z[1] - (1.0 + s*z[0])*z[0]) - 2.0*z[3];
+        h[0] = 2.0 * (1.0 + s) * z[0];
+        h[1] = -2.0 * s * z[1];
+        h[2] = -eps_1 * (h[0] + h[1] + 2.0 * z[3]);
+        h[3] = 2.0 * eps_2 * (z[3] + s * z[1] - (1.0 + s * z[0]) * z[0]) - 2.0 * z[3];
 
         final double r0RelErr = computeR0RelErr(r0, brr, eps_1, eps_2, deltaBrr);
         final double lRelErr = computeLRelErr(l, brr, nu_1, nu_2, deltaBrr);
@@ -594,7 +647,7 @@ class OlciSnowPropertiesAlgorithm {
         // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
         double sum = 0.0;
         for (int i = 0; i < brr.length; i++) {
-            sum += w[i]*w[i]*deltaBrr*deltaBrr/(brr[i]*brr[i]);
+            sum += w[i] * w[i] * deltaBrr * deltaBrr / (brr[i] * brr[i]);
         }
         final double mRelErr = Math.sqrt(sum);
         // make sure error is positive and does not exceed value itself
@@ -605,72 +658,10 @@ class OlciSnowPropertiesAlgorithm {
         // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
         double sum = 0.0;
         for (int i = 0; i < brr.length; i++) {
-            sum += h[i]*h[i]*deltaBrr*deltaBrr/(brr[i]*brr[i]);
+            sum += h[i] * h[i] * deltaBrr * deltaBrr / (brr[i] * brr[i]);
         }
         final double fRelErr = Math.sqrt(sum);
         return Math.min(Math.abs(f), Math.abs(fRelErr));
     }
 
-    
-    static class SpectralAlbedoResult {
-        private final double[][] spectralAlbedos;
-        private final double r0;
-        private final double f;
-        private final double l;
-        private final double m;
-
-        private final double r0RelErr;
-        private final double fRelErr;
-        private final double lRelErr;
-        private final double mRelErr;
-
-        SpectralAlbedoResult(double[][] spectralAlbedos, double r0, double f, double l, double m,
-                             double r0RelErr, double fRelErr, double lRelErr, double mRelErr) {
-            this.spectralAlbedos = spectralAlbedos;
-            this.r0 = r0;
-            this.f = f;
-            this.l = l;
-            this.m = m;
-            this.r0RelErr = r0RelErr;
-            this.fRelErr = fRelErr;
-            this.lRelErr = lRelErr;
-            this.mRelErr = mRelErr;
-        }
-
-        public double[][] getSpectralAlbedos() {
-            return spectralAlbedos;
-        }
-
-        public double getR0() {
-            return r0;
-        }
-
-        public double getF() {
-            return f;
-        }
-
-        public double getL() {
-            return l;
-        }
-
-        public double getM() {
-            return m;
-        }
-
-        public double getR0RelErr() {
-            return r0RelErr;
-        }
-
-        public double getfRelErr() {
-            return fRelErr;
-        }
-
-        public double getlRelErr() {
-            return lRelErr;
-        }
-
-        public double getmRelErr() {
-            return mRelErr;
-        }
-    }
 }

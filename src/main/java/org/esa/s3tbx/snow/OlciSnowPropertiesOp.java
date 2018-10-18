@@ -37,6 +37,7 @@ import org.esa.snap.core.util.math.MathUtils;
 
 import java.awt.*;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Computes snow properties from OLCI L1b data products.
@@ -48,7 +49,7 @@ import java.util.Map;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.7-SNAPSHOT")
+        version = "2.0.8-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -287,6 +288,15 @@ public class OlciSnowPropertiesOp extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
+        if (targetRectangle.x == 0 && targetRectangle.y == 0) {
+            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
+
+            Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
+            entries.forEach(targetTileStream -> {
+                Band targetBand = targetTileStream.getKey();
+                System.out.println("targetBand.getName() = " + targetBand.getName());
+            });
+        }
         try {
             Tile[] rhoToaTilesAlbedo = new Tile[requiredBrrBandNamesAlbedo.length];
             for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
@@ -332,6 +342,7 @@ public class OlciSnowPropertiesOp extends Operator {
                     if (brr400 > 0.0 && brr1020 > 0.0) {
                         final double iceIndicator = brr400 / brr1020;
                         ndbi = (iceIndicator - 1) / (iceIndicator + 1);
+                        ndbi = Math.min(-1.0, Math.max(ndbi, 0.0));
                         isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
                     }
 
@@ -402,7 +413,7 @@ public class OlciSnowPropertiesOp extends Operator {
                                 if (isPollutedSnow) {
                                     final double[] pollutedSnowParams =
                                             OlciSnowPropertiesAlgorithm.computePollutedSnowParams(brr400, brr1020, sza, vza, raa);
-                                    OlciSnowPropertiesAlgorithm.SpectralAlbedoResult spectralAlbedoPollutedResult =
+                                    SpectralAlbedoResult spectralAlbedoPollutedResult =
                                             OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPolluted(rhoToaAlbedo,
                                                                                                        pollutedSnowParams,
                                                                                                        sza, vza,
@@ -420,20 +431,29 @@ public class OlciSnowPropertiesOp extends Operator {
                                         mRelErr = spectralAlbedoPollutedResult.getmRelErr();
                                     }
                                 } else {
-                                    spectralAlbedos =
-                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
-                                                                                               refWvl,
-                                                                                               spectralAlbedoComputationMode,
-                                                                                               useAlgoApril2018);
+//                                    spectralAlbedos =
+//                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
+//                                                                                               refWvl,
+//                                                                                               spectralAlbedoComputationMode,
+//                                                                                               useAlgoApril2018);
+
+                                    final SpectralAlbedoResult spectralAlbedoResult =
+                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
+                                    spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
+
                                     l = OlciSnowPropertiesAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
                                                                                                sza, vza);
                                 }
                             } else {
-                                spectralAlbedos =
-                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
-                                                                                           refWvl,
-                                                                                           spectralAlbedoComputationMode,
-                                                                                           useAlgoApril2018);
+//                                spectralAlbedos =
+//                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
+//                                                                                           refWvl,
+//                                                                                           spectralAlbedoComputationMode,
+//                                                                                           useAlgoApril2018);
+
+                                final SpectralAlbedoResult spectralAlbedoResult =
+                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
+                                spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
                                 l = OlciSnowPropertiesAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
                                                                                            sza, vza);
                             }
@@ -452,7 +472,8 @@ public class OlciSnowPropertiesOp extends Operator {
                             double grainDiam = Double.NaN;
                             if (refAlbedo > 0.0) {
                                 if (useAlgoApril2018) {
-                                    grainDiam = l / 13.08;
+//                                    grainDiam = l / 13.08;
+                                    grainDiam = l / 11.38;      //  AK, October 2018
                                 } else {
                                     grainDiam = OlciSnowPropertiesAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
                                 }
