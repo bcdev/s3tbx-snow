@@ -660,6 +660,7 @@ public class OlciSnowPropertiesAlgorithmTest {
 
     @Test
     public void testComputeSpectralAlbedosOct2018() {
+        // from 'ice_refl_input.dat'
         final double sza = 36.9;
         final double vza = 3.08;
 
@@ -674,8 +675,36 @@ public class OlciSnowPropertiesAlgorithmTest {
 
         final double[] brr = new double[]{brr400, brr560, brr865, brr1020};
 
-        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
-        double[][] spectralAlbedos = new double[2][numWvl];
+        // clean snow
+        SpectralAlbedoResult spectralAlbedoResult =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, 0.01, sza, vza, false);
+
+        assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
+
+        // polluted snow
+        spectralAlbedoResult =
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths_Oct2018(brr, 0.01, sza, vza, true);
+
+        assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
+
+    }
+
+    @Test
+    public void testComputeSpectralAlbedosOct2018_2() {
+        // from 'ice_refl_input_20181022.dat'
+        final double sza = 66.37;
+        final double vza = 9.7663;
+
+        double brr400 = 1.0496;
+        double brr560 = 0.9439;
+        double brr865 = 0.8263;
+        double brr1020 = 0.6728;
+
+        brr400 *= 0.9798;
+        brr560 *= 0.9892;
+        brr1020 *= 0.914;
+
+        final double[] brr = new double[]{brr400, brr560, brr865, brr1020};
 
         // clean snow
         SpectralAlbedoResult spectralAlbedoResult =

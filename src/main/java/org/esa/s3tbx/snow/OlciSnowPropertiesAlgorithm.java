@@ -425,8 +425,8 @@ class OlciSnowPropertiesAlgorithm {
         // dlina in mm:
         final double l = 1.E-6 * dlina;
         // diameter of grains (in mm):
-//        final double aksi = 16.0 * 1.6 / 2.25;     --> 11.38
-//        final double grainDiam = l / aksi;
+        final double aksi = 16.0 * 1.6 / 2.25;     // --> 11.38
+        final double grainDiam = l / aksi;
 
         // f (in 1/mm):
         final double SK = refWvl[0] / refWvl[3];

@@ -238,7 +238,7 @@ public class OlciSnowPropertiesOp extends Operator {
         olciGains[2] = olciGainBand17;
         olciGains[3] = olciGainBand21;
         requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa05_radiance", "Oa17_radiance", "Oa21_radiance"};
-        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_05", "rBRR_17", "rBRR_21"};
+        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_06", "rBRR_17", "rBRR_21"};
 
         // get required radiance / BRR bands for PPA computation
         if (spectralAlbedoTargetBands != null) {
@@ -398,9 +398,6 @@ public class OlciSnowPropertiesOp extends Operator {
                             double mRelErr = Double.NaN;
 
                             boolean isPollutedSnow = false;
-//                            if (x == 314 && y == 110) {
-//                                System.out.println("x = " + x);
-//                            }
                             if (considerSnowPollution) {
                                 final double saa = saaTile.getSampleDouble(x, y);
                                 final double vaa = vaaTile.getSampleDouble(x, y);
@@ -431,31 +428,16 @@ public class OlciSnowPropertiesOp extends Operator {
                                         mRelErr = spectralAlbedoPollutedResult.getmRelErr();
                                     }
                                 } else {
-//                                    spectralAlbedos =
-//                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
-//                                                                                               refWvl,
-//                                                                                               spectralAlbedoComputationMode,
-//                                                                                               useAlgoApril2018);
-
                                     final SpectralAlbedoResult spectralAlbedoResult =
                                             OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
                                     spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
-
-                                    l = OlciSnowPropertiesAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
-                                                                                               sza, vza);
+                                    l = spectralAlbedoResult.getL();
                                 }
                             } else {
-//                                spectralAlbedos =
-//                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, sza, vza,
-//                                                                                           refWvl,
-//                                                                                           spectralAlbedoComputationMode,
-//                                                                                           useAlgoApril2018);
-
                                 final SpectralAlbedoResult spectralAlbedoResult =
                                         OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
                                 spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
-                                l = OlciSnowPropertiesAlgorithm.computeLFromTwoWavelengths(rhoToaAlbedo,
-                                                                                           sza, vza);
+                                l = spectralAlbedoResult.getL();
                             }
                             final double[] spectralSphericalAlbedos = spectralAlbedos[0];
                             final double[] spectralPlanarAlbedos = spectralAlbedos[1];
@@ -502,7 +484,8 @@ public class OlciSnowPropertiesOp extends Operator {
                             final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
                             final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
                             if (!Double.isNaN(grainDiam)) {
-                                final double grainDiamMillim = grainDiam / 1000.0;  // in mm
+//                                final double grainDiamMillim = grainDiam / 1000.0;  // in mm
+                                final double grainDiamMillim = grainDiam;  // already in in mm, Oct 2018
                                 final double grainDiamMetres = grainDiamMillim / 1000.0;  // in m
                                 targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamMillim));
 
