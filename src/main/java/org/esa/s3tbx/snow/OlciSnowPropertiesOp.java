@@ -49,7 +49,7 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.8-SNAPSHOT")
+        version = "2.0.9-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -174,9 +174,9 @@ public class OlciSnowPropertiesOp extends Operator {
     private double olciGainBand1;
 
     @Parameter(defaultValue = "0.9892",
-            description = "OLCI SVC gain for band 5 (default value as provided by Sentinel-3A Product Notice – " +
+            description = "OLCI SVC gain for band 6 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gain for band 5 (510nm)")
+            label = "OLCI SVC gain for band 6 (560nm)")
     private double olciGainBand5;
 
     @Parameter(defaultValue = "1.0",
@@ -237,7 +237,7 @@ public class OlciSnowPropertiesOp extends Operator {
         olciGains[1] = olciGainBand5;
         olciGains[2] = olciGainBand17;
         olciGains[3] = olciGainBand21;
-        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa05_radiance", "Oa17_radiance", "Oa21_radiance"};
+        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa06_radiance", "Oa17_radiance", "Oa21_radiance"};
         requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_06", "rBRR_17", "rBRR_21"};
 
         // get required radiance / BRR bands for PPA computation
@@ -406,6 +406,7 @@ public class OlciSnowPropertiesOp extends Operator {
                                 final double r0Thresh = OlciSnowPropertiesAlgorithm.computeR0PollutionThresh(sza, vza, raa);
                                 final double pollutedSnowSeparationValue = r0Thresh - pollutionDelta;
                                 isPollutedSnow = brr400 < pollutedSnowSeparationValue;
+//                                isPollutedSnow = true; // test
 
                                 if (isPollutedSnow) {
                                     final double[] pollutedSnowParams =
@@ -420,11 +421,11 @@ public class OlciSnowPropertiesOp extends Operator {
                                     if (useAlgoApril2018) {
                                         r0 = spectralAlbedoPollutedResult.getR0();
                                         f = spectralAlbedoPollutedResult.getF();
-                                        l = spectralAlbedoPollutedResult.getL() * 1000.;
+                                        l = spectralAlbedoPollutedResult.getL();
                                         m = spectralAlbedoPollutedResult.getM();
                                         r0RelErr = spectralAlbedoPollutedResult.getR0RelErr();
                                         fRelErr = spectralAlbedoPollutedResult.getfRelErr();
-                                        lRelErr = spectralAlbedoPollutedResult.getlRelErr() * 1000.;
+                                        lRelErr = spectralAlbedoPollutedResult.getlRelErr();
                                         mRelErr = spectralAlbedoPollutedResult.getmRelErr();
                                     }
                                 } else {
@@ -455,7 +456,7 @@ public class OlciSnowPropertiesOp extends Operator {
                             if (refAlbedo > 0.0) {
                                 if (useAlgoApril2018) {
 //                                    grainDiam = l / 13.08;
-                                    grainDiam = l / 11.38;      //  AK, October 2018
+                                    grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
                                 } else {
                                     grainDiam = OlciSnowPropertiesAlgorithm.computeGrainDiameter(refAlbedo, refWvl);
                                 }
@@ -484,10 +485,8 @@ public class OlciSnowPropertiesOp extends Operator {
                             final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
                             final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
                             if (!Double.isNaN(grainDiam)) {
-//                                final double grainDiamMillim = grainDiam / 1000.0;  // in mm
-                                final double grainDiamMillim = grainDiam;  // already in in mm, Oct 2018
-                                final double grainDiamMetres = grainDiamMillim / 1000.0;  // in m
-                                targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiamMillim));
+                                final double grainDiamMetres = grainDiam / 1000.0;  // in m
+                                targetTiles.get(grainDiameterBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(grainDiam));
 
                                 final double snowSpecificArea = 6.0 / (OlciSnowPropertiesConstants.RHO_ICE * grainDiamMetres);
                                 targetTiles.get(snowSpecificAreaBand).setSample(x, y, SnowUtils.cutTo7DecimalPlaces(snowSpecificArea));
@@ -559,7 +558,6 @@ public class OlciSnowPropertiesOp extends Operator {
 
         targetProduct.addBand(GRAIN_DIAMETER_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(SNOW_SPECIFIC_AREA_BAND_NAME, ProductData.TYPE_FLOAT32);
-//        targetProduct.addBand(ICE_INDICATOR_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(NDBI_BAND_NAME, ProductData.TYPE_FLOAT32);
 
         if (considerSnowPollution) {
@@ -624,8 +622,9 @@ public class OlciSnowPropertiesOp extends Operator {
             band.setNoDataValueUsed(true);
         }
         targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME).setUnit("mm");
-//        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("mm");
         targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("m");
+        targetProduct.getBand(POLLUTION_L_BAND_NAME).setUnit("mm");
+        targetProduct.getBand(POLLUTION_F_BAND_NAME).setUnit("1/mm");
 
         if (considerSnowPollution) {
             targetProduct.getBand(POLLUTION_MASK_BAND_NAME).setNoDataValueUsed(false);

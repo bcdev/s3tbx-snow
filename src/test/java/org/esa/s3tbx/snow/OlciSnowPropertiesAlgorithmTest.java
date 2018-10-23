@@ -660,7 +660,7 @@ public class OlciSnowPropertiesAlgorithmTest {
 
     @Test
     public void testComputeSpectralAlbedosOct2018() {
-        // from 'ice_refl_input.dat'
+        // from 'ice_refl_input.dat'  (Lautaret example pixel)
         final double sza = 36.9;
         final double vza = 3.08;
 
@@ -691,7 +691,7 @@ public class OlciSnowPropertiesAlgorithmTest {
 
     @Test
     public void testComputeSpectralAlbedosOct2018_2() {
-        // from 'ice_refl_input_20181022.dat'
+        // from 'ice_refl_input_20181022.dat'   (Dome-C example pixel)
         final double sza = 66.37;
         final double vza = 9.7663;
 
