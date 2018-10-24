@@ -226,6 +226,7 @@ public class OlciSnowPropertiesOp extends Operator {
     //    private SolarSpectrumTable solarSpectrumTable;
     private SolarSpectrumExtendedTable solarSpectrumExtendedTable;
     private RefractiveIndexTable refractiveIndexInterpolatedTable;
+    private Band pollutionFBand;
 
 
     @Override
@@ -623,8 +624,14 @@ public class OlciSnowPropertiesOp extends Operator {
         }
         targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME).setUnit("mm");
         targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("m");
-        targetProduct.getBand(POLLUTION_L_BAND_NAME).setUnit("mm");
-        targetProduct.getBand(POLLUTION_F_BAND_NAME).setUnit("1/mm");
+        final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
+        if (pollutionLBand != null) {
+            pollutionLBand.setUnit("mm");
+        }
+        pollutionFBand = targetProduct.getBand(POLLUTION_F_BAND_NAME);
+        if (pollutionFBand != null) {
+            pollutionFBand.setUnit("1/mm");
+        }
 
         if (considerSnowPollution) {
             targetProduct.getBand(POLLUTION_MASK_BAND_NAME).setNoDataValueUsed(false);

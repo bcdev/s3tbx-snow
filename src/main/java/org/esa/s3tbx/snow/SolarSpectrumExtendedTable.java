@@ -19,6 +19,7 @@ public class SolarSpectrumExtendedTable {
 
     private static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 411;
     private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles.txt";
+//    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles_oct2018.txt";
 
     private double[] wvl;
     private double[][] solarSpectrum;
@@ -30,6 +31,7 @@ public class SolarSpectrumExtendedTable {
         filename = SOLAR_SPECTRUM_DEFAULT_FILE_NAME;
         wvl = new double[length];
         solarSpectrum = new double[6][length];  // for SZA = 0, 15, 30, 45, 60, 75deg
+//        solarSpectrum = new double[89][length];  // for SZA = 0, ... , 88deg
         readTableFromFile();
     }
 

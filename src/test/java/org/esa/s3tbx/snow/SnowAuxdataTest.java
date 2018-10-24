@@ -1,5 +1,6 @@
 package org.esa.s3tbx.snow;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -40,6 +41,7 @@ public class SnowAuxdataTest {
     }
 
     @Test
+    @Ignore
     public void testLoadExtendedSolarSpectrumData() {
         // final_table_fluxes_angles:
         final SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
@@ -73,5 +75,30 @@ public class SnowAuxdataTest {
         assertEquals(202.25, solarSpectrumExtendedTable.getSolarSpectrum(5, 44), 1.E-12);
         assertEquals(53.157, solarSpectrumExtendedTable.getSolarSpectrum(5, 244), 1.E-12);
         assertEquals(13.134, solarSpectrumExtendedTable.getSolarSpectrum(5, 344), 1.E-12);
+    }
+
+    @Test
+    @Ignore
+    public void testLoadExtendedSolarSpectrumData_oct2018() {
+        // final_table_fluxes_angles_oct2018:
+        final SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
+        assertNotNull(solarSpectrumExtendedTable);
+        assertEquals(89, solarSpectrumExtendedTable.getSolarSpectrum().length);
+        assertEquals(411, solarSpectrumExtendedTable.getSolarSpectrum()[0].length);
+
+        assertEquals(1323.9, solarSpectrumExtendedTable.getSolarSpectrum(0, 0), 1.E-12);
+        assertEquals(0.35, solarSpectrumExtendedTable.getWvl(0), 1.E-12);
+        assertEquals(1214.0, solarSpectrumExtendedTable.getSolarSpectrum(0, 84), 1.E-12);
+        assertEquals(0.77, solarSpectrumExtendedTable.getWvl(84), 1.E-12);
+        assertEquals(45.868, solarSpectrumExtendedTable.getSolarSpectrum(0, 410), 1.E-12);
+        assertEquals(2.4, solarSpectrumExtendedTable.getWvl(410), 1.E-12);
+
+        assertEquals(1633.1, solarSpectrumExtendedTable.getSolarSpectrum(33, 33), 1.E-12);
+        assertEquals(528.96, solarSpectrumExtendedTable.getSolarSpectrum(43, 133), 1.E-12);
+        assertEquals(160.13, solarSpectrumExtendedTable.getSolarSpectrum(53, 233), 1.E-12);
+
+        assertEquals(11.904, solarSpectrumExtendedTable.getSolarSpectrum(88, 44), 1.E-12);
+        assertEquals(4.415, solarSpectrumExtendedTable.getSolarSpectrum(88, 244), 1.E-12);
+        assertEquals(0.5293, solarSpectrumExtendedTable.getSolarSpectrum(88, 344), 1.E-12);
     }
 }

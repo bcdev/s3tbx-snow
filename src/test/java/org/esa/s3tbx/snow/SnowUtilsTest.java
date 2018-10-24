@@ -1,5 +1,6 @@
 package org.esa.s3tbx.snow;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.Assert.assertNotNull;
@@ -47,6 +48,7 @@ public class SnowUtilsTest {
     }
 
     @Test
+    @Ignore
     public void testGetInterpolFlux() {
         SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
         double[][] solarSpectrum = solarSpectrumExtendedTable.getSolarSpectrum();
@@ -101,6 +103,7 @@ public class SnowUtilsTest {
     }
 
     @Test
+    @Ignore
     public void testGetExtrapolFlux() {
         SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
         double[][] solarSpectrum = solarSpectrumExtendedTable.getSolarSpectrum();

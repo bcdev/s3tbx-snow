@@ -52,6 +52,8 @@ public class SnowUtils {
         final double[][] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
 
         final double[] solarSpectrumInterpolated = getSolarSpectrumInterpolated(solarSpectrum, sza);
+//        final int szaIndex = (int) Math.min(Math.round(sza), 88);
+//        final double[] solarSpectrumInterpolated = solarSpectrum[szaIndex];
 
         double[] fLambda = new double[solarSpectrumInterpolated.length];
 
