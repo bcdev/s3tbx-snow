@@ -7,7 +7,7 @@
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
                 <attr name="operatorName" stringvalue="OLCI.SnowProperties"/>
                 <attr name="displayName" stringvalue="OLCI Snow Properties"/>
-                <attr name="dialogTitle" stringvalue="OLCI Snow Properties v2.0.9-SNAPSHOT"/>
+                <attr name="dialogTitle" stringvalue="OLCI Snow Properties v2.0.10-SNAPSHOT"/>
                 <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
                 <attr name="targetProductNameSuffix" stringvalue="_snow"/>
                 <attr name="ShortDescription" stringvalue="Provides snow properties from OLCI measurements."/>
@@ -18,8 +18,8 @@
     <folder name="Menu">
         <folder name="Optical">
             <folder name="Thematic Land Processing">
-                <folder name="Sentinel-3 Snow Processor">
-                    <attr name="displayName" stringvalue="Sentinel-3 Snow Processor"/>
+                <folder name="Sentinel-3 Snow Properties Processor">
+                    <attr name="displayName" stringvalue="Sentinel-3 Snow Properties Processor"/>
                     <attr name="position" intvalue="311"/>
                     <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.shadow">
                         <attr name="originalFile"

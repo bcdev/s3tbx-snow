@@ -19,7 +19,7 @@ During the implementation process, all processing software was distributed withi
 for the purpose of a comprehensive validation from an appropriate OLCI database containing products covering a variety of
 selected snow-covered areas. All SNAP
 S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
-(Windows, Linus, MacOS). The :underline:`procedure` for installation and operation is described in this chapter.
+(Windows, Linux, MacOS). The :underline:`procedure` for installation and operation is described in this chapter.
 
 .. index:: Theoretical Background Summary
 
@@ -36,7 +36,7 @@ Processing Environment
 ======================
 
 As said, the S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
-(Windows, Linus, MacOS).
+(Windows, Linux, MacOS).
 The chapter :doc:`s3snow_installation` describes in more detail how to install the plugins in SNAP.
 
 .. index:: Processing Components
@@ -96,13 +96,13 @@ the specific GPF help documentation integrated in the SNAP desktop application.
 The OLCI Snow Properties Processor
 ----------------------------------
 
-The Snow Properties processor is the key component for the processing in S3-SNOW. The processor provides the
+The Snow Properties Processor (SPP) is the key component for the processing in S3-SNOW. The processor provides the
 implementation
 of the algorithms for the various snow properties of interest. These algorithms are also described
 in detail in [`2 <intro.html#References>`_].
 
 As input, the processor requires an OLCI L1b product (original or being Rayleigh corrected in a preprocessing step).
-Optionally, an IdePix pixel classification product (see below) can be provided as additional input. The output is an amount of
+Optionally, an IdePix pixel classification product (see below) can be provided as additional input. The output is a set of
 snow properties of interest, defined by the user via processing parameters. This is described in detail in
 the chapter :doc:`s3snow_usage`.
 
@@ -125,7 +125,7 @@ needed in other projects than S3-Snow, and in return leave out other options whi
 
 The IdePix classification algorithm for Sentinel-3 OLCI is based on a neural network approach. A common neural net
 is used for both land and water pixels. As input for the neural net, the square roots of the OLCI TOA reflectances
-(obtained from an internal radiance-to-reflectance conversion) in all 21 bands are used. As output, the neural net
+(obtained from an internal radiance-to-reflectance conversion) at all 21 wavelengths are used. As output, the neural net
 finally provides per pixel one of the properties 'cloud sure', 'cloud ambiguous', 'cloud'
 (which means sure OR ambiguous), or 'snow/ice'.
 
@@ -144,11 +144,11 @@ applied on the same OLCI L1b products which are being considered for the snow pr
 The OLCI O2 Correction Processor
 --------------------------------
 
-The OLCI O2 Correction Processor provides a 'harmonisation' of O2 bands, which means a modification of the effective
-transmittances in O2A bands 13, 14 and 15 to their values which would be measured at their mean wavelengths and with
+The OLCI O2 Correction Processor provides a 'harmonisation' of O2 wavebands, which means a modification of the effective
+transmittances in O2A wavebands 13, 14 and 15 to their values which would be measured at their mean wavelengths and with
 nominal bandwidth. The corresponding algorithm was provided by R.Preusker (Spectral Earth, Berlin) and is described
 in detail in [`2 <intro.html#References>`_]. Among various outputs, the processor provides the rectified and desmiled
-transmission for OLCI band 13 (761.25nm) which is used by the IdePix classification for the retrieval of clouds
+transmission for OLCI waveband 13 (761.25nm) which is used by the IdePix classification for the detection of clouds
 over snow (previous subsection).
 
 The SNAP Slope Processor
@@ -182,7 +182,7 @@ Lookup Tables
 
 Various lookup tables are used for the OLCI O2 correction, which in return is part of the IdePix OLCI
 pixel classification, all described in more detail in
-[`2 <intro.html#References>`_]. These lookup table are not provided separately, but as an internal part of the
+[`2 <intro.html#References>`_]. These lookup tables are not provided separately, but as an internal part of the
 OLCI O2 correction processor plugin.
 
 .. index:: Processing Flow
@@ -202,16 +202,16 @@ The overall processing flow and the interaction of the S3-SNOW components are il
 The colour and arrow scheme in the diagram has the following meaning:
 
 - **red** : The standard processing flow for snow properties retrieval. The red boxes indicate the mandatory input products
-  and processing modules: An OLCI L1b radiances product is used as input product for the Snow Properties Processor.
+  and processing modules: An OLCI L1b radiances product is used as input product for the SPP.
   Internally, BRRs are computed from a call of the SNAP Rayleigh Correction Processor, which in return are used for the
   retrieval of the various snow properties.
 - **orange** : Alternative processing flow for snow properties retrieval: An OLCI BRR product is used as input product
-  for the Snow Properties Processor. This BRR product has been computed independently in a preprocessing step, directly
+  for the SPP. This BRR product has been computed independently in a preprocessing step, directly
   using the Rayleigh Correction Processor.
 - **green** : Optional processing, i.e. cloud classification: An OLCI L1b radiances product is used as input product
   for the IdePix Pixel Classification Processor. The IdePix output product can then be used as optional second input
-  product for the Snow Properties Processor. Internally, IdePix calls the O2 Correction Processor to obtain the
-  O2 band transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
+  product for the SPP. Internally, IdePix calls the O2 Correction Processor to obtain the
+  O2 waveband transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
   DEM product can be used as input for the O2 Correction Processor. If no DEM is specified by the user, the altitude band
   from the Olci L1b product is used.
 - **grey** : Additional processing options, not directly used in the snow properties retrieval. I.e., O2 correction

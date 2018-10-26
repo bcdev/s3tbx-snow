@@ -25,7 +25,7 @@ visible in their dedicated menus as shown in the figure sequence :numref:`snow_p
    :align:   center
    :scale: 50 %
 
-   The SNAP menu entry for the Snow Properties Processor.
+   The SNAP menu entry for the SPP.
 
 .. _idepix_snow_in_snap:
 .. figure::  pix/idepix_snow_in_snap.png

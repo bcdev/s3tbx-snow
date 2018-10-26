@@ -49,7 +49,7 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.9-SNAPSHOT")
+        version = "2.0.10-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -623,7 +623,7 @@ public class OlciSnowPropertiesOp extends Operator {
             band.setNoDataValueUsed(true);
         }
         targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME).setUnit("mm");
-        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("m");
+        targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME).setUnit("m^2/kg");
         final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
         if (pollutionLBand != null) {
             pollutionLBand.setUnit("mm");

@@ -188,7 +188,7 @@ OLCI L1b Bottom-of-Rayleigh Reflectances (BRR) Product
 ------------------------------------------------------
 
 As an alternative to the OCLI L1b radiance products, the Snow Properties Processor also accepts as input
-Bottom-of-Rayleigh Reflectances (BRR) products which have been generated in a pre-processing step using the
+BRR products which have been generated in a pre-processing step using the
 SNAP Rayleigh Correction Processor. This processor can be accessed from the SNAP Desktop application as shown in
 :numref:`rayleigh_in_snap`.
 
@@ -200,22 +200,22 @@ SNAP Rayleigh Correction Processor. This processor can be accessed from the SNAP
    Access to Rayleigh Correction Processor in SNAP Desktop.
 
 The Rayleigh Correction Processor is a SNAP build-in component. For a detailed description see the corresponding SNAP
-help documentation. For BRR products to be used with the Snow Properties Processor, BRR for bands 1, 5, 17 and 21
-(400nm, 510, 865 and 1020nm) must be generated, and in addition the BRRs for all other spectral bands of interest.
+help documentation. For BRR products to be used with the Snow Properties Processor, BRR for spectral bands 1, 6, 17 and 21
+(400nm, 560, 865 and 1020nm) must be generated, and in addition the BRRs for all other spectral bands of interest.
 In :numref:`rayleigh_params`, the parameter settings to generate
-BRR in bands 1, 5, 17 and 21, and in addition bands 9 and 10, are shown.
+BRR in bands 1, 6, 17 and 21, and in addition bands 9 and 10, are shown.
 
 .. _rayleigh_params:
 .. figure::  pix/rc_params.png
    :align:   center
    :scale: 80 %
 
-   Rayleigh Correction: parameters for the generation of BRR in bands 1, 5, 17 and 21, and in addition bands 9 and 10.
+   Rayleigh Correction: parameters for the generation of BRR in bands 1, 5, 17 and 21, and in addition in bands 9 and 10.
 
 The bands in the resulting BRR product are listed in :numref:`rc_bands`.
 
 .. _rc_bands:
-.. table:: Bands in Bottom-of-Rayleigh reflectances product
+.. table:: Bands in BRR product
 
     +-------------------------+---------------------+------------+----------------------------------------------------------+
     |     **Name in product** |       **Unit**      |   **Type** |        **Description**                                   |
@@ -388,15 +388,15 @@ For more detailed explanations of the physical meaning of the parameters, see [`
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
     |   grain_diameter                 | mm                  | float32    | Snow grain diameter                                    |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   snow_specific_area             | km2                 | float32    | Snow specific area                                     |
+    |   snow_specific_area             | m^2/kg              | float32    | Snow specific area                                     |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
     |   ice_indicator                  | dl                  | float32    | Ice indicator                                          |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
     |   pollution_mask                 | dl                  | float32    | Pollution mask                                         |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   f                              | dl                  | float32    | Snow impurity absorption coefficient                   |
+    |   f                              | 1/mm                | float32    | Snow impurity absorption coefficient                   |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   l                              | dl                  | float32    | Effective absorption length                            |
+    |   l                              | mm                  | float32    | Effective absorption length                            |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
     |   m                              | dl                  | float32    | Absorption Angstrom parameter                          |
     +----------------------------------+---------------------+------------+--------------------------------------------------------+
