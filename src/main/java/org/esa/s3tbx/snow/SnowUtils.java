@@ -33,21 +33,7 @@ public class SnowUtils {
         return refractiveIndexTableInterpolated;
     }
 
-//    public static double[] getFLambda(SolarSpectrumTable solarSpectrumTable) {
-//
-//        final double[] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
-//
-//        double[] fLambda = new double[solarSpectrum.length];
-//
-//        for (int i = 0; i < fLambda.length; i++) {
-//            final double trans = 1.0;   // for the new solar spectrum
-//            fLambda[i] = trans * solarSpectrum[i] / 1000;
-//        }
-//
-//        return fLambda;
-//    }
-
-    public static double[] getFLambda(SolarSpectrumExtendedTable solarSpectrumTable, double sza) {
+    public static double[] computeFLambda(SolarSpectrumExtendedTable solarSpectrumTable, double sza) {
 
         final double[][] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
 
