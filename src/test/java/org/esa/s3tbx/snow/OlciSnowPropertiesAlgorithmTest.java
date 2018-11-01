@@ -417,14 +417,14 @@ public class OlciSnowPropertiesAlgorithmTest {
                 SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
                         solarSpectrumExtendedTable);
 
-        double[] planarBroadbandAlbedo =
-                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, false,
-                            refractiveIndexInterpolatedTable,
-                            solarSpectrumExtendedTable,
-                            sza, vza);
-        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
-            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
-        }
+//        double[] planarBroadbandAlbedo =
+//                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(mu_0, brr, false,
+//                                                                           refractiveIndexInterpolatedTable,
+//                                                                           solarSpectrumExtendedTable,
+//                                                                           sza, vza);
+//        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
+//            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
+//        }
 
         double[] planarBroadbandAlbedo_trapez =
                 OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_trapez(mu_0, brr, false,
@@ -436,10 +436,10 @@ public class OlciSnowPropertiesAlgorithmTest {
         }
 
         double[] planarBroadbandAlbedo_simpson =
-                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_simpson(mu_0, brr, false,
-                        refractiveIndexInterpolatedTable,
-                        solarSpectrumExtendedTable,
-                        sza, vza);
+                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, false,
+                                                                   refractiveIndexInterpolatedTable,
+                                                                   solarSpectrumExtendedTable,
+                                                                   sza, vza);
         for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo_simpson) {
             System.out.println("planarBroadbandAlbedo_simpson = " + aPlanarBroadbandAlbedo);
         }

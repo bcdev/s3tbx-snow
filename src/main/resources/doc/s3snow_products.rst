@@ -29,7 +29,7 @@ OLCI L1b TOA Radiance Product
 -----------------------------
 
 Both reduced and full resolution OLCI L1b TOA radiance products can
-be used as input data. Table :numref:`olci_bands_l1b` to :numref:`olci_l1b_flag_coding` give an overview of
+be used as input data. Tables 3.1 to 3.4 give an overview of
 OLCI L1b bands, tie point grids and L1b flag coding, respectively. A more detailed description of the OLCI
 standard L1b product is given in [`3 <intro.html#References>`_].
 
@@ -212,7 +212,7 @@ BRR in bands 1, 6, 17 and 21, and in addition bands 9 and 10, are shown.
 
    Rayleigh Correction: parameters for the generation of BRR in bands 1, 5, 17 and 21, and in addition in bands 9 and 10.
 
-The bands in the resulting BRR product are listed in :numref:`rc_bands`.
+The bands in the resulting BRR product are listed in Table 3.5.
 
 .. _rc_bands:
 .. table:: Bands in BRR product
@@ -243,7 +243,7 @@ SNAP IdePix Classification Product
 The IdePix classification product is the result of the pixel classification performed on the OLCI L1b
 product. In return, the IdePix product can be used as optional input for Snow Properties Processor.
 The IdePix OLCI version for S3-SNOW provides an 'extended' classification product containing the bands
-listed in :numref:`idepix_bands`.
+listed in Table 3.6.
 
 .. _idepix_bands:
 .. table:: Bands in IdePix pixel classification product
@@ -271,7 +271,7 @@ listed in :numref:`idepix_bands`.
     +-------------------------+---------------------+------------+----------------------------------------------------------+
 
 
-The IdePix OLCI classification flag coding is given in :numref:`idepix_flagcoding`.
+The IdePix OLCI classification flag coding is given in Table 3.7.
 
 .. _idepix_flagcoding:
 .. table:: Bands in IdePix pixel classification product
@@ -310,7 +310,7 @@ O2 Correction Product
 The O2 correction step is done as part of the IdePix pixel classification. The results of this step are
 used by IdePix internally, and no separate products are written in the S3-SNOW processing flow. However, as the
 O2 correction is also available as a standalone SNAP plugin with a separate target product, its contents are
-listed in :numref:`o2corr_bands` for completeness.
+listed in Table 3.8 for completeness.
 
 .. _o2corr_bands:
 .. table:: Bands in O2 Correction target product
@@ -333,7 +333,7 @@ Slope Product
 
 A slope product is the output of the SNAP Slope Processor introduced in chapter :doc:`s3snow_processing_system`.
 As mentioned, this is an optional product which is not directly used in the S3-SNOW processing flow.
-For completeness, its contents are listed in :numref:`slope_bands`.
+For completeness, its contents are listed in Table 3.9.
 
 .. _slope_bands:
 .. table:: Bands in Slope Processor target product
@@ -356,68 +356,68 @@ For completeness, its contents are listed in :numref:`slope_bands`.
 Final Snow Properties Product
 =============================
 
-The S3-SNOW final product contain various snow properties, depending on the processing paramaters specified by the user.
-The maximum number of bands which can be generated is given in :numref:`snowprop_bands`.
+The S3-SNOW final product contains various snow properties, depending on the processing paramaters specified by the user.
+The maximum number of bands which can be generated is given in Table 3.10.
 For more detailed explanations of the physical meaning of the parameters, see [`2 <intro.html#References>`_].
 
 .. _snowprop_bands:
 .. table:: Bands in final S3-SNOW snow properties product
 
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |     **Name in product**          |       **Unit**      |   **Type** |        **Description**                                 |
-    +==================================+=====================+============+========================================================+
-    |   albedo_bb_spherical_vis        | dl                  | float32    | Spherical albedo in broadband visible range            |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_bb_spherical_nir        | dl                  | float32    | Spherical albedo in broadband near infrared range      |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_bb_spherical_sw         | dl                  | float32    | Spherical albedo in broadband shortwave range          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_bb_planar_vis           | dl                  | float32    | Planar albedo in broadband visible range               |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_bb_planar_nir           | dl                  | float32    | Planar albedo in broadband near infrared range         |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_bb_planar_sw            | dl                  | float32    | Planar albedo in broadband shortwave range             |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_spectral_spherical_<nn> | dl                  | float32    | Spectral spherical albedo in band <nn> (max. 21 bands) |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   albedo_spectral_planar_<nn>    | dl                  | float32    | Spectral planar albedo in band <nn> (max. 21 bands)    |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   rBRR_<nn>                      | dl                  | float32    | BRR in band <nn> (max. 21 bands)                       |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   ppa_spectral_<nn>              | dl                  | float32    | PPA in band <nn> (max. 21 bands)                       |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   grain_diameter                 | mm                  | float32    | Snow grain diameter                                    |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   snow_specific_area             | m^2/kg              | float32    | Snow specific area                                     |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   ice_indicator                  | dl                  | float32    | Ice indicator                                          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   pollution_mask                 | dl                  | float32    | Pollution mask                                         |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   f                              | 1/mm                | float32    | Snow impurity absorption coefficient                   |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   l                              | mm                  | float32    | Effective absorption length                            |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   m                              | dl                  | float32    | Absorption Angstrom parameter                          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   r_0                            | dl                  | float32    | Reflectance of nonabsorbing snow layer                 |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   f_rel_err                      | dl                  | float32    | Relative error of parameter f                          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   l_rel_err                      | dl                  | float32    | Relative error of parameter l                          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   m_rel_err                      | dl                  | float32    | Relative error of parameter m                          |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   r_0_rel_err                    | dl                  | float32    | Relative error of parameter r_0                        |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   ndsi                           | dl                  | float32    | NDSI                                                   |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   ndsi_mask                      | dl                  | float32    | NDSI mask for snow identification                      |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   quality_flags                  | dl                  | int16      | L1b quality flags                                      |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
-    |   pixel_classif_flags            | dl                  | int16      | Pixel classification flags                             |
-    +----------------------------------+---------------------+------------+--------------------------------------------------------+
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |     **Name in product**          |       **Unit**      |   **Type** |        **Description**                                     |
+    +==================================+=====================+============+============================================================+
+    |   albedo_bb_spherical_vis        | dl                  | float32    | Spherical albedo in broadband visible range                |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_bb_spherical_nir        | dl                  | float32    | Spherical albedo in broadband near infrared range          |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_bb_spherical_sw         | dl                  | float32    | Spherical albedo in broadband shortwave range              |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_bb_planar_vis           | dl                  | float32    | Planar albedo in broadband visible range                   |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_bb_planar_nir           | dl                  | float32    | Planar albedo in broadband near infrared range             |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_bb_planar_sw            | dl                  | float32    | Planar albedo in broadband shortwave range                 |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_spectral_spherical_<nn> | dl                  | float32    | Spectral spherical albedo in band <nn> (max. 21 bands)     |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   albedo_spectral_planar_<nn>    | dl                  | float32    | Spectral planar albedo in band <nn> (max. 21 bands)        |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   rBRR_<nn>                      | dl                  | float32    | BRR in band <nn> (max. 21 bands)                           |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   ppa_spectral_<nn>              | dl                  | float32    | PPA in band <nn> (max. 21 bands)                           |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   grain_diameter                 | mm                  | float32    | Snow grain diameter                                        |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   snow_specific_area             | m^2/kg              | float32    | Snow specific surface area                                 |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   ndbi                           | dl                  | float32    | Bare ice indicator                                         |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   pollution_mask                 | dl                  | float32    | Pollution mask                                             |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   f                              | 1/mm                | float32    | Normalized snow impurity absorption coefficient at 1micron |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   l                              | mm                  | float32    | Effective absorption length                                |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   m                              | dl                  | float32    | Absorption Angstrom parameter                              |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   r_0                            | dl                  | float32    | Reflectance of nonabsorbing snow layer                     |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   f_rel_err                      | dl                  | float32    | Relative error of parameter f                              |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   l_rel_err                      | dl                  | float32    | Relative error of parameter l                              |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   m_rel_err                      | dl                  | float32    | Relative error of parameter m                              |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   r_0_rel_err                    | dl                  | float32    | Relative error of parameter r_0                            |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   ndsi                           | dl                  | float32    | NDSI                                                       |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   ndsi_mask                      | dl                  | float32    | NDSI mask for snow identification                          |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   quality_flags                  | dl                  | int16      | L1b quality flags                                          |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
+    |   pixel_classif_flags            | dl                  | int16      | Pixel classification flags                                 |
+    +----------------------------------+---------------------+------------+------------------------------------------------------------+
 
 
 |vspace| |br|

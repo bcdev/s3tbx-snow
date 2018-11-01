@@ -69,7 +69,7 @@ See listing of files in :numref:`sw_bundle`.
 
 
 The processor versions were frequently incremented during the iterative development process.
-E.g., the current version of the Snow Properties Processor is v2.0.10.
+E.g., the current version of the Snow Properties Processor is v2.0.11.
 
 .. index:: How to get the Software
 

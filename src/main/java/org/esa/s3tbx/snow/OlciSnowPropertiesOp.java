@@ -49,7 +49,7 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.10-SNAPSHOT")
+        version = "2.0.11-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -452,7 +452,13 @@ public class OlciSnowPropertiesOp extends Operator {
                             setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
 
                             if (computePPA && spectralAlbedoTargetBands != null) {
-                                final double[] spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA(rhoToaPPA, sza, vza);
+//                                final double[] spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA(rhoToaPPA, sza, vza);
+                                double[] spectralPPA;
+                                if (isPollutedSnow) {
+                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, f, m);
+                                } else {
+                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, 0.0, 0.0);
+                                }
                                 setTargetTilesSpectralPPA(spectralPPA, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
                             }
 
