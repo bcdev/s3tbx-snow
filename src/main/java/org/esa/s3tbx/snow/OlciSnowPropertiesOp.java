@@ -280,12 +280,12 @@ public class OlciSnowPropertiesOp extends Operator {
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
         if (targetRectangle.x == 0 && targetRectangle.y == 0) {
-            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
+//            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
 
             Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
             entries.forEach(targetTileStream -> {
                 Band targetBand = targetTileStream.getKey();
-                System.out.println("targetBand.getName() = " + targetBand.getName());
+//                System.out.println("targetBand.getName() = " + targetBand.getName());
             });
         }
         try {
