@@ -43,7 +43,7 @@ References
     Issue 1, Revision 1, 16 March 2016.
 
 2.  Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
-    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 3.0, 30 April 2018.
+    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 1.0, 1 November 2018.
 
 3.  Sentinel-3 OLCI User Guide,
     available at: https://sentinel.esa.int/web/sentinel/user-guides/sentinel-3-olci

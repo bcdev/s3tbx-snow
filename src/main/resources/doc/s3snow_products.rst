@@ -68,7 +68,7 @@ standard L1b product is given in [`3 <intro.html#References>`_].
 .. table:: OLCI instrument channels.
 
     +-------------------------------+------------------------------+
-    | **Channel**                   | **Wavelength**               |
+    | **Channel**                   | **Wavelength (nm)**          |
     +===============================+==============================+
     | 1                             | 400.0                        |
     +-------------------------------+------------------------------+
@@ -188,9 +188,13 @@ OLCI L1b Bottom-of-Rayleigh Reflectances (BRR) Product
 ------------------------------------------------------
 
 As an alternative to the OCLI L1b radiance products, the Snow Properties Processor also accepts as input
-BRR products which have been generated in a pre-processing step using the
+BRR [#f1]_ products which have been generated in a pre-processing step using the
 SNAP Rayleigh Correction Processor. This processor can be accessed from the SNAP Desktop application as shown in
 :numref:`rayleigh_in_snap`.
+
+.. rubric:: Footnotes
+
+.. [#f1] More precisely, the term 'BRR' refers to a Bottom-of-atmosphere reflectance, which is derived from Top-of-atmosphere reflectance by correction for molecular scattering and absorption.
 
 .. _rayleigh_in_snap:
 .. figure::  pix/rc_in_snap.png
