@@ -106,15 +106,25 @@ public class OlciSnowPropertiesOp extends Operator {
 
     @Parameter(defaultValue = "false",
             label = "Consider NDSI snow mask",
-            description =
-                    "If selected, NDSI will be computed from 865 and 1020nm for snow identification. " +
-                            "Then, only snow pixels will be considered for albedo computation.")
+            description = "If selected, NDSI will be computed from 865 and 1020nm for snow identification. " +
+                            "Then, only 'NDSI snow' pixels will be considered for snow properties retrieval.")
     private boolean considerNdsiSnowMask;
 
     @Parameter(defaultValue = "0.03",
             description = "NDSI threshold for snow identification",
             label = "NDSI threshold for snow identification")
     private double ndsiThresh;
+
+    @Parameter(defaultValue = "false",
+            label = "Compute over bare ice",
+            description = "If selected, NDBI will be computed from 865 and 1020nm for bare ice identification. " +
+                            "Then, also pixels identified as bare ice will be considered for snow properties retrieval.")
+    private boolean considerBareIce;
+
+    @Parameter(defaultValue = "0.3",
+            description = "NDBI threshold for bare ice identification",
+            label = "NDBI threshold for bare ice identification")
+    private double ndbiThresh;
 
     @Parameter(defaultValue = "true",
             description =
@@ -334,7 +344,8 @@ public class OlciSnowPropertiesOp extends Operator {
                         final double iceIndicator = brr400 / brr1020;
                         ndbi = (iceIndicator - 1) / (iceIndicator + 1);
                         ndbi = Math.max(-1.0, Math.min(ndbi, 1.0));
-                        isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
+//                        isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
+                        isBareIce = considerBareIce && ndbi > ndbiThresh;
                     }
 
                     final boolean l1Valid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit());
@@ -342,7 +353,9 @@ public class OlciSnowPropertiesOp extends Operator {
                     final boolean isNotCloud = cloudMaskTile == null ||
                             (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0);
 
-                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud;
+                    final double sza = szaTile.getSampleDouble(x, y);
+
+                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud && sza < 75.0;
 
                     if (pixelIsValid) {
 
@@ -379,7 +392,6 @@ public class OlciSnowPropertiesOp extends Operator {
                                 }
                             }
 
-                            final double sza = szaTile.getSampleDouble(x, y);
                             final double vza = vzaTile.getSampleDouble(x, y);
                             final double mu_0 = Math.cos(sza * MathUtils.DTOR);
 
