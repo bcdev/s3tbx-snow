@@ -344,25 +344,72 @@ class OlciSnowPropertiesAlgorithm {
                                                                         refractiveIndexTable,
                                                                         solarSpectrumExtendedTable, vza,
                                                                         isPolluted);
+        double[] planarCleanSpectralAlbedo = null;
+        if (isPolluted) {
+            planarCleanSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
+                                                                        refractiveIndexTable,
+                                                                        solarSpectrumExtendedTable, vza,
+                                                                        false);
+        }
         double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
         for (int i = 0; i < fLambdaTimesPlanarSpectralAlbedo.length; i++) {
-            fLambdaTimesPlanarSpectralAlbedo[i] = planarSpectralAlbedo[i] * fLambda[i];
+            if (isPolluted && wvlsFull[i] > 1.02) {
+                fLambdaTimesPlanarSpectralAlbedo[i] = planarCleanSpectralAlbedo[i] * fLambda[i];
+            } else {
+                fLambdaTimesPlanarSpectralAlbedo[i] = planarSpectralAlbedo[i] * fLambda[i];
+            }
         }
 
-        numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                   OlciSnowPropertiesConstants.BB_WVL_2, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
-        denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                     OlciSnowPropertiesConstants.BB_WVL_2, fLambda, wvlsFull);
+        // we start at 0.35 microns, but need to extrapolate to 0.3 microns in polluted case (AK, 20181122)
+        // (but here with linear rather than quadratic extrapolation, very small differences on the VIS side anyway)
+        if (isPolluted) {
+            final double numerator300To400 = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                         OlciSnowPropertiesConstants.BB_WVL_1,
+                                                                         fLambdaTimesPlanarSpectralAlbedo,
+                                                                         wvlsFull);
+            final double denominator300To400 = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                           OlciSnowPropertiesConstants.BB_WVL_1,
+                                                                           fLambda,
+                                                                           wvlsFull);
+            numeratorVis = numerator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                 OlciSnowPropertiesConstants.BB_WVL_2,
+                                                                                 fLambdaTimesPlanarSpectralAlbedo,
+                                                                                 wvlsFull);
+            denominatorVis = denominator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                     OlciSnowPropertiesConstants.BB_WVL_2,
+                                                                                     fLambda,
+                                                                                     wvlsFull);
 
+            numeratorSw = numerator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                OlciSnowPropertiesConstants.BB_WVL_3,
+                                                                                fLambdaTimesPlanarSpectralAlbedo,
+                                                                                wvlsFull);
+            denominatorSw = denominator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                    OlciSnowPropertiesConstants.BB_WVL_3,
+                                                                                    fLambda,
+                                                                                    wvlsFull);
+        } else {
+            numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                       OlciSnowPropertiesConstants.BB_WVL_2,
+                                                       fLambdaTimesPlanarSpectralAlbedo,
+                                                       wvlsFull);
+            denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                         OlciSnowPropertiesConstants.BB_WVL_2,
+                                                         fLambda,
+                                                         wvlsFull);
+            numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                OlciSnowPropertiesConstants.BB_WVL_3,
+                                                                                fLambdaTimesPlanarSpectralAlbedo,
+                                                                                wvlsFull);
+            denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
+                                                                                    OlciSnowPropertiesConstants.BB_WVL_3,
+                                                                                    fLambda,
+                                                                                    wvlsFull);
+        }
         numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
                                                    OlciSnowPropertiesConstants.BB_WVL_3, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
         denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
                                                      OlciSnowPropertiesConstants.BB_WVL_3, fLambda, wvlsFull);
-
-        numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                  OlciSnowPropertiesConstants.BB_WVL_3, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
-        denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                    OlciSnowPropertiesConstants.BB_WVL_3, fLambda, wvlsFull);
 
         bbaVis = numeratorVis / denominatorVis;
         bbaNir = numeratorNir / denominatorNir;
@@ -476,20 +523,19 @@ class OlciSnowPropertiesAlgorithm {
      * @param d - grain diameter in mm
      * @param f - f parameter for polluted snow
      * @param m - m parameter for polluted snow
-     *
      * @return double [] ppa
      */
     static double[] computeSpectralPPA_oct2018(double d, double f, double m) {
         double[] ppa = new double[OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
 
         final double lambda0 = 1.0;  // microns
-        final double dMicrons = d*1000.0;  // mm --> microns
-        final double fPerMicrons = f/1000.0;   // 1/mm --> 1/microns
+        final double dMicrons = d * 1000.0;  // mm --> microns
+        final double fPerMicrons = f / 1000.0;   // 1/mm --> 1/microns
         for (int i = 0; i < OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length; i++) {
             final double lambda = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];   // microns
             final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
             final double alpha = 4.0 * Math.PI * chi / lambda;
-            ppa[i] = 1.6 * dMicrons * (alpha + fPerMicrons*Math.pow(lambda/lambda0, -m));
+            ppa[i] = 1.6 * dMicrons * (alpha + fPerMicrons * Math.pow(lambda / lambda0, -m));
         }
 
         return ppa;

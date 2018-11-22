@@ -78,7 +78,8 @@ public class OlciSnowPropertiesConstants {
     };
 
     // constants for planar BB albedo retrieval (AK, 20171201):
-    public static final double BB_WVL_1 = 0.3;
+    public static final double BB_WVL_0 = 0.3;
+    public static final double BB_WVL_1 = 0.4;
     public static final double BB_WVL_2 = 0.7;
     public static final double BB_WVL_3 = 2.4;
 

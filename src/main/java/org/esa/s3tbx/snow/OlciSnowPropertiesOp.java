@@ -49,7 +49,7 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.11-SNAPSHOT")
+        version = "2.0.12-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -444,6 +444,9 @@ public class OlciSnowPropertiesOp extends Operator {
                             if (refAlbedo > 0.0) {
 //                                    grainDiam = l / 13.08;
                                 grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
+                            }
+                            if (x == 152 && y == 163) {
+                                System.out.println("x = " + x);
                             }
                             final double[] broadbandPlanarAlbedo =
                                     OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
