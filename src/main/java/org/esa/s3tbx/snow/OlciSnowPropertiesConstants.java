@@ -32,6 +32,8 @@ public class OlciSnowPropertiesConstants {
             1.02           // OA21
     };
 
+    public static final int OLCI_NUM_WVLS = WAVELENGTH_GRID_OLCI.length;
+
     // Table 1 from spectral_albedo_october_5_2017.doc:
     // no longer used
 //    static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
@@ -78,8 +80,8 @@ public class OlciSnowPropertiesConstants {
     };
 
     // constants for planar BB albedo retrieval (AK, 20171201):
-    public static final double BB_WVL_0 = 0.3;
-    public static final double BB_WVL_1 = 0.4;
+//    public static final double BB_WVL_0 = 0.3;
+    public static final double BB_WVL_1 = 0.3;
     public static final double BB_WVL_2 = 0.7;
     public static final double BB_WVL_3 = 2.4;
 

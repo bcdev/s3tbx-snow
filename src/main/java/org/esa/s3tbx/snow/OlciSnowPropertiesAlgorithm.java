@@ -310,6 +310,7 @@ class OlciSnowPropertiesAlgorithm {
      * - 'TN_spectral_albedo_and_grain_size.docx' (20181015) for planar spectral albedo retrieval
      * - 'Technical note_BBA_DECEMBER_2017.doc' (20171204) for BB integration
      * --> Applies now Simpson's rule for BB integration (request AK Oct 2018).
+     * --> this code is used in version 2.0.11-SNAPSHOT, with table 'final_table_fluxes_angles.txt'
      *
      * @param mu_0                       - mu0
      * @param brr                        - subset of BRR spectrum  (BRR_01, BRR_06, BRR_21, BRR_17)
@@ -344,6 +345,59 @@ class OlciSnowPropertiesAlgorithm {
                                                                         refractiveIndexTable,
                                                                         solarSpectrumExtendedTable, vza,
                                                                         isPolluted);
+        double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
+        for (int i = 0; i < fLambdaTimesPlanarSpectralAlbedo.length; i++) {
+            fLambdaTimesPlanarSpectralAlbedo[i] = planarSpectralAlbedo[i] * fLambda[i];
+        }
+
+        numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                   OlciSnowPropertiesConstants.BB_WVL_2, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
+        denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                     OlciSnowPropertiesConstants.BB_WVL_2, fLambda, wvlsFull);
+
+        numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
+                                                   OlciSnowPropertiesConstants.BB_WVL_3, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
+        denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
+                                                     OlciSnowPropertiesConstants.BB_WVL_3, fLambda, wvlsFull);
+
+        numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                  OlciSnowPropertiesConstants.BB_WVL_3, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
+        denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                    OlciSnowPropertiesConstants.BB_WVL_3, fLambda, wvlsFull);
+
+        bbaVis = numeratorVis / denominatorVis;
+        bbaNir = numeratorNir / denominatorNir;
+        bbaSw = numeratorSw / denominatorSw;
+
+        return new double[]{bbaVis, bbaNir, bbaSw};
+    }
+
+    static double[] computeBroadbandAlbedo_nov2018(double mu_0,
+                                           double[] brr,
+                                           boolean isPolluted,
+                                           RefractiveIndexTable refractiveIndexTable,
+                                           SolarSpectrumExtendedTable solarSpectrumExtendedTable,
+                                           double sza, double vza) {
+
+        // experimental, test for new polluted BB algo and updated table 'final_table_fluxes_angles_nov2018.txt'
+
+        double bbaVis;
+        double bbaNir;
+        double bbaSw;
+        double numeratorVis;
+        double denominatorVis;
+        double numeratorNir;
+        double denominatorNir;
+        double numeratorSw;
+        double denominatorSw;
+
+        double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
+        final double[] fLambda = SnowUtils.computeFLambda(solarSpectrumExtendedTable, sza);
+
+        double[] planarSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
+                                                                        refractiveIndexTable,
+                                                                        solarSpectrumExtendedTable, vza,
+                                                                        isPolluted);
         double[] planarCleanSpectralAlbedo = null;
         if (isPolluted) {
             planarCleanSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
@@ -352,64 +406,40 @@ class OlciSnowPropertiesAlgorithm {
                                                                         false);
         }
         double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
+        final double wvlMax =
+                OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[OlciSnowPropertiesConstants.OLCI_NUM_WVLS-1];
         for (int i = 0; i < fLambdaTimesPlanarSpectralAlbedo.length; i++) {
-            if (isPolluted && wvlsFull[i] > 1.02) {
+            if (isPolluted && wvlsFull[i] > wvlMax) {
                 fLambdaTimesPlanarSpectralAlbedo[i] = planarCleanSpectralAlbedo[i] * fLambda[i];
             } else {
                 fLambdaTimesPlanarSpectralAlbedo[i] = planarSpectralAlbedo[i] * fLambda[i];
             }
         }
 
-        // we start at 0.35 microns, but need to extrapolate to 0.3 microns in polluted case (AK, 20181122)
-        // (but here with linear rather than quadratic extrapolation, very small differences on the VIS side anyway)
-        if (isPolluted) {
-            final double numerator300To400 = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                         OlciSnowPropertiesConstants.BB_WVL_1,
-                                                                         fLambdaTimesPlanarSpectralAlbedo,
-                                                                         wvlsFull);
-            final double denominator300To400 = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                           OlciSnowPropertiesConstants.BB_WVL_1,
-                                                                           fLambda,
-                                                                           wvlsFull);
-            numeratorVis = numerator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                 OlciSnowPropertiesConstants.BB_WVL_2,
-                                                                                 fLambdaTimesPlanarSpectralAlbedo,
-                                                                                 wvlsFull);
-            denominatorVis = denominator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                     OlciSnowPropertiesConstants.BB_WVL_2,
-                                                                                     fLambda,
-                                                                                     wvlsFull);
-
-            numeratorSw = numerator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                OlciSnowPropertiesConstants.BB_WVL_3,
-                                                                                fLambdaTimesPlanarSpectralAlbedo,
-                                                                                wvlsFull);
-            denominatorSw = denominator300To400 + Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                    OlciSnowPropertiesConstants.BB_WVL_3,
-                                                                                    fLambda,
-                                                                                    wvlsFull);
-        } else {
-            numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                       OlciSnowPropertiesConstants.BB_WVL_2,
-                                                       fLambdaTimesPlanarSpectralAlbedo,
-                                                       wvlsFull);
-            denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                         OlciSnowPropertiesConstants.BB_WVL_2,
-                                                         fLambda,
-                                                         wvlsFull);
-            numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                OlciSnowPropertiesConstants.BB_WVL_3,
-                                                                                fLambdaTimesPlanarSpectralAlbedo,
-                                                                                wvlsFull);
-            denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_0,
-                                                                                    OlciSnowPropertiesConstants.BB_WVL_3,
-                                                                                    fLambda,
-                                                                                    wvlsFull);
-        }
+        numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                   OlciSnowPropertiesConstants.BB_WVL_2,
+                                                   fLambdaTimesPlanarSpectralAlbedo,
+                                                   wvlsFull);
+        denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                     OlciSnowPropertiesConstants.BB_WVL_2,
+                                                     fLambda,
+                                                     wvlsFull);
+        numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                  OlciSnowPropertiesConstants.BB_WVL_3,
+                                                  fLambdaTimesPlanarSpectralAlbedo,
+                                                  wvlsFull);
+        denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                    OlciSnowPropertiesConstants.BB_WVL_3,
+                                                    fLambda,
+                                                    wvlsFull);
         numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                                                   OlciSnowPropertiesConstants.BB_WVL_3, fLambdaTimesPlanarSpectralAlbedo, wvlsFull);
+                                                   OlciSnowPropertiesConstants.BB_WVL_3,
+                                                   fLambdaTimesPlanarSpectralAlbedo,
+                                                   wvlsFull);
         denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                                                     OlciSnowPropertiesConstants.BB_WVL_3, fLambda, wvlsFull);
+                                                     OlciSnowPropertiesConstants.BB_WVL_3,
+                                                     fLambda,
+                                                     wvlsFull);
 
         bbaVis = numeratorVis / denominatorVis;
         bbaNir = numeratorNir / denominatorNir;
@@ -417,6 +447,7 @@ class OlciSnowPropertiesAlgorithm {
 
         return new double[]{bbaVis, bbaNir, bbaSw};
     }
+
 
     /**
      * Computes broadband albedos following AK algorithm given in 'Technical note_BBA_DECEMBER_2017.doc' (20171204).
@@ -609,6 +640,8 @@ class OlciSnowPropertiesAlgorithm {
 
         double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
         final int numWvl = wvlsFull.length;
+        final double wvlMax =
+                OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[OlciSnowPropertiesConstants.OLCI_NUM_WVLS-1];
 
         double[] planarSpectralAlbedo = new double[numWvl];
 
@@ -627,7 +660,7 @@ class OlciSnowPropertiesAlgorithm {
                 final double sd9 = f * Math.pow(wvlNm / refWvl[3], -m);
                 final double tt = alka * 1.E6 + sd9;
                 final double arr = r0 * Math.exp(-x * Math.sqrt(tt * l));
-                planarSpectralAlbedo[i] = Math.pow(arr / r0, r0 / u2);
+                planarSpectralAlbedo[i] = wvl <= wvlMax ? Math.pow(arr / r0, r0 / u2) : 0.0;
             } else {
                 // FORTRAN:
                 // TT(j)=alka(j)*1.e+6

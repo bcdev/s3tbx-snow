@@ -17,9 +17,11 @@ import java.util.StringTokenizer;
  */
 public class SolarSpectrumExtendedTable {
 
-    private static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 411;
-    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles.txt";
-//    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles_oct2018.txt";
+//    private static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 411;
+    private static final int SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH = 211;
+//    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles.txt";             // 411
+//    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles_oct2018.txt";   // 411
+    private static final String SOLAR_SPECTRUM_DEFAULT_FILE_NAME = "final_table_fluxes_angles_nov2018.txt";   // 211
 
     private double[] wvl;
     private double[][] solarSpectrum;
@@ -30,8 +32,8 @@ public class SolarSpectrumExtendedTable {
         length = SOLAR_SPECTRUM_TABLE_DEFAULT_LENGTH;
         filename = SOLAR_SPECTRUM_DEFAULT_FILE_NAME;
         wvl = new double[length];
-        solarSpectrum = new double[6][length];  // for SZA = 0, 15, 30, 45, 60, 75deg
-//        solarSpectrum = new double[89][length];  // for SZA = 0, ... , 88deg
+//        solarSpectrum = new double[6][length];  // for SZA = 0, 15, 30, 45, 60, 75deg
+        solarSpectrum = new double[89][length];  // for SZA = 0, ... , 88deg
         readTableFromFile();
     }
 
