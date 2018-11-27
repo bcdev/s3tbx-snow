@@ -449,16 +449,16 @@ public class OlciSnowPropertiesOp extends Operator {
                                 System.out.println("x = " + x);
                             }
                             final double[] broadbandPlanarAlbedo =
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_nov2018(mu_0,
+//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
+                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_nov2018(mu_0,
                                                                                        rhoToaAlbedo,
                                                                                        isPollutedSnow,
                                                                                        refractiveIndexInterpolatedTable,
                                                                                        solarSpectrumExtendedTable,
                                                                                        sza, vza);
                             final double[] broadbandSphericalAlbedo =
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_nov2018(1.0,
+//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
+                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_nov2018(1.0,
                                                                                        rhoToaAlbedo,
                                                                                        isPollutedSnow,
                                                                                        refractiveIndexInterpolatedTable,
