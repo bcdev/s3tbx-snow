@@ -342,55 +342,6 @@ public class OlciSnowPropertiesAlgorithmTest {
     }
 
     @Test
-    public void testComputeBroadbandAlbedo_Dec2017() {
-        final double grainDiamMicrons = 200.0;
-        final double sza = 60.0;
-        final double mu_0 = Math.cos(sza * MathUtils.DTOR);
-        final RefractiveIndexTable refractiveIndexTable = new RefractiveIndexTable();
-        refractiveIndexTable.readTableFromFile();
-        final SolarSpectrumExtendedTable solarSpectrumExtendedTable = new SolarSpectrumExtendedTable();
-        solarSpectrumExtendedTable.readTableFromFile();
-
-        RefractiveIndexTable refractiveIndexInterpolatedTable =
-                SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
-                                                         solarSpectrumExtendedTable);
-
-        double[] planarBroadbandAlbedo = null;
-        for (int k = 0; k < 10000; k++) {
-            planarBroadbandAlbedo =
-                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_Dec2017(mu_0,
-                                                                               grainDiamMicrons,
-                                                                               refractiveIndexInterpolatedTable,
-                                                                               solarSpectrumExtendedTable,
-                                                                               sza);
-            if (k % 1000 == 0) {
-                System.out.println("k1 = " + k);
-            }
-        }
-        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
-            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
-        }
-
-        double[] sphericalBroadbandAlbedo = null;
-        for (int k = 0; k < 10000; k++) {
-            sphericalBroadbandAlbedo =
-                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_Dec2017(1.0,
-                                                                               grainDiamMicrons,
-                                                                               refractiveIndexInterpolatedTable,
-                                                                               solarSpectrumExtendedTable,
-                                                                               sza);
-            if (k % 1000 == 0) {
-                System.out.println("k2 = " + k);
-            }
-        }
-        for (double aSphericalBroadbandAlbedo : sphericalBroadbandAlbedo) {
-            System.out.println("sphericalBroadbandAlbedo = " + aSphericalBroadbandAlbedo);
-        }
-
-        System.out.println();
-    }
-
-    @Test
     public void testComputeBroadbandAlbedo() {
 
         final double sza = 36.9;
@@ -417,24 +368,6 @@ public class OlciSnowPropertiesAlgorithmTest {
                 SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
                                                          solarSpectrumExtendedTable);
 
-//        double[] planarBroadbandAlbedo =
-//                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(mu_0, brr, false,
-//                                                                           refractiveIndexInterpolatedTable,
-//                                                                           solarSpectrumExtendedTable,
-//                                                                           sza, vza);
-//        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo) {
-//            System.out.println("planarBroadbandAlbedo = " + aPlanarBroadbandAlbedo);
-//        }
-
-        double[] planarBroadbandAlbedo_trapez =
-                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_trapez(mu_0, brr, false,
-                                                                          refractiveIndexInterpolatedTable,
-                                                                          solarSpectrumExtendedTable,
-                                                                          sza, vza);
-        for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo_trapez) {
-            System.out.println("planarBroadbandAlbedo_trapez = " + aPlanarBroadbandAlbedo);
-        }
-
         double[] planarBroadbandAlbedo_simpson =
                 OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, false,
                                                                    refractiveIndexInterpolatedTable,
@@ -448,7 +381,7 @@ public class OlciSnowPropertiesAlgorithmTest {
     }
 
     @Test
-    public void testComputeBroadbandAlbedoPolluted_nov2018() {
+    public void testComputeBroadbandAlbedoPolluted() {
 
         // from Lautaret_pixel1.xls (ML, 20181123)
 
@@ -477,8 +410,7 @@ public class OlciSnowPropertiesAlgorithmTest {
                                                          solarSpectrumExtendedTable);
 
         double[] planarBroadbandAlbedo_simpson =
-                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_nov2018(mu_0, brr, true,
-//                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, true,
+                OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, true,
                                                                            refractiveIndexInterpolatedTable,
                                                                            solarSpectrumExtendedTable,
                                                                            sza, vza);
@@ -528,7 +460,7 @@ public class OlciSnowPropertiesAlgorithmTest {
         }
 
         double[] planarSpectralAlbedoPolluted_2 =
-                OlciSnowPropertiesAlgorithm.computeFullPlanarSpectralAlbedoPolluted_nov2018(mu_0, brr,
+                OlciSnowPropertiesAlgorithm.computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
                                                                                             refractiveIndexInterpolatedTable,
                                                                                             solarSpectrumExtendedTable,
                                                                                             vza);
