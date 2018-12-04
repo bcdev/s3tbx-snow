@@ -341,6 +341,35 @@ class OlciSnowPropertiesAlgorithm {
     }
 
     /**
+     * Computes probability of photon absorption (PPA) at considered wavelengths.
+     * Follows 'ppa_new2_TECHNICAL_NOTE_28_11_2018.doc' (AK, 20181128)
+     *
+     * @param spectralAlbedoResult - length from spectral snow albedo result
+     *
+     * @param isPollutedSnow
+     * @return double [] ppa
+     */
+    static double[] computeSpectralPPA_nov2018(SpectralAlbedoResult spectralAlbedoResult, boolean isPollutedSnow) {
+        double[] ppa = new double[OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
+
+        final double gamma = 3.0/64.0;
+        final double l = spectralAlbedoResult.getL();
+        for (int i = 0; i < OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length; i++) {
+            final double lambda = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];   // microns
+            if (isPollutedSnow) {
+                final double sphericalSpectralAlbedo = spectralAlbedoResult.getSpectralAlbedos()[0][i];
+                ppa[i] = gamma * Math.log(sphericalSpectralAlbedo) * Math.log(sphericalSpectralAlbedo);
+            } else {
+                final double chi = OlciSnowPropertiesConstants.ICE_REFR_INDEX[i];
+                final double alpha = 4.0 * Math.PI * chi / lambda;
+                ppa[i] = gamma * alpha * l;
+            }
+        }
+        return ppa;
+    }
+
+
+    /**
      * Computes threshold of R0 reflectance to identify polluted snow
      *
      * @param sza - sun zenith angle

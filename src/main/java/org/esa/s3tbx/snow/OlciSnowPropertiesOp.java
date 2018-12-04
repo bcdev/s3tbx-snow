@@ -49,7 +49,7 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.12-SNAPSHOT")
+        version = "2.0.13-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -469,13 +469,15 @@ public class OlciSnowPropertiesOp extends Operator {
                             setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
 
                             if (computePPA && spectralAlbedoTargetBands != null) {
-//                                final double[] spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA(rhoToaPPA, sza, vza);
-                                double[] spectralPPA;
-                                if (isPollutedSnow) {
-                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, f, m);
-                                } else {
-                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, 0.0, 0.0);
-                                }
+                                double[] spectralPPA =
+                                        OlciSnowPropertiesAlgorithm.computeSpectralPPA_nov2018(spectralAlbedoResult,
+                                                                                               isPollutedSnow);
+//                                double[] spectralPPA;
+//                                if (isPollutedSnow) {
+//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, f, m);
+//                                } else {
+//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, 0.0, 0.0);
+//                                }
                                 setTargetTilesSpectralPPA(spectralPPA, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
                             }
 
@@ -492,6 +494,12 @@ public class OlciSnowPropertiesOp extends Operator {
                                 targetTiles.get(snowSpecificAreaBand).setSample(x, y, Double.NaN);
                             }
 
+                            // we want l, r_0 for both clean and polluted snow (AK 20181130)
+                            final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
+                            targetTiles.get(pollutionLBand).setSample(x, y, l);
+                            final Band pollutionR0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
+                            targetTiles.get(pollutionR0Band).setSample(x, y, r0);
+
                             if (considerSnowPollution) {
                                 final Band pollutionMaskBand = targetProduct.getBand(POLLUTION_MASK_BAND_NAME);
                                 if (brr400 > 0.0 && !Double.isNaN(r0)) {
@@ -503,12 +511,9 @@ public class OlciSnowPropertiesOp extends Operator {
                                 if (writeAdditionalSnowPollutionParms) {
                                     final Band pollutionFBand = targetProduct.getBand(POLLUTION_F_BAND_NAME);
                                     targetTiles.get(pollutionFBand).setSample(x, y, isPollutedSnow ? f : Float.NaN);
-                                    final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
-                                    targetTiles.get(pollutionLBand).setSample(x, y, isPollutedSnow ? l : Float.NaN);
+
                                     final Band pollutionMBand = targetProduct.getBand(POLLUTION_M_BAND_NAME);
                                     targetTiles.get(pollutionMBand).setSample(x, y, isPollutedSnow ? m : Float.NaN);
-                                    final Band pollutionR0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
-                                    targetTiles.get(pollutionR0Band).setSample(x, y, isPollutedSnow ? r0 : Float.NaN);
 
                                     if (writeUncertaintiesOfAdditionalSnowPollutionParms) {
                                         final double r0RelErr = spectralAlbedoResult.getR0RelErr();
@@ -560,13 +565,14 @@ public class OlciSnowPropertiesOp extends Operator {
         targetProduct.addBand(NDBI_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(NDSI_BAND_NAME, ProductData.TYPE_FLOAT32);
 
+        targetProduct.addBand(POLLUTION_L_BAND_NAME, ProductData.TYPE_FLOAT32);
+        targetProduct.addBand(POLLUTION_R0_BAND_NAME, ProductData.TYPE_FLOAT32);
+
         if (considerSnowPollution) {
             targetProduct.addBand(POLLUTION_MASK_BAND_NAME, ProductData.TYPE_INT16);
             if (writeAdditionalSnowPollutionParms) {
                 targetProduct.addBand(POLLUTION_F_BAND_NAME, ProductData.TYPE_FLOAT32);
-                targetProduct.addBand(POLLUTION_L_BAND_NAME, ProductData.TYPE_FLOAT32);
                 targetProduct.addBand(POLLUTION_M_BAND_NAME, ProductData.TYPE_FLOAT32);
-                targetProduct.addBand(POLLUTION_R0_BAND_NAME, ProductData.TYPE_FLOAT32);
 
                 if (writeUncertaintiesOfAdditionalSnowPollutionParms) {
                     targetProduct.addBand(POLLUTION_F_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
