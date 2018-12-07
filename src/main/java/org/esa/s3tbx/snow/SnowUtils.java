@@ -2,8 +2,13 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.esa.snap.core.datamodel.FlagCoding;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.BitSetter;
 import org.esa.snap.core.util.math.MathUtils;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -81,7 +86,7 @@ public class SnowUtils {
         }
         final double x1 = value * 10000.0;
         final double x2 = Math.round(x1);
-        return x2/10000.0;
+        return x2 / 10000.0;
     }
 
     public static double cutTo7DecimalPlaces(double value) {
@@ -90,7 +95,7 @@ public class SnowUtils {
         }
         final double x1 = value * 10000000.0;
         final double x2 = Math.round(x1);
-        return x2/10000000.0;
+        return x2 / 10000000.0;
     }
 
     public static double getRelAzi(double saa, double vaa) {
@@ -130,22 +135,76 @@ public class SnowUtils {
         return lowerFlux + frac * (upperFlux - lowerFlux);
     }
 
-    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
-        int lowerIndex = (int) sza/15;   // 0, 1, 2, 3, 4, 5
-        int upperIndex = lowerIndex + 1;
+    // currently not used
+//    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
+//        int lowerIndex = (int) sza / 15;   // 0, 1, 2, 3, 4, 5
+//        int upperIndex = lowerIndex + 1;
+//
+//        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
+//        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
+//            if (upperIndex <= 5) {
+//                final double interpolFlux = getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, i);
+//                solarSpectrumInterpolated[i] = interpolFlux;
+//            } else {
+//                final double extrapolFlux = getExtrapolFlux(solarSpectrum[5][i], sza);
+//                solarSpectrumInterpolated[i] = extrapolFlux;
+//            }
+//        }
+//
+//        return solarSpectrumInterpolated;
+//    }
 
-        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
-        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
-            if (upperIndex <= 5) {
-                final double interpolFlux = getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, i);
-                solarSpectrumInterpolated[i] = interpolFlux;
-            } else {
-                final double extrapolFlux = getExtrapolFlux(solarSpectrum[5][i], sza);
-                solarSpectrumInterpolated[i] = extrapolFlux;
-            }
-        }
+    /**
+     * Provides S3 Snow flag coding
+     *
+     * @param flagId - the flag ID
+     *
+     * @return - the flag coding
+     */
+    public static FlagCoding createS3SnowFlagCoding(String flagId) {
+        FlagCoding flagCoding = new FlagCoding(flagId);
 
-        return solarSpectrumInterpolated;
+        flagCoding.addFlag("S3_SNOW_SZA_HIGH", BitSetter.setFlag(0, OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH),
+                           OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH_DESCR_TEXT);
+        flagCoding.addFlag("S3_SNOW_GLINT", BitSetter.setFlag(0, OlciSnowPropertiesConstants.S3_SNOW_GLINT),
+                           OlciSnowPropertiesConstants.S3_SNOW_GLINT_DESCR_TEXT);
+        flagCoding.addFlag("S3_SNOW_SCATTERING_ANGLE", BitSetter.setFlag(0, OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING),
+                           OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING_DESCR_TEXT);
+
+        return flagCoding;
     }
 
+    /**
+     * Provides OLCI pixel classification flag bitmask
+     *
+     * @param s3snowProduct - the S3 Snow product
+     */
+    public static void setupS3SnowBitmask(Product s3snowProduct) {
+
+        int index = 0;
+        int w = s3snowProduct.getSceneRasterWidth();
+        int h = s3snowProduct.getSceneRasterHeight();
+        Mask mask;
+
+        mask = Mask.BandMathsType.create("S3_SNOW_SZA_HIGH",
+                                         OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH_DESCR_TEXT,
+                                         w, h,
+                                         "s3snow_flags.S3_SNOW_SZA_HIGH",
+                                         Color.red, 0.5f);
+        s3snowProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("S3_SNOW_GLINT",
+                                         OlciSnowPropertiesConstants.S3_SNOW_GLINT_DESCR_TEXT,
+                                         w, h,
+                                         "s3snow_flags.S3_SNOW_GLINT",
+                                         Color.yellow, 0.5f);
+        s3snowProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("S3_SNOW_SCATTERING_ANGLE",
+                                         OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING_DESCR_TEXT,
+                                         w, h,
+                                         "s3snow_flags.S3_SNOW_SCATTERING_ANGLE",
+                                         Color.blue, 0.5f);
+        s3snowProduct.getMaskGroup().add(index, mask);
+    }
 }

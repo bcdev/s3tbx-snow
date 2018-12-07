@@ -37,7 +37,6 @@ import org.esa.snap.core.util.math.MathUtils;
 
 import java.awt.*;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Computes snow properties from OLCI L1b data products.
@@ -49,10 +48,11 @@ import java.util.Set;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.0.13-SNAPSHOT")
+        version = "2.0.14-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
+    public static final String S3_SNOW_FLAG_BAND_NAME = "s3snow_flags";
     private static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
     private static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
     private static final String PPA_SPECTRAL_OUTPUT_PREFIX = "ppa_spectral_";
@@ -289,15 +289,15 @@ public class OlciSnowPropertiesOp extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
-        if (targetRectangle.x == 0 && targetRectangle.y == 0) {
-//            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
-
-            Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
-            entries.forEach(targetTileStream -> {
-                Band targetBand = targetTileStream.getKey();
-//                System.out.println("targetBand.getName() = " + targetBand.getName());
-            });
-        }
+//        if (targetRectangle.x == 0 && targetRectangle.y == 0) {
+////            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
+//
+//            Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
+//            entries.forEach(targetTileStream -> {
+//                Band targetBand = targetTileStream.getKey();
+////                System.out.println("targetBand.getName() = " + targetBand.getName());
+//            });
+//        }
         try {
             Tile[] rhoToaTilesAlbedo = new Tile[requiredBrrBandNamesAlbedo.length];
             for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
@@ -355,7 +355,14 @@ public class OlciSnowPropertiesOp extends Operator {
 
                     final double sza = szaTile.getSampleDouble(x, y);
 
-                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud && sza < 75.0;
+                    final boolean szaIsInvalid = sza > 75.0;
+//                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud && !szaIsInvalid;
+                    // 20181207: do not exclude high SZA, but just raise a flag
+                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud;
+                    final Band s3SnowFlagBand = targetProduct.getBand(S3_SNOW_FLAG_BAND_NAME);
+                    targetTiles.get(s3SnowFlagBand).setSample(x, y,
+                                                              OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH,
+                                                              szaIsInvalid);
 
                     if (pixelIsValid) {
 
@@ -381,7 +388,7 @@ public class OlciSnowPropertiesOp extends Operator {
                         }
 
                         if (validNdsi) {
-                            double[] rhoToaPPA = null;
+                            double[] rhoToaPPA;
                             if (computePPA && spectralAlbedoTargetBands != null) {
                                 rhoToaPPA = new double[requiredBrrBandNamesPPA.length];
                                 for (int i = 0; i < requiredBrrBandNamesPPA.length; i++) {
@@ -400,7 +407,19 @@ public class OlciSnowPropertiesOp extends Operator {
                             final double saa = saaTile.getSampleDouble(x, y);
                             final double vaa = vaaTile.getSampleDouble(x, y);
                             final double raa = SnowUtils.getRelAzi(saa, vaa);
-                            final double r0Thresh = OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
+
+                            // check for 'backscattering' and 'glint' (AK 20181207):
+                            final boolean isBackscattering = Math.abs(raa) < 5.0 && Math.abs(sza - vza) < 5.0;
+                            targetTiles.get(s3SnowFlagBand).setSample(x, y,
+                                                                      OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING,
+                                                                      isBackscattering);
+                            final boolean isGlint = Math.abs(180. - raa) < 5.0 && Math.abs(sza - vza) < 5.0;
+                            targetTiles.get(s3SnowFlagBand).setSample(x, y,
+                                                                      OlciSnowPropertiesConstants.S3_SNOW_GLINT,
+                                                                      isGlint);
+
+                            final double r0Thresh =
+                                    OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
                             final double pollutedSnowSeparationValue = r0Thresh - pollutionDelta;
                             final boolean isPollutedSnow = considerSnowPollution && brr400 < pollutedSnowSeparationValue;
 
@@ -443,10 +462,8 @@ public class OlciSnowPropertiesOp extends Operator {
                             double grainDiam = Double.NaN;
                             if (refAlbedo > 0.0) {
 //                                    grainDiam = l / 13.08;
-                                grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
-                            }
-                            if (x == 152 && y == 163) {
-                                System.out.println("x = " + x);
+//                                grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
+                                grainDiam = l / 16.36;      //  AK, 20181207. l and grainDiam are in mm !!
                             }
                             final double[] broadbandPlanarAlbedo =
 //                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(mu_0,
@@ -567,6 +584,12 @@ public class OlciSnowPropertiesOp extends Operator {
 
         targetProduct.addBand(POLLUTION_L_BAND_NAME, ProductData.TYPE_FLOAT32);
         targetProduct.addBand(POLLUTION_R0_BAND_NAME, ProductData.TYPE_FLOAT32);
+
+        final Band cloudFlagBand = targetProduct.addBand("s3snow_flags", ProductData.TYPE_INT8);
+        FlagCoding flagCoding = SnowUtils.createS3SnowFlagCoding(S3_SNOW_FLAG_BAND_NAME);
+        cloudFlagBand.setSampleCoding(flagCoding);
+        targetProduct.getFlagCodingGroup().add(flagCoding);
+        SnowUtils.setupS3SnowBitmask(targetProduct);
 
         if (considerSnowPollution) {
             targetProduct.addBand(POLLUTION_MASK_BAND_NAME, ProductData.TYPE_INT16);

@@ -87,8 +87,19 @@ public class OlciSnowPropertiesConstants {
 
     public static final double RHO_ICE = 917.0;  // in kg*m^-3
 
-    public static final double BARE_ICE_THRESH = 1./3.;   // AK, 20181001
+//    public static final double BARE_ICE_THRESH = 1./3.;   // AK, 20181001
 
     // define here, we do not want a dependency to Idepix just for this:
     public static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
+
+    public static final int S3_SNOW_SZA_HIGH = 0;
+    public static final int S3_SNOW_GLINT = 1;
+    public static final int S3_SNOW_BACKSCATTERING = 2;
+
+    public static final String S3_SNOW_SZA_HIGH_DESCR_TEXT =
+            "SZA high (> 75 deg), retrievals may be doubtful";
+    public static final String S3_SNOW_GLINT_DESCR_TEXT =
+            "Pixel is in glint region (relative azimuth close to 180 deg)";
+    public static final String S3_SNOW_BACKSCATTERING_DESCR_TEXT =
+            "Pixel is in backscattering region (relative azimuth close to 0 deg)";
 }
