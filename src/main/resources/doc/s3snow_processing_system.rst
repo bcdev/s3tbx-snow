@@ -155,7 +155,8 @@ The SNAP Slope Processor
 ------------------------
 
 The Slope Processor provides pixelwise terrain slope and aspect angle from an arbitrary input product containing
-a band with terrain height (i.e. a DEM product). For S3-SNOW this processor is provided as utility tool, as slope
+a band with terrain height (i.e. a DEM product). In addition, the variance of elevation over a 3x3 pixel window is
+provided. For S3-SNOW this processor is provided as utility tool, as slope
 and aspect are often useful information for the validation of snow properties.
 
 

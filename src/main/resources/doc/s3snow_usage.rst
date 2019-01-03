@@ -48,6 +48,19 @@ visible in their dedicated menus as shown in the figure sequence :numref:`snow_p
 
    The SNAP menu entry for the Slope Processor.
 
+Test Products
+=============
+
+The S3-SNOW project delivery D2.4 'Task 2 Data Base' contains a variety of suitable Sentinel-3 OLCI L1b products which
+can be used for initial tests of the functionalities of the single processors as well as for the whole processing flow.
+These products can also be obtained from the S3-SNOW ftp site hosted at BC with the
+following configuration:
+
+- FTP, Port 21
+- ftp.brockmann-consult.de
+- username: s3snow
+- password: $3Sn0W@bc
+- subdirectories: data/<region> (Dome-C, French Alps, Greenland, Morteratsch)
 
 The Snow Properties Processor
 =============================
@@ -248,7 +261,7 @@ When the Slope Processor is called from its menu entry, the processor GUI is dis
 processor contains two tabs 'I/O Parameters' and 'Processing Parameters' (:numref:`slope_tabs`).
 
 .. _slope_tabs:
-.. figure::  pix/o2corr_tabs.png
+.. figure::  pix/slope_tabs.png
    :align:   center
    :scale: 60 %
 
