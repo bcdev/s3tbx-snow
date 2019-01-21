@@ -31,7 +31,8 @@ OLCI L1b TOA Radiance Product
 Both reduced and full resolution OLCI L1b TOA radiance products can
 be used as input data. Tables 3.1 to 3.4 give an overview of
 OLCI L1b bands, tie point grids and L1b flag coding, respectively. A more detailed description of the OLCI
-standard L1b product is given in [`3 <intro.html#References>`_].
+standard L1b product is given in [`3 <intro.html#References>`_]. (Note that in SNAP terminology, the term 'bands'
+does not only refer to 'spectral bands' (i.e., 1-21 for OLCI), but for all raster data quantities read or written by SNAP.)
 
 |vspace| |br|
 
@@ -173,7 +174,7 @@ standard L1b product is given in [`3 <intro.html#References>`_].
     +-------------------------------+------------------------------+-------------------------------+
     | 28                            | tidal_region                 | Pixel is suspect              |
     +-------------------------------+------------------------------+-------------------------------+
-    | 29                            | fresh_inland_water           | Pixel is over land,           |
+    | 29                            | fresh_inland_water           | Pixel is over land            |
     +-------------------------------+------------------------------+-------------------------------+
     | 30                            | coastline                    | Pixel is bright               |
     +-------------------------------+------------------------------+-------------------------------+
@@ -194,7 +195,7 @@ SNAP Rayleigh Correction Processor. This processor can be accessed from the SNAP
 
 .. rubric:: Footnotes
 
-.. [#f1] More precisely, the term 'BRR' refers to a Bottom-of-atmosphere reflectance, which is derived from Top-of-atmosphere reflectance by correction for molecular scattering and absorption.
+.. [#f1] More precisely, the term 'BRR' refers to a Bottom-of-atmosphere reflectance (BOAR), which is derived from Top-of-atmosphere reflectance by correction for molecular scattering and absorption.
 
 .. _rayleigh_in_snap:
 .. figure::  pix/rc_in_snap.png
@@ -214,7 +215,7 @@ BRR in bands 1, 6, 17 and 21, and in addition bands 9 and 10, are shown.
    :align:   center
    :scale: 80 %
 
-   Rayleigh Correction: parameters for the generation of BRR in bands 1, 5, 17 and 21, and in addition in bands 9 and 10.
+   Rayleigh Correction: parameters for the generation of BRR in spectral bands 1, 5, 17 and 21, and in addition in spectral bands 9 and 10.
 
 The bands in the resulting BRR product are listed in Table 3.5.
 
@@ -351,7 +352,7 @@ For completeness, its contents are listed in Table 3.9.
     +-------------------------+---------------------+------------+---------------------------------------------+
     | elevation_variance      | degrees             | float32    | Variance of elevation over 3x3 pixel window |
     +-------------------------+---------------------+------------+---------------------------------------------+
-    | <altitude_band>         | m                   | float32    | altutide band from input product (optional) |
+    | <altitude_band>         | m                   | float32    | Altitude band from input product (optional) |
     +-------------------------+---------------------+------------+---------------------------------------------+
 
 
@@ -362,7 +363,7 @@ For completeness, its contents are listed in Table 3.9.
 Final Snow Properties Product
 =============================
 
-The S3-SNOW final product contains various snow properties, depending on the processing paramaters specified by the user.
+The S3-SNOW final product contains various snow properties, depending on the processing parameters specified by the user.
 The maximum number of bands which can be generated is given in Table 3.10.
 For more detailed explanations of the physical meaning of the parameters, see [`2 <intro.html#References>`_].
 
@@ -422,7 +423,7 @@ For more detailed explanations of the physical meaning of the parameters, see [`
     +----------------------------------+---------------------+------------+------------------------------------------------------------+
     |   quality_flags                  | dl                  | int16      | L1b quality flags                                          |
     +----------------------------------+---------------------+------------+------------------------------------------------------------+
-    |   pixel_classif_flags            | dl                  | int16      | Pixel classification flags                                 |
+    |   pixel_classif_flags            | dl                  | int16      | Pixel classification flags (see Table 3.7)                 |
     +----------------------------------+---------------------+------------+------------------------------------------------------------+
 
 
