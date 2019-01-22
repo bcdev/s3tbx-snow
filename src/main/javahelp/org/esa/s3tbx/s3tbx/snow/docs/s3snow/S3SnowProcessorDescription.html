@@ -98,7 +98,7 @@
     The OLCI wavelengths considered for the retrieval of spectral snow quantities. For the selected wavelengths,
     the computed spectral snow quantities (i.e. spectral snow albedo, see description of processor output below)
     will be written as corresponding band into the target product. If no band is selected, only broadband snow
-    quantities and other selected, wavelength-independent quantities are written to the target product.
+    quantities and other selected wavelength-independent quantities are written to the target product.
 </p>
 
 <p class="i1">
@@ -150,18 +150,20 @@
 </p>
 
 <p class="i1">
-    <b>Write additional parameters (f, l, m, R_0) in case of polluted snow (expert option): </b><br>
-    If selected, additional parameters related to polluted snow will be computed for the pixels identified as
-    'polluted' (see above) and written to the target product. The interpretation of these parameters requires
+    <b>Write additional parameters (f, m) in case of polluted snow: </b><br>
+    "If selected, additional parameters (f, m) will be written to the target product in case
+    of polluted snow. The option 'Consider snow pollution' must be selected as well.
+    The interpretation of these parameters requires
     detailed knowledge of the underlying algorithm, therefore this user parameter is considered as an 'expert option'.
     The default is 'false'.
 </p>
 
 <p class="i1">
-    <b>Write uncertainties of additional parameters in case of polluted snow (expert option): </b><br>
-    If selected together with the previous processing parameter, uncertainties of the additional parameters related to
-    polluted snow (see previous processing parameter) will be computed for the pixels identifies as 'polluted'
-    (see above) and written to the target product. The interpretation of these uncertainties requires
+    <b>Write uncertainties of (r_0, l) and additional parameters (f, m): </b><br>
+    If selected, uncertainties of (r_0, l) and of additional parameters (f, m)  in case of polluted
+    snow will be written to the target product.
+    For uncertainties of (f, m), the options 'Consider snow pollution' and 'Write additional parameters
+    (f, m)...' must be selected as well. The interpretation of these uncertainties requires
     detailed knowledge of the underlying algorithm, therefore this user parameter is also considered as an 'expert option'.
     The default is 'false'.
 </p>
@@ -175,7 +177,7 @@
 <p class="i1">
     <b>Snow pollution threshold: </b><br>
     Threshold for identification of polluted snow, as explained above with the processing parameter
-    'Consider snow pollution'. Default values is 0.1.
+    'Consider snow pollution'. Default value is 0.1.
 </p>
 
 <p class="i1">
@@ -381,7 +383,7 @@ were selected, and all boolean processing parameters explained above set to 'tru
 
     <b>[2]</b>
     Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
-    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 3.0, 30 April 2018.<br><br>
+    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 2.4, 11 January 2019.<br><br>
 
     <b>[3]</b>
     <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwjWg7ChtOrcAhXPfFAKHeIZCp4QFjAAegQICRAC&url=https%3A%2F%2Fwww.eumetsat.int%2Fwebsite%2Fwcm%2Fidc%2Fidcplg%3FIdcService%3DGET_FILE%26dDocName%3DPDF_S3A_PN_OLCI_L2%26RevisionSelectionMethod%3DLatestReleased%26Rendition%3DWeb&usg=AOvVaw3kklxm9qc0TSptA6fX1MOa">

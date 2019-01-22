@@ -195,7 +195,7 @@ SNAP Rayleigh Correction Processor. This processor can be accessed from the SNAP
 
 .. rubric:: Footnotes
 
-.. [#f1] More precisely, the term 'BRR' refers to a Bottom-of-atmosphere reflectance (BOAR), which is derived from Top-of-atmosphere reflectance by correction for molecular scattering and absorption.
+.. [#f1] Physically, the term 'BRR' used in the Rayleigh Correction Processor should better be called 'BOAR' (Bottom-of-atmosphere reflectance). The BOAR is derived from Top-of-atmosphere reflectance by correction for molecular scattering and absorption.
 
 .. _rayleigh_in_snap:
 .. figure::  pix/rc_in_snap.png

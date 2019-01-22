@@ -133,19 +133,22 @@ class OlciSnowPropertiesAlgorithm {
             }
         }
 
+        double[] z = new double[4];
+        for (int i = 0; i < z.length; i++) {
+            z[i] = 1.0 / Math.log(brr[i] / r0);
+        }
+        final double nu_1 = 2.0 * eps_1 - 2.0 * eps_1 * z[3];
+        final double nu_2 = 2.0 * eps_2 + 2.0 * eps_1 * 1.0 / Math.log(brr[3] / r0);
+
+        final double r0RelErr = computeR0RelErr(r0, brr, deltaBrr);
+        final double lRelErr = computeLRelErr(l, brr, nu_1, nu_2, deltaBrr);
+
         // relative error estimation for isPolluted snow following AK...
         if (isPolluted) {
             final double wvl_1 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
             final double wvl_2 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
-            double[] z = new double[4];
-            for (int i = 0; i < z.length; i++) {
-                z[i] = 1.0 / Math.log(brr[i] / r0);
-            }
 
             final double s = 0.0; // todo: unreadable, check with AK, set to 0.0 in the meantime
-
-            final double nu_1 = 2.0 * eps_1 - 2.0 * eps_1 * z[3];
-            final double nu_2 = 2.0 * eps_2 + 2.0 * eps_1 * 1.0 / Math.log(brr[3] / r0);
 
             double[] w = new double[4];
             w[0] = 2.0 * z[0] / (m * Math.log(wvl_2 / wvl_1));
@@ -159,14 +162,12 @@ class OlciSnowPropertiesAlgorithm {
             h[2] = -eps_1 * (h[0] + h[1] + 2.0 * z[3]);
             h[3] = 2.0 * eps_2 * (z[3] + s * z[1] - (1.0 + s * z[0]) * z[0]) - 2.0 * z[3];
 
-            final double r0RelErr = computeR0RelErr(r0, brr, deltaBrr);
-            final double lRelErr = computeLRelErr(l, brr, nu_1, nu_2, deltaBrr);
             final double mRelErr = computeMRelErr(m, brr, w, deltaBrr);
             final double fRelErr = computeFRelErr(f, brr, h, deltaBrr);
 
             return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, r0RelErr, fRelErr, lRelErr, mRelErr);
         } else {
-            return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, 0.0, 0.0, 0.0, 0.0);
+            return new SpectralAlbedoResult(spectralAlbedos, r0, f, l, m, r0RelErr, Float.NaN, lRelErr, Float.NaN);
         }
     }
 

@@ -77,10 +77,10 @@ public class OlciSnowPropertiesOp extends Operator {
     private static final String POLLUTION_L_BAND_NAME = "l";
     private static final String POLLUTION_M_BAND_NAME = "m";
     private static final String POLLUTION_R0_BAND_NAME = "r_0";
-    private static final String POLLUTION_F_REL_ERR_BAND_NAME = "f_rel_err";
-    private static final String POLLUTION_L_REL_ERR_BAND_NAME = "l_rel_err";
-    private static final String POLLUTION_M_REL_ERR_BAND_NAME = "m_rel_err";
-    private static final String POLLUTION_R0_REL_ERR_BAND_NAME = "r_0_rel_err";
+    private static final String F_REL_ERR_BAND_NAME = "f_rel_err";
+    private static final String L_REL_ERR_BAND_NAME = "l_rel_err";
+    private static final String M_REL_ERR_BAND_NAME = "m_rel_err";
+    private static final String R0_REL_ERR_BAND_NAME = "r_0_rel_err";
     private static final String NDSI_MASK_BAND_NAME = "ndsi_mask";
     private static final String NDSI_BAND_NAME = "ndsi";
 
@@ -132,19 +132,20 @@ public class OlciSnowPropertiesOp extends Operator {
     private boolean considerSnowPollution;
 
     @Parameter(defaultValue = "false",
-            label = "Write additional parameters (f, l, m, R_0) in case of polluted snow (expert option)",
+            label = "Write additional parameters (f, m) in case of polluted snow",
             description =
-                    "If selected, additional parameters (f, l, m, R_0) will be written to the target product in case " +
+                    "If selected, additional parameters (f, m) will be written to the target product in case " +
                             "of polluted snow. Option 'Consider snow pollution' must be selected as well. Useful for experts only.")
     private boolean writeAdditionalSnowPollutionParms;
 
     @Parameter(defaultValue = "false",
-            label = "Write uncertainties of additional parameters in case of polluted snow (expert option)",
+            label = "Write uncertainties of (r_0, l) and additional parameters (f, m)",
             description =
-                    "If selected, uncertainties of additional parameters will be written to the target product in case " +
-                            "of polluted snow. Options 'Consider snow pollution' and 'Write additional parameters " +
-                            "(f, l, m, R_0)...' must be selected as well. Useful for experts only.")
-    private boolean writeUncertaintiesOfAdditionalSnowPollutionParms;
+                    "If selected, uncertainties of (r_0, l) and of additional parameters (f, m)  in case of polluted " +
+                            "snow will be written to the target product. " +
+                            "For uncertainties of (f, m), the options 'Consider snow pollution' and 'Write additional parameters " +
+                            "(f, m)...' must be selected as well. Useful for experts only.")
+    private boolean writeUncertaintiesOfAdditionalSnowParms;
 
     @Parameter(defaultValue = "0.01",
             description = "Assumed uncertainty in Rayleigh corrected reflectances",
@@ -512,10 +513,18 @@ public class OlciSnowPropertiesOp extends Operator {
                             }
 
                             // we want l, r_0 for both clean and polluted snow (AK 20181130)
-                            final Band pollutionLBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
-                            targetTiles.get(pollutionLBand).setSample(x, y, l);
-                            final Band pollutionR0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
-                            targetTiles.get(pollutionR0Band).setSample(x, y, r0);
+                            final Band lBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
+                            targetTiles.get(lBand).setSample(x, y, l);
+                            final Band r0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
+                            targetTiles.get(r0Band).setSample(x, y, r0);
+                            if (writeUncertaintiesOfAdditionalSnowParms) {
+                                final double r0RelErr = spectralAlbedoResult.getR0RelErr();
+                                final Band r0RelErrBand = targetProduct.getBand(R0_REL_ERR_BAND_NAME);
+                                targetTiles.get(r0RelErrBand).setSample(x, y, r0RelErr);
+                                final Band pollutionLRelErrBand = targetProduct.getBand(L_REL_ERR_BAND_NAME);
+                                final double lRelErr = spectralAlbedoResult.getlRelErr();
+                                targetTiles.get(pollutionLRelErrBand).setSample(x, y, lRelErr);
+                            }
 
                             if (considerSnowPollution) {
                                 final Band pollutionMaskBand = targetProduct.getBand(POLLUTION_MASK_BAND_NAME);
@@ -532,19 +541,13 @@ public class OlciSnowPropertiesOp extends Operator {
                                     final Band pollutionMBand = targetProduct.getBand(POLLUTION_M_BAND_NAME);
                                     targetTiles.get(pollutionMBand).setSample(x, y, isPollutedSnow ? m : Float.NaN);
 
-                                    if (writeUncertaintiesOfAdditionalSnowPollutionParms) {
-                                        final double r0RelErr = spectralAlbedoResult.getR0RelErr();
+                                    if (writeUncertaintiesOfAdditionalSnowParms) {
                                         final double fRelErr = spectralAlbedoResult.getfRelErr();
-                                        final double lRelErr = spectralAlbedoResult.getlRelErr();
                                         final double mRelErr = spectralAlbedoResult.getmRelErr();
-                                        final Band pollutionFRelErrBand = targetProduct.getBand(POLLUTION_F_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionFRelErrBand).setSample(x, y, isPollutedSnow ? fRelErr : Float.NaN);
-                                        final Band pollutionLRelErrBand = targetProduct.getBand(POLLUTION_L_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionLRelErrBand).setSample(x, y, isPollutedSnow ? lRelErr : Float.NaN);
-                                        final Band pollutionMRelErrBand = targetProduct.getBand(POLLUTION_M_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionMRelErrBand).setSample(x, y, isPollutedSnow ? mRelErr : Float.NaN);
-                                        final Band pollutionR0RelErrBand = targetProduct.getBand(POLLUTION_R0_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionR0RelErrBand).setSample(x, y, isPollutedSnow ? r0RelErr : Float.NaN);
+                                        final Band pollutionFRelErrBand = targetProduct.getBand(F_REL_ERR_BAND_NAME);
+                                        targetTiles.get(pollutionFRelErrBand).setSample(x, y, fRelErr);
+                                        final Band pollutionMRelErrBand = targetProduct.getBand(M_REL_ERR_BAND_NAME);
+                                        targetTiles.get(pollutionMRelErrBand).setSample(x, y, mRelErr);
                                     }
                                 }
                             }
@@ -597,11 +600,11 @@ public class OlciSnowPropertiesOp extends Operator {
                 targetProduct.addBand(POLLUTION_F_BAND_NAME, ProductData.TYPE_FLOAT32);
                 targetProduct.addBand(POLLUTION_M_BAND_NAME, ProductData.TYPE_FLOAT32);
 
-                if (writeUncertaintiesOfAdditionalSnowPollutionParms) {
-                    targetProduct.addBand(POLLUTION_F_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
-                    targetProduct.addBand(POLLUTION_L_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
-                    targetProduct.addBand(POLLUTION_M_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
-                    targetProduct.addBand(POLLUTION_R0_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
+                if (writeUncertaintiesOfAdditionalSnowParms) {
+                    targetProduct.addBand(F_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
+                    targetProduct.addBand(L_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
+                    targetProduct.addBand(M_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
+                    targetProduct.addBand(R0_REL_ERR_BAND_NAME, ProductData.TYPE_FLOAT32);
                 }
             }
         }
