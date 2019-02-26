@@ -84,7 +84,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
     public void testComputeRelativeImpurityLoad() {
         SiceSnowPropertiesResult generalSnowProperties =
                 OlciSicePropertiesAlgorithm.computeGeneralSnowProperties(brr_1, sza_1, vza_1);
-        // result: first line, fourth column of output_impurity.dat
+        // result: first line, fourth column of output_impurity.dat  (clean case)
         assertEquals(0.0, generalSnowProperties.getRelativeImpurityLoad(), 1.E-3);
 
         generalSnowProperties =

@@ -46,8 +46,52 @@ class OlciSicePropertiesAlgorithm {
         return new SiceSnowPropertiesResult(null, grainDiam, snowSpecificArea, relImpurityLoad);
     }
 
-    static SpectralAlbedoResult computeSpectralAlbedos() {
+    /**
+     * todo
+     *
+     * @param brr - double[], all 21 BRRs
+     * @param sza - sza
+     * @param vza - vza
+     * @param raa - relazi
+     *
+     * @return spectral albedo
+     */
+    static SpectralAlbedoResult computeSpectralAlbedos(double[] brr, double sza, double vza, double raa) {
         // todo
+//        raa=abs(180.-(vaa-saa))
+//        am1=cos(pi*sza/180.)
+//        am2=cos(pi*vza/180.)
+//        sam1=sin(pi*sza/180.)
+//        sam2=sin(pi*vza/180.)
+//        ! scattering angle calculation:
+//        co=-am1*am2+sam1*sam2*cos(raa*pi/180.)
+//        scat =acos(co)*180./pi
+
+//        r0al=falex1(am1,am2,co)
+        final double camu1 = Math.cos(sza * MathUtils.DTOR);
+        final double camu2 = Math.cos(vza * MathUtils.DTOR);
+        final double samu1 = Math.sin(sza * MathUtils.DTOR);
+        final double samu2 = Math.sin(vza * MathUtils.DTOR);
+        final double co = camu1 * camu2 + samu1 * samu2 * Math.cos(raa * MathUtils.DTOR);
+
+        double r0a1 = falex1(camu1, camu2, co);
+
+        for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
+            if (brr[i] > r0a1) {
+                r0a1 = brr[i];
+            }
+        }
+
+
+//        !      effective absorption length(microns):
+//        alka=(alog(r1020/r0))**2./xx/xx/alpha4
+        // astra: ICE_REFR_INDEX  1,..,21
+        // xs: WAVELENGTH_GRID_OLCI  1,..,21
+//        for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
+//            final double dega =
+//        }
+
+
         return null;
     }
 
@@ -66,9 +110,34 @@ class OlciSicePropertiesAlgorithm {
         return 0;
     }
 
-    static double falex1() {
-        // todo
-        return 0;
+    /**
+     * some magic maths by Alex... // todo: clarify what this means
+     *
+     * @param am1 - ?
+     * @param am2 - ?
+     * @param co - cosine of scattering angle
+     *
+     * @return - ?
+     */
+    static double falex1(double am1, double am2, double co) {
+//        pi=acos(-1.)
+//        a=1.247
+//        b=1.186
+//        c=5.157
+//        a1=0.087
+//        a2=0.014
+//        scat=acos(co)*180./pi
+//        p=11.1*exp(-a1*scat)+1.1*exp(-a2*scat)
+//        falex1=(a+b*(am1+am2)+c*am1*am2+p)/4./(am1+am2)
+        final double a = 1.247;
+        final double b = 1.186;
+        final double c = 5.157;
+        final double a1 = 0.087;
+        final double a2 = 0.014;
+        final double scat = Math.acos(co) * MathUtils.RTOD;
+        final double p = 11.1 * Math.exp(-a1 * scat) + 1.1 * Math.exp(-a2 * scat);
+
+        return (a+b*(am1+am2)+c*am1*am2+p)/4./(am1+am2);
     }
 
 
