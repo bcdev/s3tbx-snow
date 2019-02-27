@@ -104,6 +104,11 @@ public class SnowUtils {
         return Math.toDegrees(Math.acos(Math.cos(saaRad) * Math.cos(vaaRad) + Math.sin(saaRad) * Math.sin(vaaRad)));
     }
 
+    public static double getRelAziSice(double saa, double vaa) {
+        // this is the definition as in Fortran breadboard for SICE
+        return Math.abs(180.0 - (vaa - saa));
+    }
+
     public static double calcScatteringCos(double sza, double vza, double raa) {
         final double sins = (float) Math.sin(sza * MathUtils.DTOR);
         final double sinv = (float) Math.sin(vza * MathUtils.DTOR);

@@ -51,6 +51,16 @@ public class OlciSnowPropertiesConstants {
             2.250E-006
     };
 
+    // from file 'kap_olci.dat'. They are partly different from ICE_REFR_INDEX. todo: ask Alex why
+    public static final double[] ICE_REFR_INDEX_SICE_OLCI = {
+            2.365E-011,2.669E-011,7.0E-011,4.17E-010,8.04E-010,
+            2.84E-009,8.580E-009,1.78E-008,1.95E-008,2.1E-008,
+            3.3E-008,6.23E-008,7.1E-008,7.68E-008,8.13E-008,
+            9.88E-008,2.400E-007,3.64E-007,4.200E-007,5.530E-007,
+            2.250E-006
+    };
+
+
     public static final double[][] KAPPA_2_SPLINE_COEFFS = {
             // from fit to https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat
             {

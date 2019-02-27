@@ -12,25 +12,24 @@ class OlciSicePropertiesAlgorithm {
         return 0;
     }
 
-    static SiceSnowPropertiesResult computeGeneralSnowProperties(double[] brr, double sza, double vza) {
+    /**
+     * todo
+     * requires brr[0], brr[5], brr[9], brr[10], brr[20] (400, 560, 681, 709, 1020)
+     *
+     * @param brr
+     * @param r0
+     * @param xx
+     * @return  SiceSnowPropertiesResult
+     */
+    static SiceSnowPropertiesResult computeGeneralSnowProperties(double[] brr, double r0, double xx) {
 
         // snow grain size:
-        final double r0 = computeR0(brr, sza, vza);
-
         final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
         final double akap4 = 2.25E-6;
         final double alpha4 = 4. * Math.PI * akap4 / alam4;
         final double brr1020 = brr[20];
 
-        final double amu1 = Math.cos(sza * MathUtils.DTOR);
-        final double amu2 = Math.cos(vza * MathUtils.DTOR);
-
-        final double u1 = SnowUtils.computeU(amu1);
-        final double u2 = SnowUtils.computeU(amu2);
-
-        final double x = u1 * u2 / r0;
-
-        final double effAbsLength = Math.log(brr1020 / r0) * Math.log(brr1020 / r0) / (x * x * alpha4);   // in microns
+        final double effAbsLength = Math.log(brr1020 / r0) * Math.log(brr1020 / r0) / (xx * xx * alpha4);   // in microns
         final double effAbsLengthMillimeter = effAbsLength / 1000.0;
 
         final double psi = 0.06;       // one number in breadboard 'psi.dat'...
@@ -41,58 +40,65 @@ class OlciSicePropertiesAlgorithm {
         final double snowSpecificArea = computeSnowSpecificArea(grainDiamMetres);
 
         // snow pollution
-        double relImpurityLoad = computeRelativeImpurityLoad(brr, r0, x, effAbsLengthMillimeter);
+        // requires brr[0], brr[5], brr[9], brr[10] (400, 560, 681, 709)
+        double relImpurityLoad = computeRelativeImpurityLoad(brr, r0, xx, effAbsLengthMillimeter);
 
-        return new SiceSnowPropertiesResult(null, grainDiam, snowSpecificArea, relImpurityLoad);
+        return new SiceSnowPropertiesResult(null, effAbsLength, grainDiam, snowSpecificArea, relImpurityLoad);
     }
 
     /**
-     * todo
+     * Provides spectral spherical and planar albedos.
+     * we need all 21 BRRs here. todo: for performance reasons, ask Alex if we can simplify
      *
-     * @param brr - double[], all 21 BRRs
+     * @param snowProperties - result array which should already contain at least effective absorption length
      * @param sza - sza
      * @param vza - vza
-     * @param raa - relazi
+     * @param raa - raa
      *
-     * @return spectral albedo
+     * @return void
      */
-    static SpectralAlbedoResult computeSpectralAlbedos(double[] brr, double sza, double vza, double raa) {
-        // todo
-//        raa=abs(180.-(vaa-saa))
-//        am1=cos(pi*sza/180.)
-//        am2=cos(pi*vza/180.)
-//        sam1=sin(pi*sza/180.)
-//        sam2=sin(pi*vza/180.)
-//        ! scattering angle calculation:
-//        co=-am1*am2+sam1*sam2*cos(raa*pi/180.)
-//        scat =acos(co)*180./pi
-
-//        r0al=falex1(am1,am2,co)
+    static void computeSpectralAlbedos(SiceSnowPropertiesResult snowProperties, double[] brr, double sza, double vza, double raa) {
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
         final double camu2 = Math.cos(vza * MathUtils.DTOR);
         final double samu1 = Math.sin(sza * MathUtils.DTOR);
         final double samu2 = Math.sin(vza * MathUtils.DTOR);
-        final double co = camu1 * camu2 + samu1 * samu2 * Math.cos(raa * MathUtils.DTOR);
+        final double co = -camu1 * camu2 + samu1 * samu2 * Math.cos(raa * MathUtils.DTOR);
+        final double u1 = SnowUtils.computeU(camu1);
+        final double u2 = SnowUtils.computeU(camu2);
 
         double r0a1 = falex1(camu1, camu2, co);
 
+        double[][] spectralAlbedos = new double[2][OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
+        // todo: ask Alex what the two ways of spectral albedo retrieval mean
+        // todo: ask Alex if we can get rid of using all 21 brrs here
         for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
             if (brr[i] > r0a1) {
                 r0a1 = brr[i];
+                // todo: is the following line correct?? Note that r0a1 can change while going through the loop of 21 brrs!
+                final double rs = Math.pow(brr[0]/r0a1, r0a1/(u1*u2));
+                final double rp = Math.pow(rs, u1);
+                spectralAlbedos[0][i] = rs;
+                spectralAlbedos[1][i] = rp;
             }
         }
+        r0a1 = Math.min(r0a1, brr[0]);  // can we simplify like this? brr400 should be the maximum of the spectrum?!
 
-
-//        !      effective absorption length(microns):
-//        alka=(alog(r1020/r0))**2./xx/xx/alpha4
-        // astra: ICE_REFR_INDEX  1,..,21
-        // xs: WAVELENGTH_GRID_OLCI  1,..,21
-//        for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
-//            final double dega =
-//        }
-
-
-        return null;
+        final double thresh = r0a1 - 0.1;
+        if (brr[0] >= thresh) {
+            // in this case, override the spectral albedos computed above
+            final double effAbsLength = snowProperties.getEffAbsLength();
+            for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
+                final double wvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];
+                final double iceRefrIndex = OlciSnowPropertiesConstants.ICE_REFR_INDEX_SICE_OLCI[i];
+                final double dega = effAbsLength * 4.0 * Math.PI * iceRefrIndex / wvl;
+                final double sqrtDega = Math.sqrt(dega);
+                final double rsalex = sqrtDega > 1.E-6 ? Math.exp(-sqrtDega) : 1.0;
+                final double rpalex = Math.pow(rsalex, u1);
+                spectralAlbedos[0][i] = rsalex;    // todo: what is physically new here ?
+                spectralAlbedos[1][i] = rpalex;
+            }
+        }
+        snowProperties.setSpectralAlbedos(spectralAlbedos);
     }
 
     static double[] computePlanarBroadbandAlbedo() {
@@ -141,7 +147,7 @@ class OlciSicePropertiesAlgorithm {
     }
 
 
-    private static double computeR0(double[] brr, double sza, double vza) {
+    static double computeR0(double[] brr, double sza, double vza) {
         // todo
         final double alam3 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[16];  // 0.865
         final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
@@ -160,6 +166,16 @@ class OlciSicePropertiesAlgorithm {
         final double brr1020 = brr[20];
 
         return Math.pow(brr865, ax1) * Math.pow(brr1020, ax2);
+    }
+
+    static double computeXX(double r0, double sza, double vza) {
+        final double amu1 = Math.cos(sza * MathUtils.DTOR);
+        final double amu2 = Math.cos(vza * MathUtils.DTOR);
+
+        final double u1 = SnowUtils.computeU(amu1);
+        final double u2 = SnowUtils.computeU(amu2);
+
+        return u1 * u2 / r0;
     }
 
     private static double computeRelativeImpurityLoad(double[] brr, double r0, double x, double effAbsLengthMillimeter) {

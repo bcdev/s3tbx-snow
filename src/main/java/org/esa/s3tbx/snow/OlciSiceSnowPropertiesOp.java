@@ -407,7 +407,7 @@ public class OlciSiceSnowPropertiesOp extends Operator {
 
                             final double saa = saaTile.getSampleDouble(x, y);
                             final double vaa = vaaTile.getSampleDouble(x, y);
-                            final double raa = SnowUtils.getRelAzi(saa, vaa);
+                            final double raa = SnowUtils.getRelAziSice(saa, vaa);
 
                             // check for 'backscattering' and 'glint' (AK 20181207):
                             final boolean isBackscattering = Math.abs(raa) < 5.0 && Math.abs(sza - vza) < 5.0;
