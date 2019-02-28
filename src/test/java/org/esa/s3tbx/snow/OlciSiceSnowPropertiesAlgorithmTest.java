@@ -144,7 +144,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         SiceSnowPropertiesResult siceSnowProperties =
                 OlciSicePropertiesAlgorithm.computeGeneralSnowProperties(brr_1, r0, xx);
         double raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
-        OlciSicePropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, brr_1, sza_1, vza_1, raa);
+        OlciSicePropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_1, brr_1, sza_1, vza_1, raa);
         double[][] spectralAlbedos = siceSnowProperties.getSpectralAlbedos();
         assertNotNull(spectralAlbedos);
         assertEquals(2, spectralAlbedos.length);
@@ -160,7 +160,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         siceSnowProperties =
                 OlciSicePropertiesAlgorithm.computeGeneralSnowProperties(brr_30, r0, xx);
         raa = SnowUtils.getRelAziSice(saa_30, vaa_30);
-        OlciSicePropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, brr_30, sza_30, vza_30, raa);
+        OlciSicePropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_30, brr_30, sza_30, vza_30, raa);
         spectralAlbedos = siceSnowProperties.getSpectralAlbedos();
         assertNotNull(spectralAlbedos);
         assertEquals(2, spectralAlbedos.length);

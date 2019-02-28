@@ -11,22 +11,25 @@ package org.esa.s3tbx.snow;
  * @author olafd
  */
 public class SiceSnowPropertiesResult {
-    private double[][] spectralAlbedos;
     private double effAbsLength;
     private double snowGrainSize;
     private double snowSpecificArea;
     private double relativeImpurityLoad;
+    private double r0a1Thresh;
+    private double[][] spectralAlbedos;
 
-    SiceSnowPropertiesResult(double[][] spectralAlbedos,
-                             double effAbsLength,
+    SiceSnowPropertiesResult(double effAbsLength,
                              double snowGrainSize,
                              double snowSpecificArea,
-                             double relativeImpurityLoad) {
-        this.spectralAlbedos = spectralAlbedos;
+                             double relativeImpurityLoad,
+                             double r0a1Thresh,
+                             double[][] spectralAlbedos) {
         this.effAbsLength = effAbsLength;
         this.snowGrainSize = snowGrainSize;
         this.snowSpecificArea = snowSpecificArea;
         this.relativeImpurityLoad = relativeImpurityLoad;
+        this.r0a1Thresh = r0a1Thresh;
+        this.spectralAlbedos = spectralAlbedos;
     }
 
     public void setSpectralAlbedos(double[][] spectralAlbedos) {
@@ -35,6 +38,14 @@ public class SiceSnowPropertiesResult {
 
     public double[][] getSpectralAlbedos() {
         return spectralAlbedos;
+    }
+
+    public double getR0a1Thresh() {
+        return r0a1Thresh;
+    }
+
+    public void setR0a1Thresh(double r0a1Thresh) {
+        this.r0a1Thresh = r0a1Thresh;
     }
 
     public double getEffAbsLength() {
