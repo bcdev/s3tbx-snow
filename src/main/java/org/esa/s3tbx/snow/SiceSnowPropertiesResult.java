@@ -17,19 +17,22 @@ public class SiceSnowPropertiesResult {
     private double relativeImpurityLoad;
     private double r0a1Thresh;
     private double[][] spectralAlbedos;
+    private double[][] broadbandAlbedos;
 
     SiceSnowPropertiesResult(double effAbsLength,
                              double snowGrainSize,
                              double snowSpecificArea,
                              double relativeImpurityLoad,
                              double r0a1Thresh,
-                             double[][] spectralAlbedos) {
+                             double[][] spectralAlbedos,
+                             double[][] broadbandAlbedos) {
         this.effAbsLength = effAbsLength;
         this.snowGrainSize = snowGrainSize;
         this.snowSpecificArea = snowSpecificArea;
         this.relativeImpurityLoad = relativeImpurityLoad;
         this.r0a1Thresh = r0a1Thresh;
         this.spectralAlbedos = spectralAlbedos;
+        this.broadbandAlbedos = broadbandAlbedos;
     }
 
     public void setSpectralAlbedos(double[][] spectralAlbedos) {
@@ -38,6 +41,14 @@ public class SiceSnowPropertiesResult {
 
     public double[][] getSpectralAlbedos() {
         return spectralAlbedos;
+    }
+
+    public void setBroadbandAlbedos(double[][] broadbandAlbedos) {
+        this.broadbandAlbedos = broadbandAlbedos;
+    }
+
+    public double[][] getBroadbandAlbedos() {
+        return broadbandAlbedos;
     }
 
     public double getR0a1Thresh() {

@@ -37,7 +37,7 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
         final double brr400 = parms[0];
         final double effAbsLength = parms[1];
         final double r0a1Thresh = parms[2];
-        final double sza = parms[3];
+        final double cosSza = parms[3];
         final double as = parms[4];
         final double bs = parms[5];
         final double cs = parms[6];
@@ -58,20 +58,20 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
         if (x < 0.4) {
             astra = 2.0E-11;
         } else {
-            astra = a[0] + a[1] * x + a[2] * x * x + a[3] * x * x * x + a[4] * x * x * x * x + a[5] * x * x * x * x * x;
+            // obviously we lose some precision in the breadboard with the 'real' numbers
+            astra = a[0] + a[1] * x + a[2] * x * x + a[3]*Math.pow(x, 3.) + a[4]*Math.pow(x, 4.) + a[5]*Math.pow(x, 5.);
         }
 
         final double dega = effAbsLength * 4.0 * Math.PI * astra / x;
         final double sqrtDega = Math.sqrt(dega);
         final double rsd = sqrtDega > 1.E-6 ? Math.exp(-sqrtDega) : 1.0;
-        final double camu1 = Math.cos(sza * org.esa.snap.core.util.math.MathUtils.DTOR);
-        final double um1 = SnowUtils.computeU(camu1);
+        final double um1 = SnowUtils.computeU(cosSza);
 
         double f1;
         if (brr400 <= r0a1Thresh && x <= 1.02) {
             f1 = as * x * x + bs * x + cs;
         } else {
-            f1 = planar == 1.0 ? Math.pow(rsd, um1) : rsd;
+            f1 = planar == 1.0 ? rsd : Math.pow(rsd, um1);
         }
 
         final double p0 = 32.38;

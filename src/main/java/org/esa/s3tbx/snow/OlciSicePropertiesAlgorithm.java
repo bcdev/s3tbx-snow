@@ -1,6 +1,7 @@
 package org.esa.s3tbx.snow;
 
 import org.esa.s3tbx.snow.math.Integrator;
+import org.esa.s3tbx.snow.math.SiceFun1Function;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
@@ -45,7 +46,7 @@ class OlciSicePropertiesAlgorithm {
         double relImpurityLoad = computeRelativeImpurityLoad(brr, r0, xx, effAbsLengthMillimeter);
 
         // fill result with numbers we have up to now
-        return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, relImpurityLoad, 0.0, null);
+        return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, relImpurityLoad, 0.0, null, null);
     }
 
     /**
@@ -106,55 +107,83 @@ class OlciSicePropertiesAlgorithm {
         snowProperties.setSpectralAlbedos(spectralAlbedos);
     }
 
-    static double[] computePlanarBroadbandAlbedo() {
-        // todo
-//        !         Step 4.1 planar BBA
-//
-//        !     planar BBA
-//                NSOLO = 0
-//        x1 = 0.4425
-//        x2 = 0.70875
-//        x3 = 1.020
-//
-//        y1 = rp(3)
-//        y2 = rp(11)
-//        y3 = rp(21)
-//
-//        d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1)
-//        d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1)
-//
-//        !           second order polynomial coefficients  for planar albedo:
-//        as = d1 / d2
-//        bs = (y3 - y2 - as * (x3 * x3 - x2 * x2)) / (x3 - x2)
-//        cs = y3 - as * x3 * x3 - bs * x3
-//
-//        !           limits of integration
-//        at = 0.3
-//        bt = 2.4
-//        aat = 0.7
-//
-//        call qsimp(fun1, at, bt, ss1)
-//        call qsimp(fun2, at, bt, ss2)
-//
-//        answer1 = ss1 / ss2
-//
-//        call qsimp(fun1, at, aat, ss1)
-//        call qsimp(fun2, at, aat, ss2)
-//
-//        answer2 = ss1 / ss2
-//
-//        call qsimp(fun1, aat, bt, ss1)
-//        call qsimp(fun2, aat, bt, ss2)
-//
-//        answer3 = ss1 / ss2
+    /**
+     *
+     *
+     * @param snowProperties
+     * @param brr400
+     * @param wvlFullGrid : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
+     * @return
+     */
+    static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
+                                                 double brr400,
+                                                 double sza,
+                                                 double[] wvlFullGrid) {
+        final double x1 = 0.4425;
+        final double x2 = 0.70875;
+        final double x3 = 1.020;
 
-//        numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-//                                                   OlciSnowPropertiesConstants.BB_WVL_2,
-//                                                   fLambdaTimesPlanarSpectralAlbedo,
-//                                                   wvlsFull);
+        final double y1 = snowProperties.getSpectralAlbedos()[1][2];
+        final double y2 = snowProperties.getSpectralAlbedos()[1][10];
+        final double y3 = snowProperties.getSpectralAlbedos()[1][20];
 
+        final double d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1);
+        final double d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1);
 
-        return null;
+        // second order polynomial coefficients for planar albedo:
+        final double as = d1 / d2;
+        final double bs = (y3 - y2 - as * (x3 * x3 - x2 * x2)) / (x3 - x2);
+        final double cs = y3 - as * x3 * x3 - bs * x3;
+
+        // limits of integration
+        final double at = OlciSnowPropertiesConstants.BB_WVL_1;
+        final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
+        final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
+
+        final SiceFun1Function fun1 = new SiceFun1Function();
+        final SiceFun1Function fun2 = new SiceFun1Function();
+
+        // fun1 params:
+        // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
+        // double as, double bs, double cs, double planar
+        final double effAbsLength = snowProperties.getEffAbsLength();
+        final double r0a1Thresh = snowProperties.getR0a1Thresh();
+        final double camu1 = Math.cos(sza * MathUtils.DTOR);
+        final double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
+        final double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
+        final double[] paramsFun2 = new double[]{}; // no parameters needed
+
+        // todo: fun1 and fun2 were tested successfully.
+        // Now check if Simpson integration matches with Alex' manual implementation.
+
+        final double numeratorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
+        final double bbVisPlanar = numeratorVisPlanar/denominatorVisPlanar;
+
+        final double numeratorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double bbNirPlanar = numeratorNirPlanar/denominatorNirPlanar;
+
+        final double numeratorSwPlanar = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorSwPlanar = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double bbSwPlanar = numeratorSwPlanar/denominatorSwPlanar;
+
+        final double numeratorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
+        final double bbVisSpherical = numeratorVisSpherical/denominatorVisSpherical;
+
+        final double numeratorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double bbNirSpherical = numeratorNirSpherical/denominatorNirSpherical;
+
+        final double numeratorSwSpherical = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorSwSpherical = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double bbSwSpherical = numeratorSwSpherical/denominatorSwSpherical;
+
+        final double[] sphericalBBAlbedo = new double[]{bbVisSpherical, bbNirSpherical, bbSwSpherical};
+        final double[] planarBBAlbedo = new double[]{bbVisPlanar, bbNirPlanar, bbSwPlanar};
+
+        snowProperties.setBroadbandAlbedos(new double[][]{sphericalBBAlbedo, planarBBAlbedo});
     }
 
     static double[] computeSphericalBroadbandAlbedo() {
@@ -218,56 +247,6 @@ class OlciSicePropertiesAlgorithm {
 
         return u1 * u2 / r0;
     }
-
-//    static double fun1(double x, double brr400, double r0, double xx, double effAbsLength, double r0a1Thresh, double sza,
-//                       double as, double bs, double cs, boolean planar) {
-//
-//        double[] a = new double[6];
-//        final double[][] bbb = OlciSnowPropertiesConstants.BBB_COEFFS_SICE;
-//        final double[] bbbBounds = OlciSnowPropertiesConstants.BBB_COEFFS_SICE_BOUNDS;
-//        for (int i = 0; i < 9; i++) {
-//            for (int j = 0; j < 6; j++) {
-//                if (x >= bbbBounds[i] && x < bbbBounds[i + 1]) {
-//                    a[j] = bbb[i][j];
-//                }
-//            }
-//        }
-//
-//        double astra;
-//        if (x < 0.4) {
-//            astra = 2.0E-11;
-//        } else {
-//            astra = a[0] + a[1] * x + a[2] * x * x + a[3] * x * x * x + a[4] * x * x * x * x + a[5] * x * x * x * x * x;
-//        }
-//
-//        final double dega = effAbsLength * 4.0 * Math.PI * astra / x;
-//        final double sqrtDega = Math.sqrt(dega);
-//        final double rsd = sqrtDega > 1.E-6 ? Math.exp(-sqrtDega) : 1.0;
-//        final double camu1 = Math.cos(sza * MathUtils.DTOR);
-//        final double um1 = SnowUtils.computeU(camu1);
-//
-//        double f1;
-//        if (brr400 <= r0a1Thresh && x <= 1.02) {
-//            f1 = as * x * x + bs * x + cs;
-//        } else {
-//            f1 = planar ? Math.pow(rsd, um1) : rsd;
-//        }
-//
-//        final double p0 = 32.38;
-//        final double p1 = -160140.33;
-//        final double p2 = 7959.53;
-//        final double t1 = 85.34 * 1.e-3;
-//        final double t2 = 401.79 * 1.e-3;
-//
-//        double funcs;
-//        if (x <= 0.4) {
-//            funcs = p0 + p1 * Math.exp(-0.4 / t1) + p2 * Math.exp(-0.4 / t2);
-//        } else {
-//            funcs = p0 + p1 * Math.exp(-x / t1) + p2 * Math.exp(-x / t2);
-//        }
-//
-//        return f1 * funcs;
-//    }
 
     private static double computeRelativeImpurityLoad(double[] brr, double r0, double x, double effAbsLengthMillimeter) {
         final double wvl400 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];

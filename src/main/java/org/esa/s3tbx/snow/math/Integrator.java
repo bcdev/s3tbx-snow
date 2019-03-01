@@ -1,5 +1,7 @@
 package org.esa.s3tbx.snow.math;
 
+import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
+
 /**
  * Class providing methods for numerical integration.
  *
@@ -62,6 +64,29 @@ public class Integrator {
             sum2 += 2.0 * y[i];
         }
         return (upper - lower) * (y[lowerIndex] + sum1 + sum2 + y[upperIndex]) / (3*n);
+    }
+
+    public static double integrateSimpsonSice(double lower, double upper,
+                                              ParametricUnivariateFunction fun,
+                                              double[] x,
+                                              double[] params) {
+        final double dx = x[1] - x[0];
+        int lowerIndex = (int) ((lower - x[0]) / dx);
+        lowerIndex = Math.min(Math.max(lowerIndex, 0), x.length-1);
+        int upperIndex = (int) ((upper - x[0]) / dx);
+        upperIndex = Math.max(0, Math.min(upperIndex, x.length-1));
+        final int n = upperIndex - lowerIndex;
+
+        double sum1 = 0.0;
+        double sum2 = 0.0;
+        for (int i = lowerIndex; i < upperIndex; i+=2) {
+            sum1 += 4.0 * fun.value(x[i], params);
+        }
+        for (int i = lowerIndex+1; i < upperIndex-1; i+=2) {
+            sum2 += 2.0 * fun.value(x[i], params);
+        }
+        return (upper - lower) *
+                (fun.value(x[lowerIndex], params) + sum1 + sum2 + fun.value(x[upperIndex], params)) / (3*n);
     }
 
 }

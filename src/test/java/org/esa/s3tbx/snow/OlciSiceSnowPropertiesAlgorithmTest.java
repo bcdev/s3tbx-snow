@@ -1,5 +1,7 @@
 package org.esa.s3tbx.snow;
 
+import org.esa.s3tbx.snow.math.SiceFun1Function;
+import org.esa.s3tbx.snow.math.SiceFun2Function;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -269,18 +271,56 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
     }
 
     @Test
-    public void testComputePlanarBroadbandAlbedo() {
+    public void testComputeBroadbandAlbedo() {
         // todo
     }
 
     @Test
-    public void testComputeSphericalBroadbandAlbedo() {
-        // todo
+    public void testFun1() {
+        double x = 2.38671637;  // a very large wavelength, 2368nm
+        // params:
+        // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
+        // double as, double bs, double cs, double planar
+        double brr400 = 0.819;
+        double effAbsLength = 130.823105;
+        double r0a1Thresh = 0.787318468;
+        double cosSza = 0.749880135;
+        double as = -0.110871777;
+        double bs = 0.085336022;
+        double cs = 0.778457224;
+        double planar = 0.0;
+        double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
+
+        SiceFun1Function fun1 = new SiceFun1Function();
+        double value = fun1.value(x, params);
+        // at this wvl we obviously lose some precision in the breadboard with the 'real' numbers, so we need a large delta...
+        assertEquals(26.8077, value, 1.0);
+
+        x = 0.900050223;         // wavelength 900nm
+        brr400 = 0.363;
+        effAbsLength = 2952.22119;
+        r0a1Thresh = 0.887;
+        cosSza = 0.575433493;
+        as = -0.743040442;
+        bs = 0.625367403;
+        cs = 0.319069743;
+        planar = 0.0;
+        fun1 = new SiceFun1Function();
+        params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
+        value = fun1.value(x, params);
+        assertEquals(245.1264, value, 1.E-3);
     }
 
     @Test
-    public void testComputeSolarLightSpectrum() {
-        // todo
+    public void testFun2() {
+        double x = 2.08124995;
+        final double[] dummy = new double[]{0};
+        SiceFun2Function fun2 = new SiceFun2Function();
+        assertEquals(77.1787, fun2.value(x, dummy), 1.E-3);
+
+        x = 0.753125012;
+        fun2 = new SiceFun2Function();
+        assertEquals(1230.1737, fun2.value(x, dummy), 1.E-3);
     }
 
     @Test
