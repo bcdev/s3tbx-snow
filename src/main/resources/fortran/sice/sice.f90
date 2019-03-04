@@ -259,8 +259,8 @@ program sice
             if (r(i).gt.r0al)r0al = r(i)
             rs(i) = (r(i) / r0al)**(r0al / u1 / u2)
             rp(i) = rs(i)**u1
-            if (js .eq. 30) write (*, *) "js, i, r(i), u1, u2: ", &
-                    js, ", ", i, ", ", r(i), ", ", u1, ", ", u2
+!            if (js .eq. 30) write (*, *) "js, i, r(i), u1, u2: ", &
+!                    js, ", ", i, ", ", r(i), ", ", u1, ", ", u2
 
         12                         continue
 
@@ -320,20 +320,20 @@ program sice
         bt = 2.4
         aat = 0.7
 
-        call qsimp(fun1, at, bt, ss1)
-        call qsimp(fun2, at, bt, ss2)
+!        call qsimp(fun1, at, bt, ss1)
+!        call qsimp(fun2, at, bt, ss2)
 
-        answer1 = ss1 / ss2
+!        answer1 = ss1 / ss2
 
-        call qsimp(fun1, at, aat, ss1)
-        call qsimp(fun2, at, aat, ss2)
+!        call qsimp(fun1, at, aat, ss1)
+!        call qsimp(fun2, at, aat, ss2)
 
-        answer2 = ss1 / ss2
+!        answer2 = ss1 / ss2
 
-        call qsimp(fun1, aat, bt, ss1)
-        call qsimp(fun2, aat, bt, ss2)
+!        call qsimp(fun1, aat, bt, ss1)
+!        call qsimp(fun2, aat, bt, ss2)
 
-        answer3 = ss1 / ss2
+!        answer3 = ss1 / ss2
 
 
 
@@ -361,21 +361,21 @@ program sice
         bt = 2.4
         aat = 0.7
 
-        call qsimp(fun1, at, bt, ss1)
-        call qsimp(fun2, at, bt, ss2)
+!        call qsimp(fun1, at, bt, ss1)
+        call qsimp(fun2, at, bt, ss2, js)
 
-        ans11 = ss1 / ss2
+!        ans11 = ss1 / ss2
 
-        call qsimp(fun1, at, aat, ss1)
-        call qsimp(fun2, at, aat, ss2)
+!        call qsimp(fun1, at, aat, ss1)
+!        call qsimp(fun2, at, aat, ss2)
 
-        ans22 = ss1 / ss2
+!        ans22 = ss1 / ss2
 
-        call qsimp(fun1, aat, bt, ss1)
-        call qsimp(fun2, aat, bt, ss2)
+!        call qsimp(fun1, aat, bt, ss1)
+!        call qsimp(fun2, aat, bt, ss2)
 
-        ans33 = ss1 / ss2
-        write(701, 102) js, answer1, answer2, answer3, ans11, ans22, ans33
+!        ans33 = ss1 / ss2
+!        write(701, 102) js, answer1, answer2, answer3, ans11, ans22, ans33
 
     1983          continue
     200            continue
@@ -467,8 +467,8 @@ real function fun2(x)
     return
 END
 
-SUBROUTINE qsimp(func, a, b, s)
-    INTEGER JMAX
+SUBROUTINE qsimp(func, a, b, s, js)
+    INTEGER JMAX, js
     REAL a, b, func, s, EPS
     EXTERNAL func
     PARAMETER (EPS = 1.e-3, JMAX = 20)
@@ -481,8 +481,12 @@ SUBROUTINE qsimp(func, a, b, s)
 
     do 11 j = 1, JMAX
 
-        call trapzd(func, a, b, st, j)
+        call trapzd(func, a, b, st, j, js)
         s = (4. * st - ost) / 3.
+
+        if (js .eq. 30) write (*, *) "QSIMP: j, a, b, st, s, ost, os: ", &
+             j, ", ", a, ", ", b, ", ", st, ", ", s, ", ", ost, ", ", os
+
 
         if (j.gt.5) then
             if (abs(s - os).lt.EPS * abs(os).or.(s.eq.0..and.os.eq.0.)) return
@@ -493,15 +497,21 @@ SUBROUTINE qsimp(func, a, b, s)
 
 END
 
-SUBROUTINE trapzd(func, a, b, s, n)
-    INTEGER n
+SUBROUTINE trapzd(func, a, b, s, n, js)
+    INTEGER n, js
     REAL a, b, s, func
     EXTERNAL func
     INTEGER it, j
     REAL del, sum, tnm, x
     COMMON as, bs, cs, am1, am2, r400, r865, r1020, BBB, NSOLO, thv
+
+    if (js .eq. 30) write (*, *) "TRAPZ IN: n, a, b, s: ", &
+                                n, ", ", a, ", ", b, ", ", s
+
     if (n.eq.1) then
         s = 0.5 * (b - a) * (func(a) + func(b))
+        if (js .eq. 30) write (*, *) "TRAPZ OUT: n, a, b, s: ", &
+                                        n, ", ", a, ", ", b, ", ", s
 
     else
         it = 2**(n - 2)
@@ -514,6 +524,8 @@ SUBROUTINE trapzd(func, a, b, s, n)
             x = x + del
         11                         continue
         s = 0.5 * (s + (b - a) * sum / tnm)
+        if (js .eq. 30) write (*, *) "TRAPZ O: n, a, b, s, del, x, sum: ", &
+                n, ", ", a, ", ", b, ", ", s, ", ", del, ", ", x, ", ", sum
 
     endif
 
