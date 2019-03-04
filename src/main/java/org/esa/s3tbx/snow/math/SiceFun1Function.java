@@ -59,7 +59,13 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
             astra = 2.0E-11;
         } else {
             // obviously we lose some precision in the breadboard with the 'real' numbers
-            astra = a[0] + a[1] * x + a[2] * x * x + a[3]*Math.pow(x, 3.) + a[4]*Math.pow(x, 4.) + a[5]*Math.pow(x, 5.);
+            final double term1 = a[0];
+            final double term2 = a[1] * x;
+            final double term3 = a[2] * x * x;
+            final double term4 = a[3] * Math.pow(x, 3.);
+            final double term5 = a[4] * Math.pow(x, 4.);
+            final double term6 = a[5] * Math.pow(x, 5.);
+            astra = term1 + term2 + term3 + term4 + term5 + term6;
         }
 
         final double dega = effAbsLength * 4.0 * Math.PI * astra / x;

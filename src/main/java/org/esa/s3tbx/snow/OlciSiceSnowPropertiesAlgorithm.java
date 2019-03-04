@@ -2,12 +2,13 @@ package org.esa.s3tbx.snow;
 
 import org.esa.s3tbx.snow.math.Integrator;
 import org.esa.s3tbx.snow.math.SiceFun1Function;
+import org.esa.s3tbx.snow.math.SiceFun2Function;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
  * @author olafd
  */
-class OlciSicePropertiesAlgorithm {
+class OlciSiceSnowPropertiesAlgorithm {
 
     static int computeSnowFlags() {
         // todo
@@ -108,17 +109,15 @@ class OlciSicePropertiesAlgorithm {
     }
 
     /**
-     *
-     *
      * @param snowProperties
      * @param brr400
-     * @param wvlFullGrid : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
+     * @param wvlFullGrid    : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
      * @return
      */
     static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
-                                                 double brr400,
-                                                 double sza,
-                                                 double[] wvlFullGrid) {
+                                             double brr400,
+                                             double sza,
+                                             double[] wvlFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
@@ -141,7 +140,7 @@ class OlciSicePropertiesAlgorithm {
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
         final SiceFun1Function fun1 = new SiceFun1Function();
-        final SiceFun1Function fun2 = new SiceFun1Function();
+        final SiceFun2Function fun2 = new SiceFun2Function();
 
         // fun1 params:
         // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
@@ -150,7 +149,6 @@ class OlciSicePropertiesAlgorithm {
         final double r0a1Thresh = snowProperties.getR0a1Thresh();
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
         final double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
-        final double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
         final double[] paramsFun2 = new double[]{}; // no parameters needed
 
         // todo: fun1 and fun2 were tested successfully.
@@ -158,37 +156,81 @@ class OlciSicePropertiesAlgorithm {
 
         final double numeratorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
         final double denominatorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
-        final double bbVisPlanar = numeratorVisPlanar/denominatorVisPlanar;
+        final double bbVisPlanar = numeratorVisPlanar / denominatorVisPlanar;
 
         final double numeratorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
         final double denominatorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
-        final double bbNirPlanar = numeratorNirPlanar/denominatorNirPlanar;
+        final double bbNirPlanar = numeratorNirPlanar / denominatorNirPlanar;
 
-        final double numeratorSwPlanar = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorSwPlanar = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
-        final double bbSwPlanar = numeratorSwPlanar/denominatorSwPlanar;
+        final double numeratorSwPlanar = Integrator.integrateSimpsonSice(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorSwPlanar = Integrator.integrateSimpsonSice(aat, bt, fun2, paramsFun2, wvlFullGrid);
+        final double bbSwPlanar = numeratorSwPlanar / denominatorSwPlanar;
 
+        final double[] planarBBAlbedo = new double[]{bbVisPlanar, bbNirPlanar, bbSwPlanar};
+
+        snowProperties.setPlanarBroadbandAlbedos(planarBBAlbedo);
+    }
+
+    /**
+     * @param snowProperties
+     * @param brr400
+     * @param wvlFullGrid    : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
+     * @return
+     */
+    static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
+                                                double brr400,
+                                                double sza,
+                                                double[] wvlFullGrid) {
+        final double x1 = 0.4425;
+        final double x2 = 0.70875;
+        final double x3 = 1.020;
+
+        final double y1 = snowProperties.getSpectralAlbedos()[0][2];
+        final double y2 = snowProperties.getSpectralAlbedos()[0][10];
+        final double y3 = snowProperties.getSpectralAlbedos()[0][20];
+
+        final double d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1);
+        final double d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1);
+
+        // second order polynomial coefficients for planar albedo:
+        final double as = d1 / d2;
+        final double bs = (y3 - y2 - as * (x3 * x3 - x2 * x2)) / (x3 - x2);
+        final double cs = y3 - as * x3 * x3 - bs * x3;
+
+        // limits of integration
+        final double at = OlciSnowPropertiesConstants.BB_WVL_1;
+        final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
+        final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
+
+        final SiceFun1Function fun1 = new SiceFun1Function();
+        final SiceFun2Function fun2 = new SiceFun2Function();
+
+        // fun1 params:
+        // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
+        // double as, double bs, double cs, double planar
+        final double effAbsLength = snowProperties.getEffAbsLength();
+        final double r0a1Thresh = snowProperties.getR0a1Thresh();
+        final double camu1 = Math.cos(sza * MathUtils.DTOR);
+        final double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
+        final double[] paramsFun2 = new double[]{}; // no parameters needed
+
+        // todo: fun1 and fun2 were tested successfully.
+        // Now check if Simpson integration matches with Alex' manual implementation.
         final double numeratorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Spherical, wvlFullGrid);
         final double denominatorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
-        final double bbVisSpherical = numeratorVisSpherical/denominatorVisSpherical;
+        final double bbVisSpherical = numeratorVisSpherical / denominatorVisSpherical;
 
         final double numeratorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
         final double denominatorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
-        final double bbNirSpherical = numeratorNirSpherical/denominatorNirSpherical;
+        final double bbNirSpherical = numeratorNirSpherical / denominatorNirSpherical;
 
-        final double numeratorSwSpherical = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorSwSpherical = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
-        final double bbSwSpherical = numeratorSwSpherical/denominatorSwSpherical;
+        final double numeratorSwSpherical = Integrator.integrateSimpsonSice(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorSwSpherical = Integrator.integrateSimpsonSice(aat, bt, fun2, paramsFun2, wvlFullGrid);
+        final double bbSwSpherical = numeratorSwSpherical / denominatorSwSpherical;
 
         final double[] sphericalBBAlbedo = new double[]{bbVisSpherical, bbNirSpherical, bbSwSpherical};
-        final double[] planarBBAlbedo = new double[]{bbVisPlanar, bbNirPlanar, bbSwPlanar};
 
-        snowProperties.setBroadbandAlbedos(new double[][]{sphericalBBAlbedo, planarBBAlbedo});
-    }
-
-    static double[] computeSphericalBroadbandAlbedo() {
-        // todo
-        return null;
+        snowProperties.setSphericalBroadbandAlbedos(sphericalBBAlbedo);
     }
 
     static double computeSolarLightSpectrum() {

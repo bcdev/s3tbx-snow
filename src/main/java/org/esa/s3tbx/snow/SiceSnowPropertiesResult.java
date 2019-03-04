@@ -47,8 +47,30 @@ public class SiceSnowPropertiesResult {
         this.broadbandAlbedos = broadbandAlbedos;
     }
 
+    public void setPlanarBroadbandAlbedos(double[] planarBroadbandAlbedos) {
+        if (this.broadbandAlbedos == null) {
+            this.broadbandAlbedos = new double[2][];
+        }
+        this.broadbandAlbedos[0] = planarBroadbandAlbedos;
+    }
+
+    public void setSphericalBroadbandAlbedos(double[] planarBroadbandAlbedos) {
+        if (this.broadbandAlbedos == null) {
+            this.broadbandAlbedos = new double[2][];
+        }
+        this.broadbandAlbedos[1] = planarBroadbandAlbedos;
+    }
+
     public double[][] getBroadbandAlbedos() {
         return broadbandAlbedos;
+    }
+
+    public double[] getPlanarBroadbandAlbedos() {
+        return broadbandAlbedos[0];
+    }
+
+    public double[] getSphericalBroadbandAlbedos() {
+        return broadbandAlbedos[1];
     }
 
     public double getR0a1Thresh() {
