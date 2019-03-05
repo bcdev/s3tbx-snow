@@ -99,9 +99,9 @@ public class Integrator {
         double os = -1.E30;
 
         for (int i = 1; i < jmax; i++) {
-            trapezResult = integrateTrapezSiceAlex(lower, upper, fun, params, x, s, i);
-            System.out.println("trapezResult = " + trapezResult);
-            s = 4.0*trapezResult/ 3.0;
+            trapezResult = integrateTrapezSiceAlex(lower, upper, fun, params, x, trapezResult, i);
+//            System.out.println("trapezResult = " + trapezResult);
+            s = (4.0*trapezResult - ost)/ 3.0;
             if (i > 5) {
                 if (Math.abs(s-os) < 1.E-3*Math.abs(os) || (s == 0.0 && os == 0.0)) {
                     break;
@@ -131,6 +131,17 @@ public class Integrator {
         if (n == 1) {
             s = 0.5 * (upper - lower) * (fun.value(x[lowerIndex], params) + fun.value(x[upperIndex], params));
         } else {
+//            it = 2**(n - 2)
+//            tnm = it
+//            del = (b - a) / tnm
+//            x = a + 0.5 * del
+//            sum = 0.
+//            do 11 j = 1, it
+//            sum = sum + func(x)
+//            x = x + del
+//            11                         continue
+//            s = 0.5 * (s + (b - a) * sum / tnm)
+
             int it = (int) Math.pow(2.0, n - 2);
             double del = (upper - lower) / it;
             double sum = 0.0;
@@ -139,8 +150,7 @@ public class Integrator {
                 sum += fun.value(xx, params);
                 xx += del;
             }
-            s = 0.5 * (tmpSum + (upper - lower) * sum / del);
-            s = 0.5 * ((upper - lower) * sum / del);
+            s = 0.5 * (tmpSum + (upper - lower) * sum / it);
         }
         return s;
     }

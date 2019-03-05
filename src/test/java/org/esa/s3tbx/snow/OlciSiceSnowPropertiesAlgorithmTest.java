@@ -3,6 +3,7 @@ package org.esa.s3tbx.snow;
 import org.esa.s3tbx.snow.math.Integrator;
 import org.esa.s3tbx.snow.math.SiceFun1Function;
 import org.esa.s3tbx.snow.math.SiceFun2Function;
+import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,13 +35,12 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
     private double[] brr_30;
 
     private double[] wvlFullGrid;
-    private int numWvl;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
 
 //        0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
-        numWvl = (int) ((OlciSnowPropertiesConstants.BB_WVL_3 - OlciSnowPropertiesConstants.BB_WVL_1) / 0.005 + 1);
+        int numWvl = (int) ((OlciSnowPropertiesConstants.BB_WVL_3 - OlciSnowPropertiesConstants.BB_WVL_1) / 0.005 + 1);
         wvlFullGrid = new double[numWvl];
         for (int i = 0; i < numWvl; i++) {
             wvlFullGrid[i] = OlciSnowPropertiesConstants.BB_WVL_1 + i * 0.005;
@@ -294,14 +294,14 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_30[0], sza_30, wvlFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
-        assertEquals(0.57, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);
-        assertEquals(0.76, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);
-        assertEquals(0.37, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);
+        assertEquals(0.57, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);       // J: 0.5706; F: 0.5677
+        assertEquals(0.76, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);       // J: 0.7592; F: 0.7595
+        assertEquals(0.36, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);       // J: 0.3683 ; F: 0.3591
         assertNotNull(siceSnowProperties.getSphericalBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getSphericalBroadbandAlbedos().length);
-        assertEquals(0.58, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);
-        assertEquals(0.77, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);
-        assertEquals(0.37, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);
+        assertEquals(0.58, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);   // J: 0.580; F: 0.5813
+        assertEquals(0.77, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);   // J: 0.7714; F: 0.7719
+        assertEquals(0.37, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);   // J: 0.3768; F: 0.3740
 
         r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_1, sza_1, vza_1);
         xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_1, vza_1);
@@ -312,14 +312,32 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_1[0], sza_1, wvlFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
-        assertEquals(0.68, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 4.E-2);     // 0.642
-        assertEquals(0.97, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 2.E-2);     // 0.969
-        assertEquals(0.35, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);     // 0.298
+        assertEquals(0.64, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);     // J: 0.6417; F: 0.6449
+        assertEquals(0.97, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);     // J: 0.9681; F: 0.9687
+        assertEquals(0.29, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);     // J: 0.2923; F: 0.2914
         assertNotNull(siceSnowProperties.getSphericalBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getSphericalBroadbandAlbedos().length);
-        assertEquals(0.67, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);    // 0.646
-        assertEquals(0.98, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);    // 0.970
-        assertEquals(0.35, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);    // 0.304
+        assertEquals(0.64, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);    // J: 0.6460; F: 0.6418
+        assertEquals(0.97, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);    // J: 0.9701; F: 0.9679
+        assertEquals(0.29, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 2.E-2);    // J: 0.3040; F: 0.2858
+
+        r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_5, sza_5, vza_5);
+        xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_5, vza_5);
+        siceSnowProperties = OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties(brr_5, r0, xx);
+        raa = SnowUtils.getRelAziSice(saa_5, vaa_5);
+        OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_5, brr_5, sza_5, vza_5, raa);
+        OlciSiceSnowPropertiesAlgorithm.computePlanarBroadbandAlbedo(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid);
+        OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid);
+        assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
+        assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
+        assertEquals(0.67, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);     // J: 0.6743; F: 0.6764
+        assertEquals(0.98, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);     // J: 0.9754; F: 0.9757
+        assertEquals(0.35, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);     // J: 0.3521; F: 0.3497
+        assertNotNull(siceSnowProperties.getSphericalBroadbandAlbedos());
+        assertEquals(3, siceSnowProperties.getSphericalBroadbandAlbedos().length);
+        assertEquals(0.67, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);    // J: 0.6776; F: 0.6743
+        assertEquals(0.98, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);    // J: 0.9767; F: 0.9753
+        assertEquals(0.35, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 2.E-2);    // J: 0.3619; F: 0.3458
         System.out.println();
     }
 
@@ -372,28 +390,43 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
     }
 
     @Test
-    public void testIntegrateSimpsonSice() {
+    public void testIntegrateSimpson_fun1() {
         // limits of integration
         final double at = OlciSnowPropertiesConstants.BB_WVL_1;
-        final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
-        double x = 0.900050223;         // wavelength 900nm
-        double brr400 = 0.363;
-        double effAbsLength = 2952.22119;
-        double r0a1Thresh = 0.887;
-        double cosSza = 0.575433493;
-        double as = -0.743040442;
-        double bs = 0.625367403;
-        double cs = 0.319069743;
+        double brr400 = brr_30[0];
+        double effAbsLength = 15517.0484;
+        double r0a1Thresh = 0.909276;
+        double cosSza = Math.cos(sza_30* MathUtils.DTOR);
+        double as = -1.63079834;
+        double bs = 1.65913153;
+        double cs = 0.370143652;
         double planar = 0.0;
         SiceFun1Function fun1 = new SiceFun1Function();
         double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
         final double simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun1, params, wvlFullGrid);
-//        final double simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, params, wvlFullGrid);
-        System.out.println("simpsonSice = " + simpsonSice);
-//        System.out.println("simpsonSiceAlex = " + simpsonSiceAlex);
+        final double simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, params, wvlFullGrid);
+
+        // new 'Simpson Alex' integration gives sightly diffrent results compared to S3Snow implementation
+        System.out.println("fun1 simpsonSice = " + simpsonSice);            // J: 738.3059
+        // we have differences to Fortran BB due to loss of precision from real numbers in function 'fun1'
+        System.out.println("fun1 simpsonSiceAlex = " + simpsonSiceAlex);    // J: 730.5411; F: 733.6338
     }
 
+    @Test
+    public void testIntegrateSimpsonSice_fun2() {
+        // limits of integration
+        final double at = OlciSnowPropertiesConstants.BB_WVL_1;
+        final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
+
+        SiceFun2Function fun2 = new SiceFun2Function();
+        double[] params2 = new double[]{0};
+        final double simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun2, params2, wvlFullGrid);
+        final double simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, params2, wvlFullGrid);
+        // for function 'fun2', the 'Simpson Alex' is almost the same as Fortran BB
+        System.out.println("fun2 simpsonSice = " + simpsonSice);                  // J: 1272.50
+        System.out.println("fun2 simpsonSiceAlex = " + simpsonSiceAlex);          // J: 1262.2802; F: 1262.2793
+    }
 
 }

@@ -361,8 +361,11 @@ program sice
         bt = 2.4
         aat = 0.7
 
-!        call qsimp(fun1, at, bt, ss1)
-        call qsimp(fun2, at, bt, ss2, js)
+        if (js .eq. 30) write (*, *) "js, as, bs, cs: ", &
+                js, ", ", as, ", ", bs, ", ", cs
+
+        call qsimp(fun1, at, bt, ss1, js)
+!        call qsimp(fun2, at, bt, ss2, js)
 
 !        ans11 = ss1 / ss2
 

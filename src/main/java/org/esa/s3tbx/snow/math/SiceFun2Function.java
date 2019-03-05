@@ -29,4 +29,5 @@ public class SiceFun2Function implements ParametricUnivariateFunction {
         
         return p0 + p1 * Math.exp(-Math.max(x, 0.4) / t1) + p2 * Math.exp(-Math.max(x, 0.4) / t2);
     }
+
 }

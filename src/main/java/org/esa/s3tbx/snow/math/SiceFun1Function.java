@@ -22,6 +22,7 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
 
     public double value(double x, double... parameters) throws NoDataException {
         return evaluate(parameters, x);
+//        return evaluate(parameters, (float) x);
     }
 
     private static double evaluate(double[] parms, double x) throws NullArgumentException, NoDataException {

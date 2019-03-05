@@ -60,7 +60,6 @@ class OlciSiceSnowPropertiesAlgorithm {
      * @param sza            - sza
      * @param vza            - vza
      * @param raa            - raa
-     * @return void
      */
     static void computeSpectralAlbedos(SiceSnowPropertiesResult snowProperties,
                                        double[] rtoa, double[] brr,
@@ -154,16 +153,16 @@ class OlciSiceSnowPropertiesAlgorithm {
         // todo: fun1 and fun2 were tested successfully.
         // Now check if Simpson integration matches with Alex' manual implementation.
 
-        final double numeratorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorVisPlanar = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, paramsFun2, wvlFullGrid);
         final double bbVisPlanar = numeratorVisPlanar / denominatorVisPlanar;
 
-        final double numeratorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorNirPlanar = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
         final double bbNirPlanar = numeratorNirPlanar / denominatorNirPlanar;
 
-        final double numeratorSwPlanar = Integrator.integrateSimpsonSice(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorSwPlanar = Integrator.integrateSimpsonSice(aat, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorSwPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorSwPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
         final double bbSwPlanar = numeratorSwPlanar / denominatorSwPlanar;
 
         final double[] planarBBAlbedo = new double[]{bbVisPlanar, bbNirPlanar, bbSwPlanar};
@@ -231,11 +230,6 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double[] sphericalBBAlbedo = new double[]{bbVisSpherical, bbNirSpherical, bbSwSpherical};
 
         snowProperties.setSphericalBroadbandAlbedos(sphericalBBAlbedo);
-    }
-
-    static double computeSolarLightSpectrum() {
-        // todo
-        return 0;
     }
 
     /**
