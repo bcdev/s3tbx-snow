@@ -43,12 +43,12 @@ import java.util.Map;
  *
  * @author olafd
  */
-@OperatorMetadata(alias = "OLCI.SnowProperties",
-        description = "Computes snow properties from OLCI L1b data products.",
+@OperatorMetadata(alias = "OLCI.SnowProperties.SICE",
+        description = "Computes snow properties from OLCI L1b data products, using new SICE algorithm.",
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
-        copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
+        copyright = "(c) 2019 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.1")
+        version = "0.8")
 
 public class OlciSiceSnowPropertiesOp extends Operator {
 

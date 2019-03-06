@@ -16,21 +16,34 @@ class OlciSiceSnowPropertiesAlgorithm {
     }
 
     /**
-     * todo
-     * requires brr[0], brr[5], brr[9], brr[10], brr[20] (400, 560, 681, 709, 1020)
+     * Provides general snow properties:
+     * - effective absorption length
+     * - gerain diameter
+     * - snow specific area
+     * - relative impurity load
      *
-     * @param brr
-     * @param r0
-     * @param xx
-     * @return SiceSnowPropertiesResult
+     * @param brr400 -
+     * @param brr560 -
+     * @param brr681 -
+     * @param brr709 -
+     * @param brr1020 -
+     * @param r0 -
+     * @param xx -
+     *           
+     * @return  SiceSnowPropertiesResult
      */
-    static SiceSnowPropertiesResult computeGeneralSnowProperties(double[] brr, double r0, double xx) {
+    static SiceSnowPropertiesResult computeGeneralSnowProperties(double brr400,
+                                                                 double brr560,
+                                                                 double brr681,
+                                                                 double brr709,
+                                                                 double brr1020,
+                                                                 double r0,
+                                                                 double xx) {
 
         // snow grain size:
         final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
         final double akap4 = 2.25E-6;
         final double alpha4 = 4. * Math.PI * akap4 / alam4;
-        final double brr1020 = brr[20];
 
         final double effAbsLength = Math.log(brr1020 / r0) * Math.log(brr1020 / r0) / (xx * xx * alpha4);   // in microns
         final double effAbsLengthMillimeter = effAbsLength / 1000.0;
@@ -44,7 +57,8 @@ class OlciSiceSnowPropertiesAlgorithm {
 
         // snow pollution
         // requires brr[0], brr[5], brr[9], brr[10] (400, 560, 681, 709)
-        double relImpurityLoad = computeRelativeImpurityLoad(brr, r0, xx, effAbsLengthMillimeter);
+        double relImpurityLoad =
+                computeRelativeImpurityLoad(brr400, brr560, brr681, brr709 , r0, xx, effAbsLengthMillimeter);
 
         // fill result with numbers we have up to now
         return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, relImpurityLoad, 0.0, null, null);
@@ -56,13 +70,13 @@ class OlciSiceSnowPropertiesAlgorithm {
      *
      * @param snowProperties - result array which should already contain at least effective absorption length
      * @param rtoa           - rtoa
-     * @param brr            - brr
+     * @param brr400         - brr400
      * @param sza            - sza
      * @param vza            - vza
      * @param raa            - raa
      */
     static void computeSpectralAlbedos(SiceSnowPropertiesResult snowProperties,
-                                       double[] rtoa, double[] brr,
+                                       double[] rtoa, double brr400,
                                        double sza, double vza, double raa) {
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
         final double camu2 = Math.cos(vza * MathUtils.DTOR);
@@ -90,7 +104,7 @@ class OlciSiceSnowPropertiesAlgorithm {
 
         final double thresh = r0a1 - 0.1;
         snowProperties.setR0a1Thresh(thresh);
-        if (brr[0] >= thresh) {
+        if (brr400 >= thresh) {
             // in this case, override the spectral albedos computed above
             final double effAbsLength = snowProperties.getEffAbsLength();
             for (int i = 0; i < OlciSnowPropertiesConstants.OLCI_NUM_WVLS; i++) {
@@ -108,10 +122,12 @@ class OlciSiceSnowPropertiesAlgorithm {
     }
 
     /**
-     * @param snowProperties
-     * @param brr400
-     * @param wvlFullGrid    : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
-     * @return
+     * Provides broadband planar albedo
+     *
+     * @param snowProperties -
+     * @param brr400 -
+     * @param sza -
+     * @param wvlFullGrid -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
      */
     static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                              double brr400,
@@ -141,7 +157,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         final SiceFun1Function fun1 = new SiceFun1Function();
         final SiceFun2Function fun2 = new SiceFun2Function();
 
-        // fun1 params:
+        // fun1 params are:
         // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
         // double as, double bs, double cs, double planar
         final double effAbsLength = snowProperties.getEffAbsLength();
@@ -149,9 +165,6 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
         final double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
         final double[] paramsFun2 = new double[]{}; // no parameters needed
-
-        // todo: fun1 and fun2 were tested successfully.
-        // Now check if Simpson integration matches with Alex' manual implementation.
 
         final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
         final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, paramsFun2, wvlFullGrid);
@@ -171,10 +184,13 @@ class OlciSiceSnowPropertiesAlgorithm {
     }
 
     /**
-     * @param snowProperties
-     * @param brr400
-     * @param wvlFullGrid    : 0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
-     * @return
+     *
+     Provides broadband spherical albedo
+     *
+     * @param snowProperties -
+     * @param brr400 -
+     * @param sza -
+     * @param wvlFullGrid -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
      */
     static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                 double brr400,
@@ -204,7 +220,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         final SiceFun1Function fun1 = new SiceFun1Function();
         final SiceFun2Function fun2 = new SiceFun2Function();
 
-        // fun1 params:
+        // fun1 params are:
         // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
         // double as, double bs, double cs, double planar
         final double effAbsLength = snowProperties.getEffAbsLength();
@@ -213,8 +229,6 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
         final double[] paramsFun2 = new double[]{}; // no parameters needed
 
-        // todo: fun1 and fun2 were tested successfully.
-        // Now check if Simpson integration matches with Alex' manual implementation.
         final double numeratorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Spherical, wvlFullGrid);
         final double denominatorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
         final double bbVisSpherical = numeratorVisSpherical / denominatorVisSpherical;
@@ -232,29 +246,8 @@ class OlciSiceSnowPropertiesAlgorithm {
         snowProperties.setSphericalBroadbandAlbedos(sphericalBBAlbedo);
     }
 
-    /**
-     * some magic maths by Alex... // todo: clarify what this means
-     *
-     * @param am1 - ?
-     * @param am2 - ?
-     * @param co  - cosine of scattering angle
-     * @return - ?
-     */
-    private static double falex1(double am1, double am2, double co) {
-        final double a = 1.247;
-        final double b = 1.186;
-        final double c = 5.157;
-        final double a1 = 0.087;
-        final double a2 = 0.014;
-        final double scat = Math.acos(co) * MathUtils.RTOD;
-        final double p = 11.1 * Math.exp(-a1 * scat) + 1.1 * Math.exp(-a2 * scat);
 
-        return (a + b * (am1 + am2) + c * am1 * am2 + p) / 4. / (am1 + am2);
-    }
-
-
-    static double computeR0(double[] brr, double sza, double vza) {
-        // todo
+    static double computeR0(double brr865, double brr1020) {
         final double alam3 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[16];  // 0.865
         final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
 
@@ -267,9 +260,6 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double eps = Math.sqrt(alpha3 / alpha4);
         final double ax1 = 1. / (1. - eps);
         final double ax2 = 1. / (1. - 1. / eps);
-
-        final double brr865 = brr[16];
-        final double brr1020 = brr[20];
 
         return Math.pow(brr865, ax1) * Math.pow(brr1020, ax2);
     }
@@ -284,12 +274,27 @@ class OlciSiceSnowPropertiesAlgorithm {
         return u1 * u2 / r0;
     }
 
-    private static double computeRelativeImpurityLoad(double[] brr, double r0, double x, double effAbsLengthMillimeter) {
+
+
+    /**
+     * some magic maths by Alex... // todo: clarify what this means
+     */
+    private static double falex1(double am1, double am2, double co) {
+        final double a = 1.247;
+        final double b = 1.186;
+        final double c = 5.157;
+        final double a1 = 0.087;
+        final double a2 = 0.014;
+        final double scat = Math.acos(co) * MathUtils.RTOD;
+        final double p = 11.1 * Math.exp(-a1 * scat) + 1.1 * Math.exp(-a2 * scat);
+
+        return (a + b * (am1 + am2) + c * am1 * am2 + p) / 4. / (am1 + am2);
+    }
+
+    private static double computeRelativeImpurityLoad(double brr400, double brr560, double brr681, double brr709,
+                                                      double r0, double x, double effAbsLengthMillimeter) {
         final double wvl400 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
         final double wvl560 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
-
-        final double brr400 = brr[0];
-        final double brr560 = brr[5];
 
         final double ap1 = Math.log(brr400 / r0) * Math.log(brr400 / r0);
         final double ap2 = Math.log(brr560 / r0) * Math.log(brr560 / r0);
@@ -314,9 +319,7 @@ class OlciSiceSnowPropertiesAlgorithm {
             ntype = 2;
         }
 
-        final double r709 = brr[10];
-        final double r681 = brr[9];
-        final double ratio = r709 / r681;
+        final double ratio = brr709 / brr681;
 
         if (ratio > 1.0) {
             ntype = 3;
