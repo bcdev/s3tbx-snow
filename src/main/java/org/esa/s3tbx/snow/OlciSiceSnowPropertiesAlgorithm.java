@@ -11,7 +11,16 @@ import org.esa.snap.core.util.math.MathUtils;
 class OlciSiceSnowPropertiesAlgorithm {
 
     static int computeSnowFlags() {
-        // todo
+        // todo : NDSI, NDBI
+//        !         NDSI
+//        andsi=(r(17)-r(21))/(r(17)+r(21))
+//        if (aNDSI.gt.0.03.and.r(1).gt.0.5) indexs=1
+//
+//        !         NDBI
+//        andbi=(r(1)-r(21))/(r(1)+r(21))
+//        if (aNDBI.gt.0.33) indexi=1
+//        if (aNDBI.gt.0.66) indexd=1
+
         return 0;
     }
 
