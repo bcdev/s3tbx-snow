@@ -27,7 +27,7 @@ class OlciSiceSnowPropertiesAlgorithm {
     /**
      * Provides general snow properties:
      * - effective absorption length
-     * - gerain diameter
+     * - grain diameter
      * - snow specific area
      * - relative impurity load
      *
@@ -65,8 +65,8 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double snowSpecificArea = computeSnowSpecificArea(grainDiamMetres);
 
         // snow pollution
-        // requires brr[0], brr[5], brr[9], brr[10] (400, 560, 681, 709)
-        double relImpurityLoad =
+        // requires brr400, brr560, brr681, brr709
+        SiceSnowImpurity relImpurityLoad =
                 computeRelativeImpurityLoad(brr400, brr560, brr681, brr709 , r0, xx, effAbsLengthMillimeter);
 
         // fill result with numbers we have up to now
@@ -300,7 +300,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         return (a + b * (am1 + am2) + c * am1 * am2 + p) / 4. / (am1 + am2);
     }
 
-    private static double computeRelativeImpurityLoad(double brr400, double brr560, double brr681, double brr709,
+    private static SiceSnowImpurity computeRelativeImpurityLoad(double brr400, double brr560, double brr681, double brr709,
                                                       double r0, double x, double effAbsLengthMillimeter) {
         final double wvl400 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
         final double wvl560 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
@@ -315,8 +315,8 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double af = ap1 * Math.pow(0.4, ang) / (effAbsLengthMillimeter * x * x);
 
         // todo: make the following nicer, taken 1:1 from breadboard
-        int ipol = 1;
-        int ntype = 4;
+        int ipol = 1;    // this means polluted snow
+        int ntype = 0;   // meaning of ntype: type of pollutants --> 1-soot, 2-dust, 3-algae, 0-uncertain
 
         if (ang < 0.5 || ang > 10.0) {
             ipol = 0;
@@ -347,7 +347,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         if (ntype == 2) {
             conc = af * shape / abdust;
         }
-        if (ipol == 0) {
+        if (ipol == 0) {    // this means clean snow
             conc = 0.0;
         }
         final double a680 = 1.E7;
@@ -355,7 +355,9 @@ class OlciSiceSnowPropertiesAlgorithm {
         if (ntype == 3) {
             conc = a680 * a680 * Math.log(ratio) * Math.log(ratio) - b680;
         }
-        return conc;
+
+        // absorption Angstroem exponent, normalized absorption coefficient at 1000nm, concentration of pollutants, flag
+        return new SiceSnowImpurity(conc, ang, af, ntype);
     }
 
     private static double computeSnowSpecificArea(double grainDiamMetres) {

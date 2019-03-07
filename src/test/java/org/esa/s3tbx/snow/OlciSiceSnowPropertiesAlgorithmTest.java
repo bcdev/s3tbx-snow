@@ -146,7 +146,8 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
                         (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         // result: first line, fourth column of output_impurity.dat  (clean case)
-        assertEquals(0.0, generalSnowProperties.getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(0.0, generalSnowProperties.getSnowImpurity().getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(0, generalSnowProperties.getSnowImpurity().getPollutionType());
 
         r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_5[16], brr_5[20]);
         xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_5, vza_5);
@@ -154,7 +155,8 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
                         (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20], r0, xx);
         // result: fifth line, fourth column of output_impurity.dat
-        assertEquals(0.255E-8, generalSnowProperties.getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(0.255E-8, generalSnowProperties.getSnowImpurity().getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(2, generalSnowProperties.getSnowImpurity().getPollutionType());
     }
 
     @Test

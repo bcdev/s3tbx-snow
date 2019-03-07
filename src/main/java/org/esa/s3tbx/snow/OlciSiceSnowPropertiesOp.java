@@ -21,6 +21,7 @@ package org.esa.s3tbx.snow;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.commons.lang.ArrayUtils;
 import org.esa.s3tbx.olci.radiometry.rayleigh.RayleighCorrectionOp;
+import org.esa.s3tbx.processor.rad2refl.Rad2ReflOp;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.FlagCoding;
 import org.esa.snap.core.datamodel.Product;
@@ -116,65 +117,21 @@ public class OlciSiceSnowPropertiesOp extends Operator {
     private double ndsiThresh;
 
     @Parameter(defaultValue = "false",
-            label = "Compute over bare ice",
-            description = "If selected, NDBI will be computed from 865 and 1020nm for bare ice identification. " +
-                            "Then, also pixels identified as bare ice will be considered for snow properties retrieval.")
-    private boolean considerBareIce;
-
-    @Parameter(defaultValue = "0.3",
-            description = "NDBI threshold for bare ice identification",
-            label = "NDBI threshold for bare ice identification")
-    private double ndbiThresh;
-
-    @Parameter(defaultValue = "true",
+            label = "Write absorption Angstroem exponent",
             description =
-                    "If selected, polluted snow will be retrieved and specific algorithms for albedo retrieval will be used.")
-    private boolean considerSnowPollution;
+                    "If selected, absorption Angstroem exponent will be written to the target product.")
+    private boolean writeAbsorptionAngstroemExponent;
 
     @Parameter(defaultValue = "false",
-            label = "Write additional parameters (f, m) in case of polluted snow",
+            label = "Write normalized absorption coefficient",
             description =
-                    "If selected, additional parameters (f, m) will be written to the target product in case " +
-                            "of polluted snow. Option 'Consider snow pollution' must be selected as well. Useful for experts only.")
-    private boolean writeAdditionalSnowPollutionParms;
-
-    @Parameter(defaultValue = "false",
-            label = "Write uncertainties of (r_0, l) and additional parameters (f, m)",
-            description =
-                    "If selected, uncertainties of (r_0, l) and of additional parameters (f, m)  in case of polluted " +
-                            "snow will be written to the target product. " +
-                            "For uncertainties of (f, m), the options 'Consider snow pollution' and 'Write additional parameters " +
-                            "(f, m)...' must be selected as well. Useful for experts only.")
-    private boolean writeUncertaintiesOfAdditionalSnowParms;
-
-    @Parameter(defaultValue = "0.01",
-            description = "Assumed uncertainty in Rayleigh corrected reflectances",
-            label = "Assumed uncertainty of Rayleigh corrected reflectances")
-    private double deltaBrr;
-
-    @Parameter(defaultValue = "0.1",
-            description = "Snow is regarded as polluted if snow reflectance at 400nm is smaller that R_0 - thresh. " +
-                    "See algorithm descriptions for more details.",
-            label = "Snow pollution threshold")
-    private double pollutionDelta;
-
-    @Parameter(defaultValue = "false",
-            label = "Compute PPA",
-            description =
-                    "If selected, PPA (Probability of Photon Absorption) is computed at selected OLCI wavelengths" +
-                            " and written to target product")
-    private boolean computePPA;
+                    "If selected, normalized absorption coefficient will be written to the target product.")
+    private boolean writeNormalizedAbsorptionCoefficient;
 
     @Parameter(defaultValue = "false",
             description =
                     "If selected, Rayleigh corrected reflectances at selected OLCI wavelengths are written to target product")
     private boolean copyReflectanceBands;
-
-    @Parameter(defaultValue = "1020.0",
-            valueSet = {"1020.0", "865.0"},
-            description = "OLCI reference wavelength used in computations of snow quantities",
-            label = "OLCI reference wavelength (nm)")
-    private double refWvl;
 
     @Parameter(defaultValue = "0.9798",
             description = "OLCI SVC gain for band 1 (default value as provided by Sentinel-3A Product Notice – " +
@@ -186,13 +143,19 @@ public class OlciSiceSnowPropertiesOp extends Operator {
             description = "OLCI SVC gain for band 6 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
             label = "OLCI SVC gain for band 6 (560nm)")
-    private double olciGainBand5;
+    private double olciGainBand6;
 
-    @Parameter(defaultValue = "1.0",
-            description = "OLCI SVC gain for band 17 (default value as provided by Sentinel-3A Product Notice – " +
+    @Parameter(defaultValue = "0.9962",
+            description = "OLCI SVC gain for band 6 (default value as provided by Sentinel-3A Product Notice – " +
                     "OLCI Level-2 Ocean Colour, July 5th, 2017",
-            label = "OLCI SVC gain for band 17 (865nm)")
-    private double olciGainBand17;
+            label = "OLCI SVC gain for band 10 (681nm)")
+    private double olciGainBand10;
+
+    @Parameter(defaultValue = "0.996",
+            description = "OLCI SVC gain for band 6 (default value as provided by Sentinel-3A Product Notice – " +
+                    "OLCI Level-2 Ocean Colour, July 5th, 2017",
+            label = "OLCI SVC gain for band 11 (709nm)")
+    private double olciGainBand11;
 
     @Parameter(defaultValue = "0.914",
             description = "OLCI SVC gain for band 21 (default value as provided by Sentinel-3A Product Notice – " +
@@ -214,13 +177,11 @@ public class OlciSiceSnowPropertiesOp extends Operator {
 
     private String[] requiredBrrBandNamesAlbedo;
 
-    private String[] requiredRadianceBandNamesPPA;     // selected spectral bands
-    private String[] requiredBrrBandNamesPPA;
-
     private Product targetProduct;
 
 
-    private Product reflProduct;
+    private Product rhoToaProduct;
+    private Product brrProduct;
 
     private int width;
     private int height;
@@ -228,49 +189,48 @@ public class OlciSiceSnowPropertiesOp extends Operator {
     //    private SolarSpectrumTable solarSpectrumTable;
     private SolarSpectrumExtendedTable solarSpectrumExtendedTable;
     private RefractiveIndexTable refractiveIndexInterpolatedTable;
+    private boolean validL1bSourceProduct;
 
 
     @Override
     public void initialize() throws OperatorException {
         String[] requiredRadianceBandNamesAlbedo;
 
-        olciGains = new double[4];
+        olciGains = new double[5];
         olciGains[0] = olciGainBand1;
-        olciGains[1] = olciGainBand5;
-        olciGains[2] = olciGainBand17;
-        olciGains[3] = olciGainBand21;
-        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa06_radiance", "Oa17_radiance", "Oa21_radiance"};
-        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_06", "rBRR_17", "rBRR_21"};
-
-        // get required radiance / BRR bands for PPA computation
-        if (spectralAlbedoTargetBands != null) {
-            requiredRadianceBandNamesPPA = new String[spectralAlbedoTargetBands.length];
-            requiredBrrBandNamesPPA = new String[spectralAlbedoTargetBands.length];
-            for (int i = 0; i < spectralAlbedoTargetBands.length; i++) {
-                // 'Oa01 (400 nm)' --> 'Oa01_radiance'
-                // 'Oa01 (400 nm)' --> 'rBRR_01'
-                requiredRadianceBandNamesPPA[i] = "Oa" + spectralAlbedoTargetBands[i].substring(2, 4) + "_radiance";
-                requiredBrrBandNamesPPA[i] = "rBRR_" + spectralAlbedoTargetBands[i].substring(2, 4);
-            }
-        }
+        olciGains[1] = olciGainBand6;
+        olciGains[2] = olciGainBand10;
+        olciGains[3] = olciGainBand11;
+        olciGains[4] = olciGainBand21;
+        requiredRadianceBandNamesAlbedo =
+                new String[]{"Oa01_radiance", "Oa06_radiance", "Oa10_radiance", "Oa11_radiance", "Oa21_radiance"};
+        requiredBrrBandNamesAlbedo = new String[]{"rBRR_01", "rBRR_06", "rBRR_10", "rBRR_11", "rBRR_21"};
 
         validateSourceProduct(sourceProduct);
 
         width = sourceProduct.getSceneRasterWidth();
         height = sourceProduct.getSceneRasterHeight();
 
-        if (isValidL1bSourceProduct(sourceProduct)) {
-            // apply Rayleigh correction
+        validL1bSourceProduct = isValidL1bSourceProduct(sourceProduct);
+        if (validL1bSourceProduct) {
+            Rad2ReflOp rad2ReflOp = new Rad2ReflOp();
+            rad2ReflOp.setSourceProduct(sourceProduct);
+            rad2ReflOp.setParameterDefaultValues();
+            rhoToaProduct = rad2ReflOp.getTargetProduct();      // band names: Oa%2d_reflectance
+
+            // apply Rayleigh correction for 5 required bands
             RayleighCorrectionOp rayleighCorrectionOp = new RayleighCorrectionOp();
             rayleighCorrectionOp.setSourceProduct(sourceProduct);
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
-            final String[] sourceBandNames = SnowUtils.setupRcSourceBands(requiredRadianceBandNamesAlbedo,
-                                                                          requiredRadianceBandNamesPPA);
+            final String[] sourceBandNames = SnowUtils.setupRcSourceBands(requiredRadianceBandNamesAlbedo, null);
             rayleighCorrectionOp.setParameter("sourceBandNames", sourceBandNames);
-            reflProduct = rayleighCorrectionOp.getTargetProduct();
+            brrProduct = rayleighCorrectionOp.getTargetProduct();  // band names: rBRR_%2d
         } else {
-            reflProduct = sourceProduct;
+            // in this case the source product MUST be a Rayleigh corrected product with all rBRR and rtoa bands
+            // todo: check
+            rhoToaProduct = sourceProduct;     // band names: rtoa_%2d   !!!
+            brrProduct = sourceProduct;        // band names: rBRR_%2d
         }
 
         // read auxiliary data:
@@ -290,29 +250,25 @@ public class OlciSiceSnowPropertiesOp extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
-//        if (targetRectangle.x == 0 && targetRectangle.y == 0) {
-////            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
-//
-//            Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
-//            entries.forEach(targetTileStream -> {
-//                Band targetBand = targetTileStream.getKey();
-////                System.out.println("targetBand.getName() = " + targetBand.getName());
-//            });
-//        }
         try {
+            Tile[] rhoToaTiles = new Tile[OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
+            for (int i = 0; i < OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length; i++) {
+                String rToaBandName;
+                if (validL1bSourceProduct) {
+                    // band names: Oa%2d_reflectance
+                } else {
+                    // band names: rtoa_%2d
+                }
+                final Band rhoToaBand = rhoToaProduct.getBand(requiredBrrBandNamesAlbedo[i]);
+                rhoToaTiles[i] = getSourceTile(rhoToaBand, targetRectangle);
+            }
+
             Tile[] rhoToaTilesAlbedo = new Tile[requiredBrrBandNamesAlbedo.length];
             for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
-                final Band rhoToaBandAlbedo = reflProduct.getBand(requiredBrrBandNamesAlbedo[i]);
+                final Band rhoToaBandAlbedo = brrProduct.getBand(requiredBrrBandNamesAlbedo[i]);
                 rhoToaTilesAlbedo[i] = getSourceTile(rhoToaBandAlbedo, targetRectangle);
             }
-            Tile[] rhoToaTilesPPA = null;
-            if (computePPA && spectralAlbedoTargetBands != null) {
-                rhoToaTilesPPA = new Tile[requiredBrrBandNamesPPA.length];
-                for (int i = 0; i < requiredBrrBandNamesPPA.length; i++) {
-                    final Band rhoToaBandPPA = reflProduct.getBand(requiredBrrBandNamesPPA[i]);
-                    rhoToaTilesPPA[i] = getSourceTile(rhoToaBandPPA, targetRectangle);
-                }
-            }
+
 
             Tile szaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSzaName()), targetRectangle);
             Tile saaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getSaaName()), targetRectangle);
@@ -339,16 +295,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                     final double brr865 = rhoToaAlbedo[2];
                     final double brr1020 = rhoToaAlbedo[3];
 
-                    double ndbi = Double.NaN;
-                    boolean isBareIce = false;
-                    if (brr400 > 0.0 && brr1020 > 0.0) {
-                        final double iceIndicator = brr400 / brr1020;
-                        ndbi = (iceIndicator - 1) / (iceIndicator + 1);
-                        ndbi = Math.max(-1.0, Math.min(ndbi, 1.0));
-//                        isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
-                        isBareIce = considerBareIce && ndbi > ndbiThresh;
-                    }
-
                     final boolean l1Valid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit());
                     final boolean isLandOrBareIce = l1FlagsTile.getSampleBit(x, y, sensor.getLandBit()) || isBareIce;
                     final boolean isNotCloud = cloudMaskTile == null ||
@@ -366,14 +312,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                                               szaIsInvalid);
 
                     if (pixelIsValid) {
-
-                        final Band ndbiBand = targetProduct.getBand(NDBI_BAND_NAME);
-                        if (!Double.isNaN(ndbi)) {
-                            targetTiles.get(ndbiBand).setSample(x, y, SnowUtils.cutTo4DecimalPlaces(ndbi));
-                        } else {
-                            targetTiles.get(ndbiBand).setSample(x, y, ndbi);
-                        }
-
                         double ndsi = (brr865 - brr1020) / (brr865 + brr1020);
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
@@ -389,17 +327,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                         }
 
                         if (validNdsi) {
-                            double[] rhoToaPPA;
-                            if (computePPA && spectralAlbedoTargetBands != null) {
-                                rhoToaPPA = new double[requiredBrrBandNamesPPA.length];
-                                for (int i = 0; i < requiredBrrBandNamesPPA.length; i++) {
-                                    if (rhoToaTilesPPA != null) {
-                                        rhoToaPPA[i] = rhoToaTilesPPA[i].getSampleDouble(x, y);
-                                        rhoToaPPA[i] = Math.max(0.0, rhoToaPPA[i]);
-                                    }
-                                }
-                            }
-
                             final double vza = vzaTile.getSampleDouble(x, y);
                             final double mu_0 = Math.cos(sza * MathUtils.DTOR);
 
@@ -409,74 +336,36 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                             final double vaa = vaaTile.getSampleDouble(x, y);
                             final double raa = SnowUtils.getRelAziSice(saa, vaa);
 
-                            // check for 'backscattering' and 'glint' (AK 20181207):
-                            final boolean isBackscattering = Math.abs(raa) < 5.0 && Math.abs(sza - vza) < 5.0;
-                            targetTiles.get(s3SnowFlagBand).setSample(x, y,
-                                                                      OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING,
-                                                                      isBackscattering);
-                            final boolean isGlint = Math.abs(180. - raa) < 5.0 && Math.abs(sza - vza) < 5.0;
-                            targetTiles.get(s3SnowFlagBand).setSample(x, y,
-                                                                      OlciSnowPropertiesConstants.S3_SNOW_GLINT,
-                                                                      isGlint);
+                            double r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_1[16], brr_1[20]);
+                            double xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza, vza);
+                            SiceSnowPropertiesResult siceSnowProperties =
+                                    OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
+                                            (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
+                            OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_1, brr_1[0], sza_1, vza_1, raa);
 
-                            final double r0Thresh =
-                                    OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
-                            final double pollutedSnowSeparationValue = r0Thresh - pollutionDelta;
-                            final boolean isPollutedSnow = considerSnowPollution && brr400 < pollutedSnowSeparationValue;
-
-                            SpectralAlbedoResult spectralAlbedoResult;
-
-                            if (considerSnowPollution) {
-                                if (isPollutedSnow) {
-                                    spectralAlbedoResult =
-                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPolluted(rhoToaAlbedo,
-                                                                                                       sza, vza,
-                                                                                                       deltaBrr);
-                                } else {
-                                    spectralAlbedoResult =
-                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
-                                }
-                            } else {
-                                spectralAlbedoResult =
-                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
-                            }
+                            SpectralAlbedoResult spectralAlbedoResult =
+                                        OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos();
 
                             spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
 
                             final double[] spectralSphericalAlbedos = spectralAlbedos[0];
                             final double[] spectralPlanarAlbedos = spectralAlbedos[1];
 
-                            final double r0 = spectralAlbedoResult.getR0();
-                            final double f = spectralAlbedoResult.getF();
-                            final double l = spectralAlbedoResult.getL();
-                            final double m = spectralAlbedoResult.getM();
-
                             setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
                                                           ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
                             setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
                                                           ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
-                            final double refAlbedo = refWvl == 1020.0 ?
-                                    spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1] :
-                                    spectralSphericalAlbedos[spectralSphericalAlbedos.length - 5];
-
                             double grainDiam = Double.NaN;
-                            if (refAlbedo > 0.0) {
-//                                    grainDiam = l / 13.08;
-//                                grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
-                                grainDiam = l / 16.36;      //  AK, 20181207. l and grainDiam are in mm !!
-                            }
+
                             final double[] broadbandPlanarAlbedo =
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(mu_0,
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
+                                    OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
                                                                                        rhoToaAlbedo,
-                                                                                       isPollutedSnow,
                                                                                        refractiveIndexInterpolatedTable,
                                                                                        solarSpectrumExtendedTable,
                                                                                        sza, vza);
                             final double[] broadbandSphericalAlbedo =
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(1.0,
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
+                                    OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
                                                                                        rhoToaAlbedo,
                                                                                        isPollutedSnow,
                                                                                        refractiveIndexInterpolatedTable,
@@ -485,19 +374,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
 
                             setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
                             setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
-
-                            if (computePPA && spectralAlbedoTargetBands != null) {
-                                double[] spectralPPA =
-                                        OlciSnowPropertiesAlgorithm.computeSpectralPPA_nov2018(spectralAlbedoResult,
-                                                                                               isPollutedSnow);
-//                                double[] spectralPPA;
-//                                if (isPollutedSnow) {
-//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, f, m);
-//                                } else {
-//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, 0.0, 0.0);
-//                                }
-                                setTargetTilesSpectralPPA(spectralPPA, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
-                            }
 
                             final Band grainDiameterBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
                             final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
@@ -512,45 +388,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                 targetTiles.get(snowSpecificAreaBand).setSample(x, y, Double.NaN);
                             }
 
-                            // we want l, r_0 for both clean and polluted snow (AK 20181130)
-                            final Band lBand = targetProduct.getBand(POLLUTION_L_BAND_NAME);
-                            targetTiles.get(lBand).setSample(x, y, l);
-                            final Band r0Band = targetProduct.getBand(POLLUTION_R0_BAND_NAME);
-                            targetTiles.get(r0Band).setSample(x, y, r0);
-                            if (writeUncertaintiesOfAdditionalSnowParms) {
-                                final double r0RelErr = spectralAlbedoResult.getR0RelErr();
-                                final Band r0RelErrBand = targetProduct.getBand(R0_REL_ERR_BAND_NAME);
-                                targetTiles.get(r0RelErrBand).setSample(x, y, r0RelErr);
-                                final Band pollutionLRelErrBand = targetProduct.getBand(L_REL_ERR_BAND_NAME);
-                                final double lRelErr = spectralAlbedoResult.getlRelErr();
-                                targetTiles.get(pollutionLRelErrBand).setSample(x, y, lRelErr);
-                            }
-
-                            if (considerSnowPollution) {
-                                final Band pollutionMaskBand = targetProduct.getBand(POLLUTION_MASK_BAND_NAME);
-                                if (brr400 > 0.0 && !Double.isNaN(r0)) {
-                                    int pollutionMask = isPollutedSnow ? 1 : 0;
-                                    targetTiles.get(pollutionMaskBand).setSample(x, y, pollutionMask);
-                                } else {
-                                    targetTiles.get(pollutionMaskBand).setSample(x, y, 0);
-                                }
-                                if (writeAdditionalSnowPollutionParms) {
-                                    final Band pollutionFBand = targetProduct.getBand(POLLUTION_F_BAND_NAME);
-                                    targetTiles.get(pollutionFBand).setSample(x, y, isPollutedSnow ? f : Float.NaN);
-
-                                    final Band pollutionMBand = targetProduct.getBand(POLLUTION_M_BAND_NAME);
-                                    targetTiles.get(pollutionMBand).setSample(x, y, isPollutedSnow ? m : Float.NaN);
-
-                                    if (writeUncertaintiesOfAdditionalSnowParms) {
-                                        final double fRelErr = spectralAlbedoResult.getfRelErr();
-                                        final double mRelErr = spectralAlbedoResult.getmRelErr();
-                                        final Band pollutionFRelErrBand = targetProduct.getBand(F_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionFRelErrBand).setSample(x, y, fRelErr);
-                                        final Band pollutionMRelErrBand = targetProduct.getBand(M_REL_ERR_BAND_NAME);
-                                        targetTiles.get(pollutionMRelErrBand).setSample(x, y, mRelErr);
-                                    }
-                                }
-                            }
                             if (considerNdsiSnowMask) {
                                 final Band ndsiMaskBand = targetProduct.getBand(NDSI_MASK_BAND_NAME);
                                 int ndsiMask = validNdsi ? 1 : 0;
@@ -636,10 +473,10 @@ public class OlciSiceSnowPropertiesOp extends Operator {
             if (copyReflectanceBands) {
                 final String[] allBrrBands = (String[]) ArrayUtils.addAll(requiredBrrBandNamesAlbedo,
                                                                           requiredBrrBandNamesPPA);
-                for (Band band : reflProduct.getBands()) {
+                for (Band band : brrProduct.getBands()) {
                     for (String brrBandName : allBrrBands) {
                         if (band.getName().equals(brrBandName) && !targetProduct.containsBand(brrBandName)) {
-                            ProductUtils.copyBand(band.getName(), reflProduct, targetProduct, true);
+                            ProductUtils.copyBand(band.getName(), brrProduct, targetProduct, true);
                             ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
                         }
                     }
