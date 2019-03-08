@@ -10,23 +10,23 @@ package org.esa.s3tbx.snow;
  * @author olafd
  */
 public class SiceSnowImpurity {
-    private double relativeImpurityLoad;
+    private double concentrationOfPollutants;
     private double absorptionAngstromExp;
     private double normalizedAbsCoeff;
     private int pollutionType;
 
-    SiceSnowImpurity(double relativeImpurityLoad,
+    SiceSnowImpurity(double concentrationOfPollutants,
                      double absorptionAngstromExp,
                      double normalizedAbsCoeff,
                      int pollutionType) {
-        this.relativeImpurityLoad = relativeImpurityLoad;
+        this.concentrationOfPollutants = concentrationOfPollutants;
         this.absorptionAngstromExp = absorptionAngstromExp;
         this.normalizedAbsCoeff = normalizedAbsCoeff;
         this.pollutionType = pollutionType;
     }
 
-    public double getRelativeImpurityLoad() {
-        return relativeImpurityLoad;
+    public double getConcentrationOfPollutants() {
+        return concentrationOfPollutants;
     }
 
     public double getAbsorptionAngstromExp() {

@@ -146,7 +146,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
                         (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         // result: first line, fourth column of output_impurity.dat  (clean case)
-        assertEquals(0.0, generalSnowProperties.getSnowImpurity().getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(0.0, generalSnowProperties.getSnowImpurity().getConcentrationOfPollutants(), 1.E-3);
         assertEquals(0, generalSnowProperties.getSnowImpurity().getPollutionType());
 
         r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_5[16], brr_5[20]);
@@ -155,7 +155,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
                         (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20], r0, xx);
         // result: fifth line, fourth column of output_impurity.dat
-        assertEquals(0.255E-8, generalSnowProperties.getSnowImpurity().getRelativeImpurityLoad(), 1.E-3);
+        assertEquals(0.255E-8, generalSnowProperties.getSnowImpurity().getConcentrationOfPollutants(), 1.E-3);
         assertEquals(2, generalSnowProperties.getSnowImpurity().getPollutionType());
     }
 
@@ -168,14 +168,16 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                         (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         double raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_1, brr_1[0], sza_1, vza_1, raa);
-        double[][] spectralAlbedos = siceSnowProperties.getSpectralAlbedos();
-        assertNotNull(spectralAlbedos);
-        assertEquals(2, spectralAlbedos.length);
-        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, spectralAlbedos[0].length);
         // spherical, 'retrieval 2' (brr[0] >= thresh):
-        checkSphericalSpectralAlbedos_retrieval2(spectralAlbedos[0]);
+        double[] sphericalSpectralAlbedos = siceSnowProperties.getSphericalSpectralAlbedos();
+        assertNotNull(sphericalSpectralAlbedos);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, sphericalSpectralAlbedos.length);
+        checkSphericalSpectralAlbedos_retrieval2(sphericalSpectralAlbedos);
         // planar, 'retrieval 2' (brr[0] >= thresh):
-        checkPlanarSpectralAlbedos_retrieval2(spectralAlbedos[1]);
+        double[] planarSpectralAlbedos = siceSnowProperties.getPlanarSpectralAlbedos();
+        assertNotNull(planarSpectralAlbedos);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, planarSpectralAlbedos.length);
+        checkPlanarSpectralAlbedos_retrieval2(planarSpectralAlbedos);
 
         // 'retrieval 1':
         r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_30[16], brr_30[20]);
@@ -185,14 +187,16 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                         (brr_30[0], brr_30[5], brr_30[9], brr_30[10], brr_30[20], r0, xx);
         raa = SnowUtils.getRelAziSice(saa_30, vaa_30);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_30, brr_30[0], sza_30, vza_30, raa);
-        spectralAlbedos = siceSnowProperties.getSpectralAlbedos();
-        assertNotNull(spectralAlbedos);
-        assertEquals(2, spectralAlbedos.length);
-        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, spectralAlbedos[0].length);
         // spherical, 'retrieval 1' (brr[0] < thresh):
-        checkSphericalSpectralAlbedos_retrieval1(spectralAlbedos[0]);
+        sphericalSpectralAlbedos = siceSnowProperties.getSphericalSpectralAlbedos();
+        assertNotNull(sphericalSpectralAlbedos);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, sphericalSpectralAlbedos.length);
+        checkSphericalSpectralAlbedos_retrieval1(sphericalSpectralAlbedos);
         // planar, 'retrieval 1' (brr[0] < thresh):
-        checkPlanarSpectralAlbedos_retrieval1(spectralAlbedos[1]);
+        planarSpectralAlbedos = siceSnowProperties.getPlanarSpectralAlbedos();
+        assertNotNull(planarSpectralAlbedos);
+        assertEquals(OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length, planarSpectralAlbedos.length);
+        checkPlanarSpectralAlbedos_retrieval1(planarSpectralAlbedos);
 
     }
 
@@ -301,8 +305,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                         (brr_30[0], brr_30[5], brr_30[9], brr_30[10], brr_30[20], r0, xx);
         double raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_30, brr_30[0], sza_30, vza_30, raa);
-        OlciSiceSnowPropertiesAlgorithm.computePlanarBroadbandAlbedo(siceSnowProperties, brr_30[0], sza_30, wvlFullGrid);
-        OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_30[0], sza_30, wvlFullGrid);
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_30[0], sza_30, wvlFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
         assertEquals(0.57, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);       // J: 0.5706; F: 0.5677
@@ -320,8 +323,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_1, brr_1[0], sza_1, vza_1, raa);
-        OlciSiceSnowPropertiesAlgorithm.computePlanarBroadbandAlbedo(siceSnowProperties, brr_1[0], sza_1, wvlFullGrid);
-        OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_1[0], sza_1, wvlFullGrid);
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_1[0], sza_1, wvlFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
         assertEquals(0.64, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);     // J: 0.6417; F: 0.6449
@@ -339,8 +341,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20], r0, xx);
         raa = SnowUtils.getRelAziSice(saa_5, vaa_5);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_5, brr_5[0], sza_5, vza_5, raa);
-        OlciSiceSnowPropertiesAlgorithm.computePlanarBroadbandAlbedo(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid);
-        OlciSiceSnowPropertiesAlgorithm.computeSphericalBroadbandAlbedo(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid);
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
         assertEquals(0.67, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);     // J: 0.6743; F: 0.6764

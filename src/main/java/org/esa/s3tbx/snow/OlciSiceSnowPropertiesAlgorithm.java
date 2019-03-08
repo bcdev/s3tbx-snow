@@ -64,13 +64,13 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double grainDiamMetres = grainDiam / 1000.0;    // in metres
         final double snowSpecificArea = computeSnowSpecificArea(grainDiamMetres);
 
-        // snow pollution
+        // snow impurity
         // requires brr400, brr560, brr681, brr709
-        SiceSnowImpurity relImpurityLoad =
-                computeRelativeImpurityLoad(brr400, brr560, brr681, brr709 , r0, xx, effAbsLengthMillimeter);
+        SiceSnowImpurity snowImpurity =
+                computeSnowImpurity(brr400, brr560, brr681, brr709 , r0, xx, effAbsLengthMillimeter);
 
         // fill result with numbers we have up to now
-        return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, relImpurityLoad, 0.0, null, null);
+        return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, snowImpurity, 0.0, 0.0, null, null);
     }
 
     /**
@@ -95,7 +95,9 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double u1 = SnowUtils.computeU(camu1);
         final double u2 = SnowUtils.computeU(camu2);
 
-        double r0a1 = falex1(camu1, camu2, co);
+        final double scat = Math.acos(co) * MathUtils.RTOD;
+        snowProperties.setScatteringAngle(scat);
+        double r0a1 = falex1(camu1, camu2, scat);
 
         double[][] spectralAlbedos = new double[2][OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
         // todo: ask Alex what the two ways of spectral albedo retrieval mean
@@ -127,28 +129,65 @@ class OlciSiceSnowPropertiesAlgorithm {
                 spectralAlbedos[1][i] = rpalex;
             }
         }
-        snowProperties.setSpectralAlbedos(spectralAlbedos);
+        snowProperties.setSphericalSpectralAlbedos(spectralAlbedos[0]);
+        snowProperties.setPlanarSpectralAlbedos(spectralAlbedos[1]);
     }
 
     /**
-     * Provides broadband planar albedo
+     * Provides broadband albedos
      *
      * @param snowProperties -
      * @param brr400 -
      * @param sza -
      * @param wvlFullGrid -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
      */
-    static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
+    static void computeBroadbandAlbedos(SiceSnowPropertiesResult snowProperties,
                                              double brr400,
                                              double sza,
                                              double[] wvlFullGrid) {
+        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid);
+        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid);
+    }
+
+    static double computeR0(double brr865, double brr1020) {
+        final double alam3 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[16];  // 0.865
+        final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
+
+        final double akap3 = 2.4E-7;
+        final double akap4 = 2.25E-6;
+
+        final double alpha3 = 4. * Math.PI * akap3 / alam3;
+        final double alpha4 = 4. * Math.PI * akap4 / alam4;
+
+        final double eps = Math.sqrt(alpha3 / alpha4);
+        final double ax1 = 1. / (1. - eps);
+        final double ax2 = 1. / (1. - 1. / eps);
+
+        return Math.pow(brr865, ax1) * Math.pow(brr1020, ax2);
+    }
+
+    static double computeXX(double r0, double sza, double vza) {
+        final double amu1 = Math.cos(sza * MathUtils.DTOR);
+        final double amu2 = Math.cos(vza * MathUtils.DTOR);
+
+        final double u1 = SnowUtils.computeU(amu1);
+        final double u2 = SnowUtils.computeU(amu2);
+
+        return u1 * u2 / r0;
+    }
+
+
+    private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
+                                                     double brr400,
+                                                     double sza,
+                                                     double[] wvlFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
 
-        final double y1 = snowProperties.getSpectralAlbedos()[1][2];
-        final double y2 = snowProperties.getSpectralAlbedos()[1][10];
-        final double y3 = snowProperties.getSpectralAlbedos()[1][20];
+        final double y1 = snowProperties.getPlanarSpectralAlbedos()[2];
+        final double y2 = snowProperties.getPlanarSpectralAlbedos()[10];
+        final double y3 = snowProperties.getPlanarSpectralAlbedos()[20];
 
         final double d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1);
         final double d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1);
@@ -192,26 +231,17 @@ class OlciSiceSnowPropertiesAlgorithm {
         snowProperties.setPlanarBroadbandAlbedos(planarBBAlbedo);
     }
 
-    /**
-     *
-     Provides broadband spherical albedo
-     *
-     * @param snowProperties -
-     * @param brr400 -
-     * @param sza -
-     * @param wvlFullGrid -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
-     */
-    static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
-                                                double brr400,
-                                                double sza,
-                                                double[] wvlFullGrid) {
+    private static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
+                                                        double brr400,
+                                                        double sza,
+                                                        double[] wvlFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
 
-        final double y1 = snowProperties.getSpectralAlbedos()[0][2];
-        final double y2 = snowProperties.getSpectralAlbedos()[0][10];
-        final double y3 = snowProperties.getSpectralAlbedos()[0][20];
+        final double y1 = snowProperties.getSphericalSpectralAlbedos()[2];
+        final double y2 = snowProperties.getSphericalSpectralAlbedos()[10];
+        final double y3 = snowProperties.getSphericalSpectralAlbedos()[20];
 
         final double d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1);
         final double d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1);
@@ -255,53 +285,22 @@ class OlciSiceSnowPropertiesAlgorithm {
         snowProperties.setSphericalBroadbandAlbedos(sphericalBBAlbedo);
     }
 
-
-    static double computeR0(double brr865, double brr1020) {
-        final double alam3 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[16];  // 0.865
-        final double alam4 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[20];  // 1.02;
-
-        final double akap3 = 2.4E-7;
-        final double akap4 = 2.25E-6;
-
-        final double alpha3 = 4. * Math.PI * akap3 / alam3;
-        final double alpha4 = 4. * Math.PI * akap4 / alam4;
-
-        final double eps = Math.sqrt(alpha3 / alpha4);
-        final double ax1 = 1. / (1. - eps);
-        final double ax2 = 1. / (1. - 1. / eps);
-
-        return Math.pow(brr865, ax1) * Math.pow(brr1020, ax2);
-    }
-
-    static double computeXX(double r0, double sza, double vza) {
-        final double amu1 = Math.cos(sza * MathUtils.DTOR);
-        final double amu2 = Math.cos(vza * MathUtils.DTOR);
-
-        final double u1 = SnowUtils.computeU(amu1);
-        final double u2 = SnowUtils.computeU(amu2);
-
-        return u1 * u2 / r0;
-    }
-
-
-
     /**
      * some magic maths by Alex... // todo: clarify what this means
      */
-    private static double falex1(double am1, double am2, double co) {
+    private static double falex1(double am1, double am2, double scat) {
         final double a = 1.247;
         final double b = 1.186;
         final double c = 5.157;
         final double a1 = 0.087;
         final double a2 = 0.014;
-        final double scat = Math.acos(co) * MathUtils.RTOD;
         final double p = 11.1 * Math.exp(-a1 * scat) + 1.1 * Math.exp(-a2 * scat);
 
         return (a + b * (am1 + am2) + c * am1 * am2 + p) / 4. / (am1 + am2);
     }
 
-    private static SiceSnowImpurity computeRelativeImpurityLoad(double brr400, double brr560, double brr681, double brr709,
-                                                      double r0, double x, double effAbsLengthMillimeter) {
+    private static SiceSnowImpurity computeSnowImpurity(double brr400, double brr560, double brr681, double brr709,
+                                                        double r0, double x, double effAbsLengthMillimeter) {
         final double wvl400 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[0];
         final double wvl560 = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[5];
 
