@@ -3,6 +3,7 @@ package org.esa.s3tbx.snow;
 import org.esa.s3tbx.snow.math.Integrator;
 import org.esa.s3tbx.snow.math.SiceFun1Function;
 import org.esa.s3tbx.snow.math.SiceFun2Function;
+import org.esa.snap.core.gpf.Tile;
 import org.esa.snap.core.util.math.MathUtils;
 
 /**
@@ -20,6 +21,7 @@ class OlciSiceSnowPropertiesAlgorithm {
 //        andbi=(r(1)-r(21))/(r(1)+r(21))
 //        if (aNDBI.gt.0.33) indexi=1
 //        if (aNDBI.gt.0.66) indexd=1
+
 
         return 0;
     }
@@ -176,7 +178,34 @@ class OlciSiceSnowPropertiesAlgorithm {
         return u1 * u2 / r0;
     }
 
+    static void setPollutionTypeFlag(int x, int y,
+                                     Tile sicePollutionFlagTile,
+                                     SiceSnowPropertiesResult siceSnowProperties,
+                                     double ndbi) {
+        if (ndbi <= 0.33) {
+            // otherwise we have clean ice,i.e. no pollution at all
+            final int pollutionType = siceSnowProperties.getSnowImpurity().getPollutionType();
+            sicePollutionFlagTile.setSample(x, y, pollutionType, true);
+        }
+    }
 
+    static void setGroundTypeFlag(int x, int y,
+                                  Tile siceGroundFlagTile,
+                                  SiceSnowPropertiesResult siceSnowProperties,
+                                  double rtoa400, double rtoa1020,
+                                  double ndsi, double ndbi) {
+
+        if (ndsi > 0.03 && rtoa400 > 0.5) {
+            siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_SNOW, true);
+        } else if (ndbi > 0.33) {
+            siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN, true);
+        } else if (ndbi > 0.66) {
+            siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED, true);
+        } else if (siceSnowProperties.getSnowGrainSize() <= 0.01 || (rtoa400 - rtoa1020 <=0.13)) {
+            siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_UNCERTAIN, true);
+        }
+    }
+    
     private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                      double brr400,
                                                      double sza,

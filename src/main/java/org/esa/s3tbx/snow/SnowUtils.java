@@ -212,4 +212,133 @@ public class SnowUtils {
                                          Color.blue, 0.5f);
         s3snowProduct.getMaskGroup().add(index, mask);
     }
+
+    /**
+     * Provides SICE pollution type flag coding
+     *
+     * @param flagId - the flag ID
+     *
+     * @return - the flag coding
+     */
+    public static FlagCoding createSicePollutionTypeFlagCoding(String flagId) {
+        FlagCoding flagCoding = new FlagCoding(flagId);
+
+        flagCoding.addFlag("SICE_POLLUTION_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN_DESCR_TEXT);
+        flagCoding.addFlag("SICE_POLLUTION_SOOT", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_SOOT),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_SOOT_DESCR_TEXT);
+        flagCoding.addFlag("SICE_POLLUTION_DUST", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_DUST),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_DUST_DESCR_TEXT);
+        flagCoding.addFlag("SICE_POLLUTION_ALGAE", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_ALGAE),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_ALGAE_DESCR_TEXT);
+
+        return flagCoding;
+    }
+
+    /**
+     * Provides SICE pollution type flag bitmask
+     *
+     * @param siceProduct - the SICE product
+     */
+    public static void setupSicePollutionTypeBitmask(Product siceProduct) {
+
+        int index = 0;
+        int w = siceProduct.getSceneRasterWidth();
+        int h = siceProduct.getSceneRasterHeight();
+        Mask mask;
+
+        mask = Mask.BandMathsType.create("SICE_POLLUTION_UNCERTAIN",
+                                         OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN_DESCR_TEXT,
+                                         w, h,
+                                         "sice_pollution_type_flags.SICE_POLLUTION_UNCERTAIN",
+                                         Color.red, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_POLLUTION_SOOT",
+                                         OlciSnowPropertiesConstants.SICE_POLLUTION_SOOT_DESCR_TEXT,
+                                         w, h,
+                                         "sice_pollution_type_flags.SICE_POLLUTION_SOOT",
+                                         Color.yellow, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_POLLUTION_DUST",
+                                         OlciSnowPropertiesConstants.SICE_POLLUTION_DUST_DESCR_TEXT,
+                                         w, h,
+                                         "sice_pollution_type_flags.SICE_POLLUTION_DUST",
+                                         Color.yellow, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_POLLUTION_ALGAE",
+                                         OlciSnowPropertiesConstants.SICE_POLLUTION_ALGAE_DESCR_TEXT,
+                                         w, h,
+                                         "sice_pollution_type_flags.SICE_POLLUTION_ALGAE",
+                                         Color.blue, 0.5f);
+        siceProduct.getMaskGroup().add(index, mask);
+    }
+
+
+    /**
+     * Provides SICE ground type flag coding
+     *
+     * @param flagId - the flag ID
+     *
+     * @return - the flag coding
+     */
+    public static FlagCoding createSiceGroundTypeFlagCoding(String flagId) {
+        FlagCoding flagCoding = new FlagCoding(flagId);
+
+        flagCoding.addFlag("SICE_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_UNCERTAIN),
+                           OlciSnowPropertiesConstants.SICE_UNCERTAIN_DESCR_TEXT);
+        flagCoding.addFlag("SICE_SNOW", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_SNOW),
+                           OlciSnowPropertiesConstants.SICE_SNOW_DESCR_TEXT);
+        flagCoding.addFlag("SICE_BARE_ICE_CLEAN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN),
+                           OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN_DESCR_TEXT);
+        flagCoding.addFlag("SICE_BARE_ICE_POLLUTED", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED),
+                           OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED_DESCR_TEXT);
+
+        return flagCoding;
+    }
+
+    /**
+     * Provides SICE ground type flag bitmask
+     *
+     * @param siceProduct - the SICE product
+     */
+    public static void setupSiceGroundTypeBitmask(Product siceProduct) {
+
+        int index = 0;
+        int w = siceProduct.getSceneRasterWidth();
+        int h = siceProduct.getSceneRasterHeight();
+        Mask mask;
+
+        mask = Mask.BandMathsType.create("SICE_UNCERTAIN",
+                                         OlciSnowPropertiesConstants.SICE_UNCERTAIN_DESCR_TEXT,
+                                         w, h,
+                                         "sice_ground_type_flags.SICE_UNCERTAIN",
+                                         Color.red, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_SNOW",
+                                         OlciSnowPropertiesConstants.SICE_SNOW_DESCR_TEXT,
+                                         w, h,
+                                         "sice_ground_type_flags.SICE_SNOW",
+                                         Color.yellow, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_BARE_ICE_CLEAN",
+                                         OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN_DESCR_TEXT,
+                                         w, h,
+                                         "sice_ground_type_flags.SICE_BARE_ICE_CLEAN",
+                                         Color.yellow, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_BARE_ICE_POLLUTED",
+                                         OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED_DESCR_TEXT,
+                                         w, h,
+                                         "sice_ground_type_flags.SICE_BARE_ICE_POLLUTED",
+                                         Color.blue, 0.5f);
+        siceProduct.getMaskGroup().add(index, mask);
+    }
+
+
 }

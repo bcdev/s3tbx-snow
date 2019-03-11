@@ -2,7 +2,7 @@
 
     <folder name="Actions">
         <folder name="Operators">
-            <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.instance">
+            <file name="org-esa-s3tbx-snow-OlciSnowPropertiesOpAction.instance">
                 <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
                 <attr name="operatorName" stringvalue="OLCI.SnowProperties"/>
@@ -12,24 +12,59 @@
                 <attr name="targetProductNameSuffix" stringvalue="_snow"/>
                 <attr name="ShortDescription" stringvalue="Provides snow properties from OLCI measurements."/>
             </file>
+
+            <file name="org-esa-s3tbx-snow-OlciSiceSnowPropertiesOpAction.instance">
+                <attr name="instanceCreate" methodvalue="org.openide.awt.Actions.alwaysEnabled"/>
+                <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
+                <attr name="operatorName" stringvalue="OLCI.SnowProperties.SICE"/>
+                <attr name="displayName" stringvalue="OLCI SICE Snow Properties"/>
+                <attr name="dialogTitle" stringvalue="OLCI SICE Snow Properties v0.8"/>
+                <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
+                <attr name="targetProductNameSuffix" stringvalue="_sice"/>
+                <attr name="ShortDescription" stringvalue="Provides SICE snow properties from OLCI measurements."/>
+            </file>
         </folder>
     </folder>
 
     <folder name="Menu">
         <folder name="Optical">
             <folder name="Thematic Land Processing">
-                <folder name="Sentinel-3 Snow Properties Processor">
-                    <attr name="displayName" stringvalue="Sentinel-3 Snow Properties Processor"/>
-                    <attr name="position" intvalue="311"/>
-                    <file name="org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.shadow">
+                <folder name="Sentinel-3 Snow Properties Processors">
+                    <!--<attr name="displayName" stringvalue="Sentinel-3 Snow Properties Processor"/>-->
+                    <!--<attr name="position" intvalue="311"/>-->
+                    <file name="org-esa-s3tbx-snow-OlciSnowPropertiesOpAction.shadow">
                         <attr name="originalFile"
-                              stringvalue="Actions/Operators/org-esa-s3tbx-snow-OlciSnowAlbedoOpAction.instance"/>
+                              stringvalue="Actions/Operators/org-esa-s3tbx-snow-OlciSnowPropertiesOpAction.instance"/>
                         <attr name="position" intvalue="1"/>
+                        <attr name="displayName" stringvalue="OLCI Snow Properties"/>
+                    </file>
+                    <file name="org-esa-s3tbx-snow-OlciSiceSnowPropertiesOpAction.shadow">
+                        <attr name="originalFile"
+                              stringvalue="Actions/Operators/org-esa-s3tbx-snow-OlciSiceSnowPropertiesOpAction.instance"/>
+                        <attr name="position" intvalue="1"/>
+                        <attr name="displayName" stringvalue="OLCI SICE Snow Properties"/>
                     </file>
                 </folder>
             </folder>
         </folder>
     </folder>
+
+    <!--<folder name="Menu">-->
+        <!--<folder name="Optical">-->
+            <!--<folder name="Thematic Land Processing">-->
+                <!--<folder name="Sentinel-3 SICE Snow Properties Processor">-->
+                    <!--<attr name="displayName" stringvalue="Sentinel-3 SICE Snow Properties Processor"/>-->
+                    <!--<attr name="position" intvalue="311"/>-->
+                    <!--<file name="org-esa-s3tbx-snow-OlciSiceSnowPropertiesOpAction.shadow">-->
+                        <!--<attr name="originalFile"-->
+                              <!--stringvalue="Actions/Operators/org-esa-s3tbx-snow-OlciSiceSnowPropertiesOpAction.instance"/>-->
+                        <!--<attr name="position" intvalue="1"/>-->
+                    <!--</file>-->
+                <!--</folder>-->
+            <!--</folder>-->
+        <!--</folder>-->
+    <!--</folder>-->
+
 
     <folder name="Services">
         <folder name="JavaHelp">

@@ -128,4 +128,32 @@ public class OlciSnowPropertiesConstants {
             "Pixel is in glint region (relative azimuth close to 180 deg)";
     public static final String S3_SNOW_BACKSCATTERING_DESCR_TEXT =
             "Pixel is in backscattering region (relative azimuth close to 0 deg)";
+
+    public static final int SICE_POLLUTION_UNCERTAIN = 0;
+    public static final int SICE_POLLUTION_SOOT = 1;
+    public static final int SICE_POLLUTION_DUST = 2;
+    public static final int SICE_POLLUTION_ALGAE = 3;
+
+    public static final String SICE_POLLUTION_UNCERTAIN_DESCR_TEXT =
+            "Uncertain pollution of snow/ice";
+    public static final String SICE_POLLUTION_SOOT_DESCR_TEXT =
+            "Snow/ice polluted by soot";
+    public static final String SICE_POLLUTION_DUST_DESCR_TEXT =
+            "Snow/ice polluted by dust";
+    public static final String SICE_POLLUTION_ALGAE_DESCR_TEXT =
+            "Snow/ice polluted by algae";
+
+    public static final int SICE_UNCERTAIN = 0;
+    public static final int SICE_SNOW = 1;
+    public static final int SICE_BARE_ICE_CLEAN = 2;
+    public static final int SICE_BARE_ICE_POLLUTED = 3;
+
+    public static final String SICE_UNCERTAIN_DESCR_TEXT =
+            "Uncertain type of snow/ice coverage";
+    public static final String SICE_SNOW_DESCR_TEXT =
+            "Snow covered pixel";
+    public static final String SICE_BARE_ICE_CLEAN_DESCR_TEXT =
+            "Clean bare ice pixel";
+    public static final String SICE_BARE_ICE_POLLUTED_DESCR_TEXT =
+            "Polluted bare ice pixel";
 }
