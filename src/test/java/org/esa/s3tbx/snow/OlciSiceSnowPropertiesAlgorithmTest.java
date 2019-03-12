@@ -5,6 +5,7 @@ import org.esa.s3tbx.snow.math.SiceFun1Function;
 import org.esa.s3tbx.snow.math.SiceFun2Function;
 import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
@@ -125,7 +126,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         double xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_1, vza_1);
         SiceSnowPropertiesResult generalSnowProperties =
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
-                        (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20],  r0, xx);
+                        (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         // result: first line, fourth column of output_flags.dat
         assertEquals(4.287, generalSnowProperties.getSnowSpecificArea(), 1.E-3);
 
@@ -133,7 +134,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_5, vza_5);
         generalSnowProperties =
                 OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
-                        (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20],  r0, xx);
+                        (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20], r0, xx);
         // result: fifth line, fourth column of output_flags.dat
         assertEquals(7.311, generalSnowProperties.getSnowSpecificArea(), 1.E-3);
     }
@@ -412,15 +413,27 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         double brr400 = brr_30[0];
         double effAbsLength = 15517.0484;
         double r0a1Thresh = 0.909276;
-        double cosSza = Math.cos(sza_30* MathUtils.DTOR);
+        double cosSza = Math.cos(sza_30 * MathUtils.DTOR);
         double as = -1.63079834;
         double bs = 1.65913153;
         double cs = 0.370143652;
         double planar = 0.0;
         SiceFun1Function fun1 = new SiceFun1Function();
+        double simpsonSice = 0.0;
+        double simpsonSiceAlex = 0.0;
         double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
-        final double simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun1, params, wvlFullGrid);
-        final double simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, params, wvlFullGrid);
+        final long t1 = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun1, params, wvlFullGrid);
+        }
+        final long t2 = System.currentTimeMillis();
+        System.out.println("t2-t1 for fun1 Simpson SICE = " + (t2 - t1));
+        final long t3 = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, params, wvlFullGrid);
+        }
+        final long t4 = System.currentTimeMillis();
+        System.out.println("t4-t3 for fun1 Simpson SICE Alex = " + (t4 - t3));
 
         // new 'Simpson Alex' integration gives sightly diffrent results compared to S3Snow implementation
         System.out.println("fun1 simpsonSice = " + simpsonSice);            // J: 738.3059
@@ -435,9 +448,21 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
         SiceFun2Function fun2 = new SiceFun2Function();
+        double simpsonSice = 0.0;
+        double simpsonSiceAlex = 0.0;
         double[] params2 = new double[]{0};
-        final double simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun2, params2, wvlFullGrid);
-        final double simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, params2, wvlFullGrid);
+        final long t1 = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            simpsonSice = Integrator.integrateSimpsonSice(at, bt, fun2, params2, wvlFullGrid);
+        }
+        final long t2 = System.currentTimeMillis();
+        System.out.println("t2-t1 for fun2 Simpson SICE = " + (t2 - t1));
+        final long t3 = System.currentTimeMillis();
+        for (int i = 0; i < 10000; i++) {
+            simpsonSiceAlex = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, params2, wvlFullGrid);
+        }
+        final long t4 = System.currentTimeMillis();
+        System.out.println("t4-t3 for fun2 Simpson SICE Alex = " + (t4 - t3));
         // for function 'fun2', the 'Simpson Alex' is almost the same as Fortran BB
         System.out.println("fun2 simpsonSice = " + simpsonSice);                  // J: 1272.50
         System.out.println("fun2 simpsonSiceAlex = " + simpsonSiceAlex);          // J: 1262.2802; F: 1262.2793

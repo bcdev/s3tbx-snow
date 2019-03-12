@@ -76,11 +76,16 @@ public class Integrator {
 
         double sum1 = 0.0;
         double sum2 = 0.0;
+        double[] funValue = new double[upperIndex + 1];
         for (int i = lowerIndex; i < upperIndex; i += 2) {
-            sum1 += 4.0 * fun.value(x[i], params);
+            funValue[i] = fun.value(x[i], params);
+        }
+
+        for (int i = lowerIndex; i < upperIndex; i += 2) {
+            sum1 += 4.0 * funValue[i];
         }
         for (int i = lowerIndex + 1; i < upperIndex - 1; i += 2) {
-            sum2 += 2.0 * fun.value(x[i], params);
+            sum2 += 2.0 * funValue[i];
         }
         return (upper - lower) *
                 (fun.value(x[lowerIndex], params) + sum1 + sum2 + fun.value(x[upperIndex], params)) / (3 * n);
@@ -91,7 +96,7 @@ public class Integrator {
                                                   double[] params,
                                                   double[] x) {
 
-        final int jmax = 20;
+        final int jmax = 8;
         double trapezResult = 0.0;
         double s = 0.0;
 
@@ -100,10 +105,10 @@ public class Integrator {
 
         for (int i = 1; i < jmax; i++) {
             trapezResult = integrateTrapezSiceAlex(lower, upper, fun, params, x, trapezResult, i);
-//            System.out.println("trapezResult = " + trapezResult);
-            s = (4.0*trapezResult - ost)/ 3.0;
+//            System.out.println("trapezResult = " + i + ", " + trapezResult);
+            s = (4.0 * trapezResult - ost) / 3.0;
             if (i > 5) {
-                if (Math.abs(s-os) < 1.E-3*Math.abs(os) || (s == 0.0 && os == 0.0)) {
+                if (Math.abs(s - os) < 1.E-3 * Math.abs(os) || (s == 0.0 && os == 0.0)) {
                     break;
                 }
             }
