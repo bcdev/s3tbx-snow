@@ -76,20 +76,46 @@ public class Integrator {
 
         double sum1 = 0.0;
         double sum2 = 0.0;
-        double[] funValue = new double[upperIndex + 1];
         for (int i = lowerIndex; i < upperIndex; i += 2) {
-            funValue[i] = fun.value(x[i], params);
-        }
-
-        for (int i = lowerIndex; i < upperIndex; i += 2) {
-            sum1 += 4.0 * funValue[i];
+            sum1 += 4.0 * fun.value(x[i], params);
         }
         for (int i = lowerIndex + 1; i < upperIndex - 1; i += 2) {
-            sum2 += 2.0 * funValue[i];
+            sum2 += 2.0 * fun.value(x[i], params);
         }
         return (upper - lower) *
                 (fun.value(x[lowerIndex], params) + sum1 + sum2 + fun.value(x[upperIndex], params)) / (3 * n);
     }
+
+    public static double integrateSimpsonSiceOlaf(double lower, double upper,
+                                                  ParametricUnivariateFunction fun,
+                                                  double[] params,
+                                                  double[] x,
+                                                  double[] astra) {
+        final double dx = x[1] - x[0];
+        int lowerIndex = (int) ((lower - x[0]) / dx);
+        lowerIndex = Math.min(Math.max(lowerIndex, 0), x.length - 1);
+        int upperIndex = (int) ((upper - x[0]) / dx);
+        upperIndex = Math.max(0, Math.min(upperIndex, x.length - 1));
+        final int n = upperIndex - lowerIndex;
+
+        double sum1 = 0.0;
+        double sum2 = 0.0;
+        for (int i = lowerIndex; i < upperIndex; i += 2) {
+            params[params.length - 1] = astra[i];
+            sum1 += 4.0 * fun.value(x[i], params);
+        }
+        for (int i = lowerIndex + 1; i < upperIndex - 1; i += 2) {
+            params[params.length - 1] = astra[i];
+            sum2 += 2.0 * fun.value(x[i], params);
+        }
+
+        params[params.length - 1] = astra[lowerIndex];
+        final double funLower = fun.value(x[lowerIndex], params);
+        params[params.length - 1] = astra[upperIndex];
+        final double funUpper = fun.value(x[upperIndex], params);
+        return (upper - lower) * (funLower + sum1 + sum2 + funUpper) / (3 * n);
+    }
+
 
     public static double integrateSimpsonSiceAlex(double lower, double upper,
                                                   ParametricUnivariateFunction fun,
@@ -134,19 +160,10 @@ public class Integrator {
 
         double s;
         if (n == 1) {
-            s = 0.5 * (upper - lower) * (fun.value(x[lowerIndex], params) + fun.value(x[upperIndex], params));
+            double funLower = fun.value(x[lowerIndex], params);
+            double funUpper = fun.value(x[upperIndex], params);
+            s = 0.5 * (upper - lower) * (funLower + funUpper);
         } else {
-//            it = 2**(n - 2)
-//            tnm = it
-//            del = (b - a) / tnm
-//            x = a + 0.5 * del
-//            sum = 0.
-//            do 11 j = 1, it
-//            sum = sum + func(x)
-//            x = x + del
-//            11                         continue
-//            s = 0.5 * (s + (b - a) * sum / tnm)
-
             int it = (int) Math.pow(2.0, n - 2);
             double del = (upper - lower) / it;
             double sum = 0.0;
@@ -159,4 +176,5 @@ public class Integrator {
         }
         return s;
     }
+
 }

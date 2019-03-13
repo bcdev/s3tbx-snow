@@ -156,9 +156,12 @@ public class OlciSiceSnowPropertiesOp extends Operator {
     private Product targetProduct;
 
     private double[] wvlFullGrid;
+    private double[] astraFullGrid;
 
     private int width;
     private int height;
+
+    private RefractiveIndexTable refractiveIndexTable;
 
 
     @Override
@@ -179,11 +182,17 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         height = sourceProduct.getSceneRasterHeight();
 
         // set up fine resolution wavelength grid (5nm step)
-        int numWvl = (int) ((OlciSnowPropertiesConstants.BB_WVL_3 - OlciSnowPropertiesConstants.BB_WVL_1) / 0.005 + 1);
+        final double wvlStep = 0.02;
+        int numWvl = (int) ((OlciSnowPropertiesConstants.BB_WVL_3 - OlciSnowPropertiesConstants.BB_WVL_1) / wvlStep + 1);
         wvlFullGrid = new double[numWvl];
         for (int i = 0; i < numWvl; i++) {
-            wvlFullGrid[i] = OlciSnowPropertiesConstants.BB_WVL_1 + i * 0.005;
+            wvlFullGrid[i] = OlciSnowPropertiesConstants.BB_WVL_1 + i * wvlStep;
         }
+
+        // read auxiliary data:
+        refractiveIndexTable = new RefractiveIndexTable();
+        astraFullGrid = SnowUtils.linearInterpolate(wvlFullGrid, refractiveIndexTable.getWvl(),
+                                                    refractiveIndexTable.getRefractiveIndexImag());
 
         if (cloudMaskProduct != null) {
             validateCloudMaskProduct();
@@ -306,72 +315,74 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                             OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties,
                                                                                    rhoToa, brr400, sza, vza, raa);
                             OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties,
-                                                                                    brr400, sza, wvlFullGrid);
-//
-//                            setTargetTilesSpectralAlbedos(siceSnowProperties.getSphericalSpectralAlbedos(),
-//                                                          ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
-//                            setTargetTilesSpectralAlbedos(siceSnowProperties.getPlanarSpectralAlbedos(),
-//                                                          ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
-//
-//                            setTargetTilesBroadbandAlbedos(siceSnowProperties.getSphericalBroadbandAlbedos(),
-//                                                           targetTiles, "spherical", x, y);
-//                            setTargetTilesBroadbandAlbedos(siceSnowProperties.getPlanarBroadbandAlbedos(),
-//                                                           targetTiles, "planar", x, y);
-//
-//                            final double snowGrainSize = siceSnowProperties.getSnowGrainSize();
-//                            final Band snowGrainSizeBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
-//                            targetTiles.get(snowGrainSizeBand).setSample(x, y,
-//                                                                         SnowUtils.cutTo4DecimalPlaces(snowGrainSize));
-//
-//                            final double snowSpecificArea = siceSnowProperties.getSnowSpecificArea();
-//                            final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
-//                            targetTiles.get(snowSpecificAreaBand).setSample(x, y,
-//                                                                            SnowUtils.cutTo4DecimalPlaces(snowSpecificArea));
-//
-//                            final double scatteringAngle = siceSnowProperties.getScatteringAngle();
-//                            final Band scatteringAngleBand = targetProduct.getBand(SCATTERING_ANGLE_BAND_NAME);
-//                            targetTiles.get(scatteringAngleBand).setSample(x, y,
-//                                                                           SnowUtils.cutTo4DecimalPlaces(scatteringAngle));
-//
-//                            final double concentrationOfPollutants =
-//                                    siceSnowProperties.getSnowImpurity().getConcentrationOfPollutants();
-//                            final Band concOfPollutantsBand = targetProduct.getBand(CONCENTRATION_OF_POLLUTANTS_BAND_NAME);
-//                            targetTiles.get(concOfPollutantsBand).setSample(x, y,
-//                                                                            SnowUtils.cutTo4DecimalPlaces(concentrationOfPollutants));
-//
-//                            // set flags:
-//                            OlciSiceSnowPropertiesAlgorithm.
-//                                    setPollutionTypeFlag(x, y, sicePollutionFlagTile, siceSnowProperties, ndbi);
-//                            OlciSiceSnowPropertiesAlgorithm.
-//                                    setGroundTypeFlag(x, y, siceGroundFlagTile, siceSnowProperties,
-//                                                      rtoa400, rtoa1020, ndsi, ndbi);
-//
-//                            // write optional output:
-//                            if (considerNdsiSnowMask) {
-//                                final Band ndsiMaskBand = targetProduct.getBand(NDSI_MASK_BAND_NAME);
-//                                int ndsiMask = validNdsi ? 1 : 0;
-//                                targetTiles.get(ndsiMaskBand).setSample(x, y, ndsiMask);
-//                            }
-//
-//                            if (writeAbsorptionAngstroemExponent) {
-//                                final Band band = targetProduct.getBand(ABSORPTION_ANGSTROEM_EXPONENT_BAND_NAME);
-//                                final double absorptionAngstromExp =
-//                                        siceSnowProperties.getSnowImpurity().getAbsorptionAngstromExp();
-//                                targetTiles.get(band).setSample(x, y, absorptionAngstromExp);
-//                            }
-//
-//                            if (writeNormalizedAbsorptionCoefficient) {
-//                                final Band band = targetProduct.getBand(NORNALIZED_ABSORPTION_COEFFICIENT_BAND_NAME);
-//                                final double normalizedAbsCoeff =
-//                                        siceSnowProperties.getSnowImpurity().getNormalizedAbsCoeff();
-//                                targetTiles.get(band).setSample(x, y, normalizedAbsCoeff);
-//                            }
-//
-//                            if (writeEffectiveAbsorptionLength) {
-//                                final Band band = targetProduct.getBand(EFFECTIVE_ABSORPTION_LENGTH_BAND_NAME);
-//                                final double effAbsLength = siceSnowProperties.getEffAbsLength();
-//                                targetTiles.get(band).setSample(x, y, effAbsLength);
-//                            }
+                                                                                    brr400, sza,
+                                                                                    wvlFullGrid,
+                                                                                    astraFullGrid);
+
+                            setTargetTilesSpectralAlbedos(siceSnowProperties.getSphericalSpectralAlbedos(),
+                                                          ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
+                            setTargetTilesSpectralAlbedos(siceSnowProperties.getPlanarSpectralAlbedos(),
+                                                          ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
+
+                            setTargetTilesBroadbandAlbedos(siceSnowProperties.getSphericalBroadbandAlbedos(),
+                                                           targetTiles, "spherical", x, y);
+                            setTargetTilesBroadbandAlbedos(siceSnowProperties.getPlanarBroadbandAlbedos(),
+                                                           targetTiles, "planar", x, y);
+
+                            final double snowGrainSize = siceSnowProperties.getSnowGrainSize();
+                            final Band snowGrainSizeBand = targetProduct.getBand(GRAIN_DIAMETER_BAND_NAME);
+                            targetTiles.get(snowGrainSizeBand).setSample(x, y,
+                                                                         SnowUtils.cutTo4DecimalPlaces(snowGrainSize));
+
+                            final double snowSpecificArea = siceSnowProperties.getSnowSpecificArea();
+                            final Band snowSpecificAreaBand = targetProduct.getBand(SNOW_SPECIFIC_AREA_BAND_NAME);
+                            targetTiles.get(snowSpecificAreaBand).setSample(x, y,
+                                                                            SnowUtils.cutTo4DecimalPlaces(snowSpecificArea));
+
+                            final double scatteringAngle = siceSnowProperties.getScatteringAngle();
+                            final Band scatteringAngleBand = targetProduct.getBand(SCATTERING_ANGLE_BAND_NAME);
+                            targetTiles.get(scatteringAngleBand).setSample(x, y,
+                                                                           SnowUtils.cutTo4DecimalPlaces(scatteringAngle));
+
+                            final double concentrationOfPollutants =
+                                    siceSnowProperties.getSnowImpurity().getConcentrationOfPollutants();
+                            final Band concOfPollutantsBand = targetProduct.getBand(CONCENTRATION_OF_POLLUTANTS_BAND_NAME);
+                            targetTiles.get(concOfPollutantsBand).setSample(x, y,
+                                                                            SnowUtils.cutTo4DecimalPlaces(concentrationOfPollutants));
+
+                            // set flags:
+                            OlciSiceSnowPropertiesAlgorithm.
+                                    setPollutionTypeFlag(x, y, sicePollutionFlagTile, siceSnowProperties, ndbi);
+                            OlciSiceSnowPropertiesAlgorithm.
+                                    setGroundTypeFlag(x, y, siceGroundFlagTile, siceSnowProperties,
+                                                      rtoa400, rtoa1020, ndsi, ndbi);
+
+                            // write optional output:
+                            if (considerNdsiSnowMask) {
+                                final Band ndsiMaskBand = targetProduct.getBand(NDSI_MASK_BAND_NAME);
+                                int ndsiMask = validNdsi ? 1 : 0;
+                                targetTiles.get(ndsiMaskBand).setSample(x, y, ndsiMask);
+                            }
+
+                            if (writeAbsorptionAngstroemExponent) {
+                                final Band band = targetProduct.getBand(ABSORPTION_ANGSTROEM_EXPONENT_BAND_NAME);
+                                final double absorptionAngstromExp =
+                                        siceSnowProperties.getSnowImpurity().getAbsorptionAngstromExp();
+                                targetTiles.get(band).setSample(x, y, absorptionAngstromExp);
+                            }
+
+                            if (writeNormalizedAbsorptionCoefficient) {
+                                final Band band = targetProduct.getBand(NORNALIZED_ABSORPTION_COEFFICIENT_BAND_NAME);
+                                final double normalizedAbsCoeff =
+                                        siceSnowProperties.getSnowImpurity().getNormalizedAbsCoeff();
+                                targetTiles.get(band).setSample(x, y, normalizedAbsCoeff);
+                            }
+
+                            if (writeEffectiveAbsorptionLength) {
+                                final Band band = targetProduct.getBand(EFFECTIVE_ABSORPTION_LENGTH_BAND_NAME);
+                                final double effAbsLength = siceSnowProperties.getEffAbsLength();
+                                targetTiles.get(band).setSample(x, y, effAbsLength);
+                            }
                         } else {
                             setTargetTilesInvalid(targetTiles, x, y);
                         }

@@ -2,6 +2,7 @@ package org.esa.s3tbx.snow;
 
 import org.apache.commons.math3.analysis.interpolation.LinearInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+import org.apache.commons.math3.exception.OutOfRangeException;
 import org.esa.snap.core.datamodel.FlagCoding;
 import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.Product;
@@ -32,7 +33,7 @@ public class SnowUtils {
         refractiveIndexTableInterpolated.setRefractiveIndexImag(wvlsFull);
 
         final double[] wvlsRefrIndexAux = refractiveIndexTable.getWvl();
-        refractiveIndexTableInterpolated.setRefractiveIndexImag(splineInterpolate(wvlsRefrIndexAux,
+        refractiveIndexTableInterpolated.setRefractiveIndexImag(linearInterpolateWithSplineFunction(wvlsRefrIndexAux,
                                                                                   refractiveIndexTable.getRefractiveIndexImag(),
                                                                                   wvlsFull));
         return refractiveIndexTableInterpolated;
@@ -56,7 +57,7 @@ public class SnowUtils {
         return fLambda;
     }
 
-    public static double[] splineInterpolate(double[] x, double[] y, double[] xi) {
+    public static double[] linearInterpolateWithSplineFunction(double[] x, double[] y, double[] xi) {
         final LinearInterpolator linearInterpolator = new LinearInterpolator();
         PolynomialSplineFunction psf = linearInterpolator.interpolate(x, y);
 
@@ -65,6 +66,35 @@ public class SnowUtils {
             yi[i] = psf.value(xi[i]);
         }
         return yi;
+    }
+
+    public static double[] linearInterpolate(double[] x, double[] xa, double[] ya) {
+        double[] result = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            result[i] = linearInterpolate(x[i], xa, ya);
+        }
+        return result;
+    }
+
+    public static double linearInterpolate(double x, double[] xa, double[] ya) {
+        int kk = -1;
+        for (int k = 0; k < xa.length - 1; k++) {
+            if (x >= xa[k] && x <= xa[k + 1]) {
+                kk = k;
+                break;
+            }
+        }
+
+        if (kk < 0) {
+            throw new OutOfRangeException(x, xa[0], xa[xa.length - 1]);
+        }
+
+        final double x0 = xa[kk];
+        final double x1 = xa[kk + 1];
+        final double y0 = ya[kk];
+        final double y1 = ya[kk + 1];
+
+        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
     }
 
     public static String[] setupRcSourceBands(String[] requiredRadianceBandNamesAlbedo, String[] requiredRadianceBandNamesPpa) {
@@ -163,7 +193,6 @@ public class SnowUtils {
      * Provides S3 Snow flag coding
      *
      * @param flagId - the flag ID
-     *
      * @return - the flag coding
      */
     public static FlagCoding createS3SnowFlagCoding(String flagId) {
@@ -217,7 +246,6 @@ public class SnowUtils {
      * Provides SICE pollution type flag coding
      *
      * @param flagId - the flag ID
-     *
      * @return - the flag coding
      */
     public static FlagCoding createSicePollutionTypeFlagCoding(String flagId) {
@@ -281,7 +309,6 @@ public class SnowUtils {
      * Provides SICE ground type flag coding
      *
      * @param flagId - the flag ID
-     *
      * @return - the flag coding
      */
     public static FlagCoding createSiceGroundTypeFlagCoding(String flagId) {

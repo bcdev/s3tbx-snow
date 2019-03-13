@@ -21,29 +21,28 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
     }
 
     public double value(double x, double... parameters) throws NoDataException {
-        return evaluate(parameters, x);
-//        return evaluate(parameters, (float) x);
-    }
-
-    private static double evaluate(double[] parms, double x) throws NullArgumentException, NoDataException {
-        MathUtils.checkNotNull(parms);
-        final int numParms = parms.length;
-        if (numParms != 8) {
+        MathUtils.checkNotNull(parameters);
+        final int numParms = parameters.length;
+        if (numParms == 8) {
+            return evaluate_old(parameters, x);
+        } else if (numParms == 9) {
+            return evaluate_new(parameters, x);
+        } else {
             throw new NoDataException(LocalizedFormats.DIMENSIONS_MISMATCH);
         }
+    }
 
-        // params:
-//        double brr400, double effAbsLength, double r0a1Thresh, double sza,
-//        double as, double bs, double cs, double planar
-        final double brr400 = parms[0];
-        final double effAbsLength = parms[1];
-        final double r0a1Thresh = parms[2];
-        final double cosSza = parms[3];
-        final double as = parms[4];
-        final double bs = parms[5];
-        final double cs = parms[6];
-        final double planar = parms[7];
+    private static double evaluate_old(double[] parms, double x) throws NullArgumentException, NoDataException {
+        final double astra = computeAstraFromPolynom(x);
+        return compute(parms, x, astra);
+    }
 
+    private static double evaluate_new(double[] parms, double x) throws NullArgumentException, NoDataException {
+        final double astra = parms[parms.length-1];
+        return compute(parms, x, astra);
+    }
+
+    private static double computeAstraFromPolynom(double x) {
         double[] a = new double[6];
         final double[][] bbb = OlciSnowPropertiesConstants.BBB_COEFFS_SICE;
         final double[] bbbBounds = OlciSnowPropertiesConstants.BBB_COEFFS_SICE_BOUNDS;
@@ -63,11 +62,26 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
             final double term1 = a[0];
             final double term2 = a[1] * x;
             final double term3 = a[2] * x * x;
-            final double term4 = a[3] * Math.pow(x, 3.);
-            final double term5 = a[4] * Math.pow(x, 4.);
-            final double term6 = a[5] * Math.pow(x, 5.);
+            final double term4 = a[3] * x * x * x;
+            final double term5 = a[4] * x * x * x * x;
+            final double term6 = a[5] * x * x * x * x * x;
             astra = term1 + term2 + term3 + term4 + term5 + term6;
         }
+        return astra;
+    }
+
+    private static double compute(double[] parms, double x, double astra) {
+        // params:
+//        double brr400, double effAbsLength, double r0a1Thresh, double sza,
+//        double as, double bs, double cs, double planar, double astra
+        final double brr400 = parms[0];
+        final double effAbsLength = parms[1];
+        final double r0a1Thresh = parms[2];
+        final double cosSza = parms[3];
+        final double as = parms[4];
+        final double bs = parms[5];
+        final double cs = parms[6];
+        final double planar = parms[7];
 
         final double dega = effAbsLength * 4.0 * Math.PI * astra / x;
         final double sqrtDega = Math.sqrt(dega);

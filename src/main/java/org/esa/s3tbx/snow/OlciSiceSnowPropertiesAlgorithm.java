@@ -33,15 +33,14 @@ class OlciSiceSnowPropertiesAlgorithm {
      * - snow specific area
      * - relative impurity load
      *
-     * @param brr400 -
-     * @param brr560 -
-     * @param brr681 -
-     * @param brr709 -
+     * @param brr400  -
+     * @param brr560  -
+     * @param brr681  -
+     * @param brr709  -
      * @param brr1020 -
-     * @param r0 -
-     * @param xx -
-     *           
-     * @return  SiceSnowPropertiesResult
+     * @param r0      -
+     * @param xx      -
+     * @return SiceSnowPropertiesResult
      */
     static SiceSnowPropertiesResult computeGeneralSnowProperties(double brr400,
                                                                  double brr560,
@@ -69,7 +68,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         // snow impurity
         // requires brr400, brr560, brr681, brr709
         SiceSnowImpurity snowImpurity =
-                computeSnowImpurity(brr400, brr560, brr681, brr709 , r0, xx, effAbsLengthMillimeter);
+                computeSnowImpurity(brr400, brr560, brr681, brr709, r0, xx, effAbsLengthMillimeter);
 
         // fill result with numbers we have up to now
         return new SiceSnowPropertiesResult(effAbsLength, grainDiam, snowSpecificArea, snowImpurity, 0.0, 0.0, null, null);
@@ -137,18 +136,19 @@ class OlciSiceSnowPropertiesAlgorithm {
 
     /**
      * Provides broadband albedos
-     *
-     * @param snowProperties -
-     * @param brr400 -
-     * @param sza -
-     * @param wvlFullGrid -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
+     *  @param snowProperties -
+     * @param brr400         -
+     * @param sza            -
+     * @param wvlFullGrid    -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
+     * @param astraFullGrid
      */
     static void computeBroadbandAlbedos(SiceSnowPropertiesResult snowProperties,
-                                             double brr400,
-                                             double sza,
-                                             double[] wvlFullGrid) {
-        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid);
-        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid);
+                                        double brr400,
+                                        double sza,
+                                        double[] wvlFullGrid,
+                                        double[] astraFullGrid) {
+        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid, astraFullGrid);
+        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid, astraFullGrid);
     }
 
     static double computeR0(double brr865, double brr1020) {
@@ -201,15 +201,73 @@ class OlciSiceSnowPropertiesAlgorithm {
             siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN, true);
         } else if (ndbi > 0.66) {
             siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED, true);
-        } else if (siceSnowProperties.getSnowGrainSize() <= 0.01 || (rtoa400 - rtoa1020 <=0.13)) {
+        } else if (siceSnowProperties.getSnowGrainSize() <= 0.01 || (rtoa400 - rtoa1020 <= 0.13)) {
             siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_UNCERTAIN, true);
         }
     }
-    
+
+    static double getAstra(double x, double[] xa, double[] ya) {
+        double mindiff = Double.MAX_VALUE;
+        int kss = 0;
+        for (int k = 0; k < xa.length; k++) {
+            double dif = Math.abs(x - xa[k]);
+            if (dif < mindiff) {
+                mindiff = dif;
+                kss = k;
+                if (dif <= 1.E-6) {
+                    return ya[k];
+                }
+                break;
+            }
+            if (dif <= 1.E-6) {
+                return ya[k];
+            }
+        }
+        double delta = x - xa[kss];
+        int kss2 = delta <= 0 ? kss - 1 : kss;
+        double x0, x1, y0, y1;
+        x0 = xa[kss2];
+        x1 = xa[kss2 + 1];
+        y0 = ya[kss2];
+        y1 = ya[kss + 1];
+
+        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+    }
+
+    static double getAstra2(double x, double[] xa, double[] ya) {
+        double mindiff = Double.MAX_VALUE;
+        int kss = 0;
+        for (int k = 0; k < xa.length; k++) {
+            double dif = Math.abs(x - xa[k]);
+            if (dif < mindiff) {
+                mindiff = dif;
+                kss = k;
+                if (dif <= 1.E-6) {
+                    return ya[k];
+                }
+                break;
+            }
+            if (dif <= 1.E-6) {
+                return ya[k];
+            }
+        }
+        double delta = x - xa[kss];
+        int kss2 = delta <= 0 ? kss - 1 : kss;
+        double x0, x1, y0, y1;
+        x0 = xa[kss2];
+        x1 = xa[kss2 + 1];
+        y0 = ya[kss2];
+        y1 = ya[kss + 1];
+
+        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
+    }
+
+
     private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                      double brr400,
                                                      double sza,
-                                                     double[] wvlFullGrid) {
+                                                     double[] wvlFullGrid,
+                                                     double[] astraFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
@@ -240,19 +298,25 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double effAbsLength = snowProperties.getEffAbsLength();
         final double r0a1Thresh = snowProperties.getR0a1Thresh();
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
-        final double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
-        final double[] paramsFun2 = new double[]{}; // no parameters needed
+        double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
+        double[] paramsFun2 = new double[]{}; // no parameters needed
 
-        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
+//        paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0, 0.0};
+//        paramsFun2 = new double[]{0.0};
+//        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceOlaf(at, aat, fun1, paramsFun1Planar, wvlFullGrid, astraFullGrid);
+//        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceOlaf(at, aat, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
         final double bbVisPlanar = numeratorVisPlanar / denominatorVisPlanar;
 
-        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
+        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
+//        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun1, paramsFun1Planar, wvlFullGrid, astraFullGrid);
+//        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
         final double bbNirPlanar = numeratorNirPlanar / denominatorNirPlanar;
 
-        final double numeratorSwPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorSwPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorSwPlanar = numeratorVisPlanar + numeratorNirPlanar;
+        final double denominatorSwPlanar = denominatorVisPlanar + denominatorNirPlanar;
         final double bbSwPlanar = numeratorSwPlanar / denominatorSwPlanar;
 
         final double[] planarBBAlbedo = new double[]{bbVisPlanar, bbNirPlanar, bbSwPlanar};
@@ -263,7 +327,8 @@ class OlciSiceSnowPropertiesAlgorithm {
     private static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                         double brr400,
                                                         double sza,
-                                                        double[] wvlFullGrid) {
+                                                        double[] wvlFullGrid,
+                                                        double[] astraFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
@@ -294,19 +359,25 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double effAbsLength = snowProperties.getEffAbsLength();
         final double r0a1Thresh = snowProperties.getR0a1Thresh();
         final double camu1 = Math.cos(sza * MathUtils.DTOR);
-        final double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
-        final double[] paramsFun2 = new double[]{}; // no parameters needed
+        double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
+        double[] paramsFun2 = new double[]{}; // no parameters needed
 
-        final double numeratorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorVisSpherical = Integrator.integrateSimpsonSice(at, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
+//        paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0, 0.0};
+//        paramsFun2 = new double[]{0.0}; // no parameters needed
+//        final double numeratorVisSpherical = Integrator.integrateSimpsonSiceOlaf(at, aat, fun1, paramsFun1Spherical, wvlFullGrid, astraFullGrid);
+//        final double denominatorVisSpherical = Integrator.integrateSimpsonSiceOlaf(at, aat, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
         final double bbVisSpherical = numeratorVisSpherical / denominatorVisSpherical;
 
-        final double numeratorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorNirSpherical = Integrator.integrateSimpsonSice(at, aat, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid);
+        final double denominatorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
+//        final double numeratorNirSpherical = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid, astraFullGrid);
+//        final double denominatorNirSpherical = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
         final double bbNirSpherical = numeratorNirSpherical / denominatorNirSpherical;
 
-        final double numeratorSwSpherical = Integrator.integrateSimpsonSice(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorSwSpherical = Integrator.integrateSimpsonSice(aat, bt, fun2, paramsFun2, wvlFullGrid);
+        final double numeratorSwSpherical = numeratorVisSpherical + numeratorNirSpherical;
+        final double denominatorSwSpherical = denominatorVisSpherical + denominatorNirSpherical;
         final double bbSwSpherical = numeratorSwSpherical / denominatorSwSpherical;
 
         final double[] sphericalBBAlbedo = new double[]{bbVisSpherical, bbNirSpherical, bbSwSpherical};

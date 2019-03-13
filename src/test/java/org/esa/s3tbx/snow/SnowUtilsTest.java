@@ -16,15 +16,13 @@ public class SnowUtilsTest {
         double[] y = {0, 50, 200};
         double[] xi = {10, 25, 75, 80, 100};
 
-        double[] yi = SnowUtils.splineInterpolate(x, y, xi);
+        double[] yi = SnowUtils.linearInterpolate(x, y, xi);
 
         //assertion
-        assertEquals(5, yi.length, 1.E-2);
-        assertEquals(10.0, yi[0]);
-        assertEquals(25.0, yi[1]);
-        assertEquals(125.0, yi[2]);
-        assertEquals(140.0, yi[3]);
-        assertEquals(200.0, yi[4]);
+        assertEquals(3, yi.length);
+        assertEquals(10.0, yi[0], 1.E-3);
+        assertEquals(25.0, yi[1], 1.E-3);
+        assertEquals(41.66667, yi[2], 1.E-3);
     }
 
     @Test
