@@ -588,6 +588,8 @@ public class OlciSnowPropertiesAlgorithmTest {
         // from 'ice_refl_input.dat'  (Lautaret example pixel)
         final double sza = 36.9;
         final double vza = 3.08;
+        final double saa = 143.8;
+        final double vaa = 104.593;
 
         double brr400 = 0.68;
         double brr560 = 0.8623;
@@ -602,13 +604,16 @@ public class OlciSnowPropertiesAlgorithmTest {
 
         // clean snow
         SpectralAlbedoResult spectralAlbedoResult =
-                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, false);
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, 0.0, false);
 
         assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 
         // polluted snow
+        final double raa = SnowUtils.getRelAzi(saa, vaa);
+        final double r0Thresh =
+                OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
         spectralAlbedoResult =
-                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, true);
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, r0Thresh, true);
 
         assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 
@@ -619,6 +624,8 @@ public class OlciSnowPropertiesAlgorithmTest {
         // from 'ice_refl_input_20181022.dat'   (Dome-C example pixel)
         final double sza = 66.37;
         final double vza = 9.7663;
+        final double saa = 143.8;
+        final double vaa = 104.593;
 
         double brr400 = 1.0496;
         double brr560 = 0.9439;
@@ -633,13 +640,16 @@ public class OlciSnowPropertiesAlgorithmTest {
 
         // clean snow
         SpectralAlbedoResult spectralAlbedoResult =
-                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, false);
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, 0.0, false);
 
         assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 
         // polluted snow
+        final double raa = SnowUtils.getRelAzi(saa, vaa);
+        final double r0Thresh =
+                OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
         spectralAlbedoResult =
-                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, true);
+                OlciSnowPropertiesAlgorithm.computeSpectralAlbedoFromTwoWavelengths(brr, 0.01, sza, vza, r0Thresh, true);
 
         assertNotNull(spectralAlbedoResult.getSpectralAlbedos());
 

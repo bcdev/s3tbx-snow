@@ -25,26 +25,28 @@ class OlciSnowPropertiesAlgorithm {
      * @return SpectralAlbedoResult
      */
     static SpectralAlbedoResult computeSpectralAlbedos(double[] brr, double deltaBrr, double sza, double vza) {
-        return computeSpectralAlbedoFromTwoWavelengths(brr, deltaBrr, sza, vza, false);
+        return computeSpectralAlbedoFromTwoWavelengths(brr, deltaBrr, sza, vza, 0.0, false);
     }
 
     /**
      * Computes spectral spherical and planar albedos in case of polluted snow.
      * Algorithm Tech Note: 'Manual_31_01_2018.docx', AK 20180131
      *
-     * @param brr - subset of BRR spectrum  (BRR_01, BRR_06, BRR_21, BRR_17)
-     * @param sza - sun zenith angle (deg)
-     * @param vza - view zenith angle (deg)
+     * @param brr      - subset of BRR spectrum  (BRR_01, BRR_06, BRR_21, BRR_17)
+     * @param deltaBrr - assumed BRR uncertainty
+     * @param sza      - sun zenith angle (deg)
+     * @param vza      - view zenith angle (deg)
+     * @param r0Thresh
      * @return double[][] spectralAlbedos : spherical and planar at OLCI wavelengths
      */
     static SpectralAlbedoResult computeSpectralAlbedosPolluted(double[] brr,
+                                                               double deltaBrr,
                                                                double sza,
-                                                               double vza,
-                                                               double deltaBrr) {
+                                                               double vza, double r0Thresh) {
 //        final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
 //        return computeSpectralAlbedosPollutedFromFourWavelengths(brr, deltaBrr, sza, vza);
         // now using AK latest algo from Oct 2018:
-        return computeSpectralAlbedoFromTwoWavelengths(brr, deltaBrr, sza, vza, true);
+        return computeSpectralAlbedoFromTwoWavelengths(brr, deltaBrr, sza, vza, r0Thresh, true);
     }
 
     /**
@@ -56,14 +58,15 @@ class OlciSnowPropertiesAlgorithm {
      *
      * @param brr        - subset of BRR spectrum  (BRR_01, BRR_06, BRR_21, BRR_17)
      * @param deltaBrr   - assumed BRR uncertainty
-     * @param isPolluted - indicator for clean or polluted snow
      * @param sza        - solar zenith angle
      * @param vza        - view zenith angle
+     * @param r0Thresh
+     * @param isPolluted - indicator for clean or polluted snow
      * @return double[] broadband albedos in 3 wavelength regions VIS, NIR, SW (300-700nm, 700-2400nm, 300-2400nm)
      */
     static SpectralAlbedoResult computeSpectralAlbedoFromTwoWavelengths(double[] brr, double deltaBrr,
                                                                         double sza, double vza,
-                                                                        boolean isPolluted) {
+                                                                        double r0Thresh, boolean isPolluted) {
 
         final int numWvl = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length;
         double[][] spectralAlbedos = new double[2][numWvl];
@@ -120,8 +123,10 @@ class OlciSnowPropertiesAlgorithm {
                 final double sd9 = f * Math.pow(wvlNm / refWvl[3], -m);
                 final double tt = alka * 1.E6 + sd9;
                 final double arr = r0 * Math.exp(-x * Math.sqrt(tt * l));
-                spectralAlbedos[0][i] = Math.pow(arr / r0, r0 / (u1 * u2));   // spectral spherical albedo
-                spectralAlbedos[1][i] = Math.pow(arr / r0, r0 / u2);        // spectral planar albedo
+//                spectralAlbedos[0][i] = Math.pow(arr / r0, r0 / (u1 * u2));   // spectral spherical albedo
+//                spectralAlbedos[1][i] = Math.pow(arr / r0, r0 / u2);
+                spectralAlbedos[0][i] = Math.pow(arr / r0Thresh, r0Thresh / (u1 * u2));   // AK, 20190314
+                spectralAlbedos[1][i] = Math.pow(arr / r0Thresh, r0Thresh / u2);       // AK, 20190314
             } else {
                 // TT(j)=alka(j)*1.e+6
                 // arr(j)=r0*exp(-x*sqrt(TT(j)*l))
@@ -237,7 +242,6 @@ class OlciSnowPropertiesAlgorithm {
 //
 //        return new double[]{bbaVis, bbaNir, bbaSw};
 //    }
-
     static double[] computeBroadbandAlbedo(double mu_0,
                                            double[] brr,
                                            boolean isPolluted,
@@ -259,22 +263,22 @@ class OlciSnowPropertiesAlgorithm {
         final double[] fLambda = SnowUtils.computeFLambda(solarSpectrumExtendedTable, sza);
 
         double[] planarSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
-                                                                        refractiveIndexTable,
-                                                                        solarSpectrumExtendedTable, vza,
-                                                                        isPolluted);
+                refractiveIndexTable,
+                solarSpectrumExtendedTable, vza,
+                isPolluted);
         double[] planarCleanSpectralAlbedo = null;
         if (isPolluted) {
             planarSpectralAlbedo = computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
-                                                                                   refractiveIndexTable,
-                                                                                   solarSpectrumExtendedTable, vza);
+                    refractiveIndexTable,
+                    solarSpectrumExtendedTable, vza);
             planarCleanSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
-                                                                        refractiveIndexTable,
-                                                                        solarSpectrumExtendedTable, vza,
-                                                                        false);
+                    refractiveIndexTable,
+                    solarSpectrumExtendedTable, vza,
+                    false);
         }
         double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
         final double wvlMax =
-                OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[OlciSnowPropertiesConstants.OLCI_NUM_WVLS-1];
+                OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[OlciSnowPropertiesConstants.OLCI_NUM_WVLS - 1];
         for (int i = 0; i < fLambdaTimesPlanarSpectralAlbedo.length; i++) {
             if (isPolluted && wvlsFull[i] > wvlMax) {
                 fLambdaTimesPlanarSpectralAlbedo[i] = planarCleanSpectralAlbedo[i] * fLambda[i];
@@ -285,29 +289,29 @@ class OlciSnowPropertiesAlgorithm {
 
 
         numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                   OlciSnowPropertiesConstants.BB_WVL_2,
-                                                   fLambdaTimesPlanarSpectralAlbedo,
-                                                   wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_2,
+                fLambdaTimesPlanarSpectralAlbedo,
+                wvlsFull);
         denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                     OlciSnowPropertiesConstants.BB_WVL_2,
-                                                     fLambda,
-                                                     wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_2,
+                fLambda,
+                wvlsFull);
         numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                  OlciSnowPropertiesConstants.BB_WVL_3,
-                                                  fLambdaTimesPlanarSpectralAlbedo,
-                                                  wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_3,
+                fLambdaTimesPlanarSpectralAlbedo,
+                wvlsFull);
         denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                                                    OlciSnowPropertiesConstants.BB_WVL_3,
-                                                    fLambda,
-                                                    wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_3,
+                fLambda,
+                wvlsFull);
         numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                                                   OlciSnowPropertiesConstants.BB_WVL_3,
-                                                   fLambdaTimesPlanarSpectralAlbedo,
-                                                   wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_3,
+                fLambdaTimesPlanarSpectralAlbedo,
+                wvlsFull);
         denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                                                     OlciSnowPropertiesConstants.BB_WVL_3,
-                                                     fLambda,
-                                                     wvlsFull);
+                OlciSnowPropertiesConstants.BB_WVL_3,
+                fLambda,
+                wvlsFull);
 
         bbaVis = numeratorVis / denominatorVis;
         bbaNir = numeratorNir / denominatorNir;
@@ -346,14 +350,13 @@ class OlciSnowPropertiesAlgorithm {
      * Follows 'ppa_new2_TECHNICAL_NOTE_28_11_2018.doc' (AK, 20181128)
      *
      * @param spectralAlbedoResult - length from spectral snow albedo result
-     *
      * @param isPollutedSnow
      * @return double [] ppa
      */
     static double[] computeSpectralPPA_nov2018(SpectralAlbedoResult spectralAlbedoResult, boolean isPollutedSnow) {
         double[] ppa = new double[OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length];
 
-        final double gamma = 3.0/64.0;
+        final double gamma = 3.0 / 64.0;
         final double l = spectralAlbedoResult.getL();
         for (int i = 0; i < OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length; i++) {
             final double lambda = OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI[i];   // microns
@@ -425,7 +428,7 @@ class OlciSnowPropertiesAlgorithm {
         final double u1 = SnowUtils.computeU(mu_0);
         final double u2 = SnowUtils.computeU(mu_1);
 
-        final double x = u1 * u2  / r0;
+        final double x = u1 * u2 / r0;
 
         final double dlina = Math.log(brr[3] / r0) * Math.log(brr[3] / r0) / (x * x * alpha[3]);
 
@@ -554,7 +557,7 @@ class OlciSnowPropertiesAlgorithm {
         final double eps1 = 1.547269070091289;
         final double eps2 = -0.547269070091289;
         double r0RelErr = Math.sqrt(eps1 * eps1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
-                                            eps2 * eps2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+                eps2 * eps2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
         // make sure error is positive and does not exceed value itself
         return Math.min(Math.abs(r0), Math.abs(r0RelErr));
     }
@@ -562,7 +565,7 @@ class OlciSnowPropertiesAlgorithm {
     private static double computeLRelErr(double l, double[] brr, double nu_1, double nu_2, double deltaBrr) {
         // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
         double lRelErr = Math.sqrt(nu_1 * nu_1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
-                                           nu_2 * nu_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+                nu_2 * nu_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
         // make sure error is positive and does not exceed value itself
         return Math.min(Math.abs(l), Math.abs(lRelErr));
     }
