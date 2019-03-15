@@ -15,6 +15,43 @@ import static org.junit.Assert.assertNotNull;
 public class OlciSnowPropertiesAlgorithmTest {
 
     @Test
+    public void testPolynominalCurveFittingWarrenBrandt() {
+        double[] initialGuess = {0., 0., 0., 0., 0., 0.};
+
+        PolynomialFitter curveFitter = new PolynomialFitter(new LevenbergMarquardtOptimizer());
+
+        curveFitter.addObservedPoint(1.02, 2.25E-6);
+        curveFitter.addObservedPoint(1.03, 2.33E-6);
+        curveFitter.addObservedPoint(1.04, 2.33E-6);
+        curveFitter.addObservedPoint(1.05, 2.17E-6);
+        curveFitter.addObservedPoint(1.06, 1.96E-6);
+        curveFitter.addObservedPoint(1.07, 1.81E-6);
+        curveFitter.addObservedPoint(1.08, 1.74E-6);
+        curveFitter.addObservedPoint(1.09, 1.73E-6);
+        curveFitter.addObservedPoint(1.1 , 1.7E-6 );
+        curveFitter.addObservedPoint(1.11, 1.76E-6);
+        curveFitter.addObservedPoint(1.12, 1.82E-6);
+        curveFitter.addObservedPoint(1.13, 2.04E-6);
+        curveFitter.addObservedPoint(1.14, 2.25E-6);
+        curveFitter.addObservedPoint(1.15, 2.29E-6);
+        curveFitter.addObservedPoint(1.16, 3.04E-6);
+        curveFitter.addObservedPoint(1.17, 3.84E-6);
+        curveFitter.addObservedPoint(1.18, 4.77E-6);
+        curveFitter.addObservedPoint(1.19, 5.76E-6);
+        curveFitter.addObservedPoint(1.2 , 6.71E-6);
+        curveFitter.addObservedPoint(1.21, 8.66E-6);
+        curveFitter.addObservedPoint(1.22, 1.02E-5);
+        curveFitter.addObservedPoint(1.23, 1.13E-5);
+        curveFitter.addObservedPoint(1.24, 1.22E-5);
+
+        final double[] fit = curveFitter.fit(initialGuess);
+        for (int i = 0; i < fit.length; i++) {
+            System.out.printf("5th order fit 1.02-1.24: %d,%s%n", i, fit[i]);
+        }
+
+    }
+
+    @Test
     public void testPolynominalCurveFitting() {
         double[] initialGuess = {0., 0., 0., 0., 0.};
 

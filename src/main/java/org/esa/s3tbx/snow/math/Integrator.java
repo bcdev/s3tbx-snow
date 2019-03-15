@@ -122,7 +122,9 @@ public class Integrator {
                                                   double[] params,
                                                   double[] x) {
 
-        final int jmax = 8;
+        // todo: jmax is the most critical number for processor overall performance!!
+        // The lower the better, but 7 is the minimum to keep BB differences within ~1% (0.01)
+        final int jmax = 7;
         double trapezResult = 0.0;
         double s = 0.0;
 
