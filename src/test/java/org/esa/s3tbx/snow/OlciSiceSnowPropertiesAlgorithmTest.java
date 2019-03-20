@@ -1,8 +1,6 @@
 package org.esa.s3tbx.snow;
 
-import org.esa.s3tbx.snow.math.Integrator;
-import org.esa.s3tbx.snow.math.SiceFun1Function;
-import org.esa.s3tbx.snow.math.SiceFun2Function;
+import org.esa.s3tbx.snow.math.*;
 import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -316,19 +314,19 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                         (brr_30[0], brr_30[5], brr_30[9], brr_30[10], brr_30[20], r0, xx);
         double raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_30, brr_30[0], sza_30, vza_30, raa);
-        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_30[0], sza_30, wvlFullGrid,
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_30[0], sza_30, refractiveIndexTable, wvlFullGrid,
                                                                 astraFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
         // todo: check the values again
-//        assertEquals(0.57, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);       // J: 0.5706; F: 0.5677
-//        assertEquals(0.76, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);       // J: 0.7592; F: 0.7595
-//        assertEquals(0.36, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 1.E-2);       // J: 0.3683 ; F: 0.3591
+        assertEquals(0.76, siceSnowProperties.getPlanarBroadbandAlbedos()[0], 1.E-2);       // J: 0.5706; F: 0.7595
+        assertEquals(0.42, siceSnowProperties.getPlanarBroadbandAlbedos()[1], 1.E-2);       // J: 0.7592; F: 0.73591
+        assertEquals(0.57, siceSnowProperties.getPlanarBroadbandAlbedos()[2], 3.E-2);       // J: 0.3683 ; F: 0.5677
         assertNotNull(siceSnowProperties.getSphericalBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getSphericalBroadbandAlbedos().length);
-//        assertEquals(0.58, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);   // J: 0.580; F: 0.5813
-//        assertEquals(0.77, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);   // J: 0.7714; F: 0.7719
-//        assertEquals(0.37, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);   // J: 0.3768; F: 0.3740
+        assertEquals(0.77, siceSnowProperties.getSphericalBroadbandAlbedos()[0], 1.E-2);   // J: 0.580; F: 0.7719
+        assertEquals(0.37, siceSnowProperties.getSphericalBroadbandAlbedos()[1], 1.E-2);   // J: 0.7714; F: 0.3740
+        assertEquals(0.58, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);   // J: 0.3768; F: 0.5813
 
         r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_1[16], brr_1[20]);
         xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_1, vza_1);
@@ -336,7 +334,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 (brr_1[0], brr_1[5], brr_1[9], brr_1[10], brr_1[20], r0, xx);
         raa = SnowUtils.getRelAziSice(saa_1, vaa_1);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_1, brr_1[0], sza_1, vza_1, raa);
-        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_1[0], sza_1, wvlFullGrid,
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_1[0], sza_1, refractiveIndexTable, wvlFullGrid,
                                                                 astraFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
@@ -355,7 +353,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
                 (brr_5[0], brr_5[5], brr_5[9], brr_5[10], brr_5[20], r0, xx);
         raa = SnowUtils.getRelAziSice(saa_5, vaa_5);
         OlciSiceSnowPropertiesAlgorithm.computeSpectralAlbedos(siceSnowProperties, rtoa_5, brr_5[0], sza_5, vza_5, raa);
-        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_5[0], sza_5, wvlFullGrid,
+        OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties, brr_5[0], sza_5, refractiveIndexTable, wvlFullGrid,
                                                                 astraFullGrid);
         assertNotNull(siceSnowProperties.getPlanarBroadbandAlbedos());
         assertEquals(3, siceSnowProperties.getPlanarBroadbandAlbedos().length);
@@ -404,6 +402,47 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
         value = fun1.value(x, params);
         assertEquals(245.1264, value, 1.E-3);      // this is better: 245.1263
+    }
+
+    @Test
+    public void testFun1Performance() {
+        // here we show that FUN1 via internal astra interpolation is ~25% slower than using a static polynom!
+        double x;
+        // params:
+        // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
+        // double as, double bs, double cs, double planar
+        double brr400 = 0.819;
+        double effAbsLength = 130.823105;
+        double r0a1Thresh = 0.787318468;
+        double cosSza = 0.749880135;
+        double as = -0.110871777;
+        double bs = 0.085336022;
+        double cs = 0.778457224;
+        double planar = 1.0;
+        double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, planar};
+
+        SiceFun1InterpolInsideFunction fun1Interpol = new SiceFun1InterpolInsideFunction(refractiveIndexTable.getWvl(),
+                                                                   refractiveIndexTable.getRefractiveIndexImag());
+        long t1 = System.currentTimeMillis();
+        for (int i = 0; i < refractiveIndexTable.getWvl().length-1; i++) {
+            x = refractiveIndexTable.getWvl(i) + 0.002;
+            for (int j = 0; j < 1.E5; j++) {
+                fun1Interpol.value(x, params);
+            }
+        }
+        long t2 = System.currentTimeMillis();
+        System.out.println("t2-t1 for fun1 INTERPOL = " + (t2 - t1));
+
+        SiceFun1PolynomFunction fun1Poly = new SiceFun1PolynomFunction(null, null);
+        long t3 = System.currentTimeMillis();
+        for (int i = 0; i < refractiveIndexTable.getWvl().length-1; i++) {
+            x = refractiveIndexTable.getWvl(i) + 0.002;
+            for (int j = 0; j < 1.E5; j++) {
+                fun1Poly.value(x, params);
+            }
+        }
+        long t4 = System.currentTimeMillis();
+        System.out.println("t4-t3 for fun1 POLY = " + (t4 - t3));
     }
 
     @Test
@@ -465,6 +504,25 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         System.out.println("fun1 simpsonSiceAlex = " + simpsonSiceAlex);    // J: 730.5411; F: 733.6338
         System.out.println("fun1 simpsonSiceOlaf = " + simpsonSiceOlaf);    // J: 730.5411; F: 733.6338
     }
+
+    @Test
+    public void test_fun1_interpolate() {
+        double x = 0.4;
+        double cosSza = 0.5;
+        double as = 0.188057452;
+        double bs = -0.967674673;
+        double cs = 1.19137311;
+        double brr400 = 0.95;
+        double r0a1Thresh = 0.97;
+        double effAbsLength = 14761.8789;
+        double[] xa = refractiveIndexTable.getWvl();
+        double[] ya = refractiveIndexTable.getRefractiveIndexImag();
+        SiceFun1InterpolInsideFunction fun1 = new SiceFun1InterpolInsideFunction(xa, ya);
+        double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, 1.0};
+        double result = fun1.value(x, params);
+        assertEquals(1000.0, result, 1.E-3);
+    }
+
 
     @Test
     public void testIntegrateSimpsonSice_fun2() {

@@ -1,102 +1,99 @@
-program sice
+program sice2
 
-    !       The code is aimed at the determination
-    !       of snow and ice properties ( e.g., albedo)
-    !       using satellite observations (S-3)
+    !         The code is aimed at the determination
+    !         of snow and ice properties ( e.g., albedo)
+    !         using satellite observations (S-3)
 
-    !           A. KOKHANOVSKY
+    !             A. KOKHANOVSKY
 
-    !             VERSION 1
-    !             19.02.2019
-    !             SICE
-    !             *************
+    !               VERSION 1
+    !               19.02.2019
+    !               SICE
+    !       *************
 
-    !****************************************************************************
-    !
-    !  PROGRAM: sice.f
-    !
-    !  PURPOSE:  Entry point for the console application.
-    !
-    !  OD: compile on Windows with:
-    !			gfortran -ffree-form -o sice.exe .\sice.f
-    !			(with option  -ffree-form we can forget about the Fortran rules for blank chars at line beginning)
-    !      run with:
-    !			.\sice.exe
-    !			(assuming that all the dat files are in current directory)
-    !			(see also https://gcc.gnu.org/wiki/GFortranUsage)
-    !
-    !****************************************************************************
+    !                                  VERSION 2
+    !                                  12.03.2019
+    !          DELETING INTERPOLATION ERROR in BBA calculation( See  'ALEX')
 
     real r(21), boar(21), rs(21), rp(21), BBB(9, 6), rpalex(21), rsalex(21)
     real xs(21), astra(21)
-
+    !           ALEX
     EXTERNAL fun1, fun2
-    COMMON as, bs, cs, am1, am2, r400, r865, r1020, BBB, NSOLO, thv
+    common as, bs, cs, csza, cvza, r400, r865, r1020, bbb, NSOLO, thv
+    common xa(168), ya(168)
+    !c****************************************************************
+    !            ALEX
+    !          thv,xa,ya
+    open(898, file = 'ice_index.dat')
+    do 67 j = 1, 168
+        read(898, *) xa(j), an, ya(j)
+    67       continue
+    !c**********************end of modification***************ALEX
 
     102          format (i4, 190(4x, e12.4))
-    103          format (i4, i4, 190(4x, e12.4))
-    1022        format(i4, 9e12.4, 4x, 6i3)
+    1022        format(i4, 7e12.4, 4x, 6i3)
     1024        format(i4, 5x, f7.2, 5x, e12.4, 5x, e12.4, 5x, 8i4)
     pi = acos(-1.)
 
 
-    !              4 input files:
+    !                4 input files:
 
-    !*****************************************************************
-    !               sza,vza,saa,vaa, OLCI 21 reflectances :
+    !c*****************************************************************
+    !                 sza,vza,saa,vaa, OLCI 21 reflectances :
     open(1, file = 'input1_TOA.dat')
 
-    !               OLCI BOA 21 reflectances (after atmospheric correction):
+    !                 OLCI BOA 21 reflectances (after atmospheri!   correction):
     open(2, file = 'input2_BOA.dat')
 
-    !              maximal number of lines to be processed:
+    !                maximal number of lines to be processed:
     open(3, file = 'nlines.dat')
     read(3, *) N
 
-    !                imaginary part of ice refractive index:
-    !                interpolation coefficients
+    !                  imaginary part of ice refractive index:
+    !                  interpolation coefficients
     open(501, file = 'kap_ice.dat')
 
-    !     imaginary part of ice refractive index at 21 OLCI channels
+    !       imaginary part of ice refractive index at 21 OLCI channels
     open(901, file = 'kap_olci.dat')
 
-    !     conversion coefficient ( EAL->>>snow grain size)
+    !       conversion coefficient ( EAL->>>snow grain size)
     open(1001, file = 'psi.dat')
 
 
-    !     if key=1 then the SNAP atmospheric correction is used
-    !     otherwise - not
+    !       if key=1 then the SNAP atmospheri!   correction is used
+    !       otherwise - not
     open(1003, file = 'key.dat')
-    !******************************************************************
+    !c******************************************************************
 
-    !                    output files:
+    !                      output files:
 
-    ! spectral albedo: 21 planar and 21 spherical albedo
+    !   spectral albedo: 21 planar and 21 spherical albedo
     open(100, file = 'output_sp_albedo.dat')
-    !      BBA: planar and spherical
+    !        BBA: planar and spherical
     open(701, file = 'output_bba.dat')
-    !       EAL, SGS, SSA, ndsi,ndbi,etc
+    !         EAL, SGS, SSA, ndsi,ndbi,etc
     open(111, file = 'output_flags.dat')
-    !       IMPURITY TYPE AND LOAD
+    !         IMPURITY TYPE AND LOAD
     open(5001, file = 'output_impurity.dat')
-    !*****************************************************************
-    !                STEP 1
-    !                reading satellite and ice refractive index data
-    !******************************************************************
-    !                conversion coefficient EAL-diameter of grains and thv for OLCI 1st channel
+    !c*****************************************************************
+    !                  STEP 1
+    !                  reading satellite and ice refractive index data
+    !c******************************************************************
+    !                  conversion coefficient EAL-diameter of grains and thv for OLCI 1st channel
     read(1001, *) psi
 
     read(1003, *) key
-    !     reading coefficients for spectral ice refractive index
+    !       reading coefficients for spectral ice refractive index
 
     do 333 jsk = 1, 9
         read(501, *) (BBB(jsk, jss), jss = 1, 6)
+
     333              continue
 
     do 334 nkd = 1, 21
         read(901, *) xs(nkd), astra(nkd)
     334              continue
-    !                 reading satellite data
+    !                   reading satellite data
     do 1983 j = 1, N
         read(1, *, end = 200) js, sza, vza, saa, vaa, (r(i), i = 1, 21)
 
@@ -109,56 +106,54 @@ program sice
         read(2, *, end = 200) js, (boar(i), i = 1, 21)
         899          continue
 
-        !            for grain size and pollution:
+        !              for grain size and pollution:
         r400 = boar(1)
         r560 = boar(6)
         r865 = boar(17)
         r1020 = boar(21)
 
-        !             for algae:
+        !               for algae:
         r681 = boar(10)
         r709 = boar(11)
         ratio = r709 / r681
-        !*********************END OF DATA READING***********************
+        !c*********************END OF DATA READING***********************
 
 
 
-        !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        !c@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
-        !     STEP 2
+        !       STEP 2
 
-        !     FLAGS and SNOW GRAIN SIZE
-        !     SNOW POLLUTION LOAD
+        !       FLAGS and SNOW GRAIN SIZE
+        !       SNOW POLLUTION LOAD
 
         indexs = 0
         indexi = 0
         indexd = 0
         indexc = 0
 
-        !         NDSI
+        !           NDSI
         andsi = (r(17) - r(21)) / (r(17) + r(21))
         if (aNDSI.gt.0.03.and.r(1).gt.0.5) indexs = 1
 
-        !         NDBI
+        !           NDBI
         andbi = (r(1) - r(21)) / (r(1) + r(21))
         if (aNDBI.gt.0.33) indexi = 1
         if (aNDBI.gt.0.66) indexd = 1
 
-        !             relative azimuthal angle calculation:
+        !               relative azimuthal angle calculation:
         raa = abs(180. - (vaa - saa))
-        !********************************************
+        !c********************************************
         am1 = cos(pi * sza / 180.)
         am2 = cos(pi * vza / 180.)
         sam1 = sin(pi * sza / 180.)
         sam2 = sin(pi * vza / 180.)
-        !             scattering angle calculation:
-        !			   if (js .eq. 30) write (*,*) "js, am1, am2, sam1, sam2, raa: ", &
-        !			js, ", ", am1, ", ", am2, ", ", sam1, ", ", sam2, ", ", raa
+        !               scattering angle calculation:
         co = -am1 * am2 + sam1 * sam2 * cos(raa * pi / 180.)
         scat = acos(co) * 180. / pi
 
-        !             angular functions:
+        !               angular functions:
         u1 = 3. * (1. + 2. * am1) / 7.
         u2 = 3. * (1. + 2. * am2) / 7.
 
@@ -177,26 +172,25 @@ program sice
         r0 = r865**ax1 * r1020**ax2
         xx = u1 * u2 / r0
 
-        !      effective absorption length(microns):
+        !        effective absorption length(microns):
         alka = (alog(r1020 / r0))**2. / xx / xx / alpha4
-        if (js .eq. 1) write (*, *) "js, alka: ", js, ", ", alka
 
-        !       mm
+        !         mm
         al = alka / 1000.
 
-        !     grain size
+        !       grain size
         dens = 0.917
-        !         mm
+        !           mm
         diam = al * psi
         if (diam.le.0.01) indexc = 1
         delta = r(1) - r(21)
         if (delta.le.0.13) indexc = 1
-        !           m*m/kg
+        !             m*m/kg
         surf = 6. / diam / dens
 
-        !     SNOW POLLUTION
+        !       SNOW POLLUTION
 
-        !        2 wavelengths:
+        !          2 wavelengths:
         al1 = 0.4
         al2 = 0.56
 
@@ -207,12 +201,11 @@ program sice
         ang2 = alog(al2 / al1)
         ang = ang1 / ang2
 
-        !          inverse mm:
+        !            inverse mm:
         AF = ap1 * (0.4)**ang / al / xx / xx
 
-        !            write(111,1022) js,al,diam,surf,scat,andsi,andbi,delta
-        write(111, 1022) js, r0, xx, al, diam, surf, scat, andsi, andbi, delta
-        !               indexs,indexi,indexd,indexc
+        write(111, 1022) js, al, diam, surf, scat, andsi, andbi, delta
+        !            indexs,indexi,indexd,indexc
 
         ipol = 1
         ntype = 4
@@ -225,49 +218,46 @@ program sice
         bbsoot = 0.9
         sootka = 0.47
         shape = 1.6
-        !           inverse mm:
+        !             inverse mm:
         absoot = 1000. * bbsoot * 4. * pi * sootka
-        !          inverse mm:
+        !            inverse mm:
         abdust = 600.
 
-        !                 RELATIVE IMPURITY LOAD (RIL)
-        !     volumetric concentration of pollutants devided by
-        !     the volumetric concentration of ice grains:
+        !                   RELATIVE IMPURITY LOAD (RIL)
+        !       volumetri!   concentration of pollutants devided by
+        !       the volumetri!   concentration of ice grains:
         if (ntype.eq.1) conc = AF * shape / absoot
         if (ntype.eq.2) conc = AF * shape / abdust
 
         if (ipol.eq.0) conc = 0.0
-        !         algae:
+        !           algae:
         a680 = 1.e+7
         b680 = 600.
-        !           cells/ml
+        !             cells/ml
         if (ntype.eq.3) conc = a680 * (alog(ratio))**2. - b680
         write(5001, 1024) j, ang, af, conc, ipol, ntype
 
-        !@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        !c@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 
 
-        !++++++++++++++++++++++++++++++++++++
+        !c++++++++++++++++++++++++++++++++++++
 
-        !               STEP 3
-        !     spectral albedo determination
+        !                 STEP 3
+        !       spectral albedo determination
         r0al = falex1(am1, am2, co)
-        !write (*, *) "r0al: ", r0al
         do 12 i = 1, 21
 
             if (r(i).gt.r0al)r0al = r(i)
             rs(i) = (r(i) / r0al)**(r0al / u1 / u2)
             rp(i) = rs(i)**u1
-            !            if (js .eq. 30) write (*, *) "js, i, r(i), u1, u2: ", &
-            !                    js, ", ", i, ", ", r(i), ", ", u1, ", ", u2
 
         12                         continue
 
         thv = r0al - 0.1
-        !               output of spectral albedo
-        if(r400.le.thv) write(100, 102) &
-                js, (rs(ix), ix = 1, 21), (rp(iz), iz = 1, 21)
+        !                 output of spectral albedo
+        if(r400.le.thv) write(100, 102) js, &
+                (rp(ix), ix = 1, 21), (rs(iz), iz = 1, 21)
 
         if(r400.le.thv) go to 700
 
@@ -279,25 +269,22 @@ program sice
             if (pow.le.1.e-6) rsd = 1.
             rsalex(nk) = rsd
             rpalex(nk) = rsd**u1
-            !			  if (js .eq. 1) write (*,*) "js, nk, astra, xs, dega, pow, rsd: ", &
-            !			       js, ", ", nk, ", ", astra(nk), ", ", xs(nk), ", ", dega, &
-            !				   ", ", pow, ", ", rsd
 
         500      continue
 
-        if(r400.gt.thv) &
-                write(100, 103) js, js, (rsalex(i), i = 1, 21), (rpalex(i), i = 1, 21)
+        if(r400.gt.thv) write(100, 102) js, &
+                (rpalex(i), i = 1, 21), (rsalex(i), i = 1, 21)
 
         700    continue
-        !++++++++++++++++++++++++++++++++++++++++
+        !c++++++++++++++++++++++++++++++++++++++++
 
 
-        !             STEP4
-        !     broadband  albedo determination
+        !               STEP4
+        !       broadband  albedo determination
 
-        !         Step 4.1 planar BBA
+        !           Step 4.1 planar BBA
 
-        !     planar BBA
+        !       planar BBA
         NSOLO = 0
         x1 = 0.4425
         x2 = 0.70875
@@ -310,35 +297,35 @@ program sice
         d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1)
         d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1)
 
-        !           second order polynomial coefficients  for planar albedo:
+        !             second order polynomial coefficients  for planar albedo:
         as = d1 / d2
         bs = (y3 - y2 - as * (x3 * x3 - x2 * x2)) / (x3 - x2)
         cs = y3 - as * x3 * x3 - bs * x3
 
-        !           limits of integration
+        !             limits of integration
         at = 0.3
         bt = 2.4
         aat = 0.7
 
-        !        call qsimp(fun1, at, bt, ss1)
-        !        call qsimp(fun2, at, bt, ss2)
+        !call qsimp(fun1, at, bt, ss1)
+        !call qsimp(fun2, at, bt, ss2)
 
-        !        answer1 = ss1 / ss2
+        !answer1 = ss1 / ss2
 
-        !        call qsimp(fun1, at, aat, ss1)
-        !        call qsimp(fun2, at, aat, ss2)
+        !call qsimp(fun1, at, aat, ss1)
+        !call qsimp(fun2, at, aat, ss2)
 
-        !        answer2 = ss1 / ss2
+        !answer2 = ss1 / ss2
 
-        !        call qsimp(fun1, aat, bt, ss1)
-        !        call qsimp(fun2, aat, bt, ss2)
+        !call qsimp(fun1, aat, bt, ss1)
+        !call qsimp(fun2, aat, bt, ss2)
 
-        !        answer3 = ss1 / ss2
+        !answer3 = ss1 / ss2
 
 
 
-        !            Step 4.2 Spherical BBA
-        !     spherical BBA
+        !              Step 4.2 Spherical BBA
+        !       spherical BBA
         NSOLO = 1
         x1 = 0.4425
         x2 = 0.70875
@@ -351,12 +338,12 @@ program sice
         d1 = (y3 - y1) * (x2 - x1) - (y2 - y1) * (x3 - x1)
         d2 = (x3 * x3 - x1 * x1) * (x2 - x1) - (x2 * x2 - x1 * x1) * (x3 - x1)
 
-        !           second order polynomial coefficients  for planar albedo:
+        !             second order polynomial coefficients  for planar albedo:
         as = d1 / d2
         bs = (y3 - y2 - as * (x3 * x3 - x2 * x2)) / (x3 - x2)
         cs = y3 - as * x3 * x3 - bs * x3
 
-        !           limits of integration
+        !             limits of integration
         at = 0.3
         bt = 2.4
         aat = 0.7
@@ -364,33 +351,44 @@ program sice
         if (js .eq. 30) write (*, *) "js, as, bs, cs: ", &
                 js, ", ", as, ", ", bs, ", ", cs
 
-        call qsimp(fun1, at, bt, ss1, js)
-        !        call qsimp(fun2, at, bt, ss2, js)
+        !call qsimp(fun1, at, bt, ss1, js)
+        !call qsimp(fun2, at, bt, ss2)
 
-        !        ans11 = ss1 / ss2
+        !ans11 = ss1 / ss2
+        !if (js.eq.5) write (*, *) "answer1: ", ss1, ", ", ss2, ", ", ans11
 
-        !        call qsimp(fun1, at, aat, ss1)
-        !        call qsimp(fun2, at, aat, ss2)
+        !call qsimp(fun1, at, aat, ss1)
+        !call qsimp(fun2, at, aat, ss2)
 
-        !        ans22 = ss1 / ss2
+        !ans22 = ss1 / ss2
+        !if (js.eq.5) write (*, *) "answer2: ", ss1, ", ", ss2, ", ", ans22
 
-        !        call qsimp(fun1, aat, bt, ss1)
-        !        call qsimp(fun2, aat, bt, ss2)
+        call qsimp(fun1, aat, bt, ss1, js)
+        !call qsimp(fun2, aat, bt, ss2)
 
-        !        ans33 = ss1 / ss2
-        !        write(701, 102) js, answer1, answer2, answer3, ans11, ans22, ans33
+        !ans33 = ss1 / ss2
+        !if (js.eq.5) write (*, *) "answer3: ", ss1, ", ", ss2, ", ", ans33
+        !write(701, 102) js, answer1, answer2, answer3, ans11, ans22, ans33
 
     1983          continue
     200            continue
-    !+++++++++++++++++++++++++++++++++++++++++++++=
+    !c+++++++++++++++++++++++++++++++++++++++++++++=
     stop
 end
 
 
-!          convolution of solar spectrum and spectral albedo:     
+!            convolution of solar spectrum and spectral albedo:     
 real function fun1(x)
-    real bbb(9, 6), a(6)
+    !              Alex
+    real bbb(9, 6), a(6), dif(168)
+    integer kss(2)
     common as, bs, cs, csza, cvza, r400, r865, r1020, bbb, NSOLO, thv
+    common xa(168), ya(168)
+    !c****************************************************
+    !       thv,xa,ya
+    !       ALEX
+    ks = 1
+    !c*****************************************
 
     pi = acos(-1.)
 
@@ -428,8 +426,41 @@ real function fun1(x)
         if (x.gt.2.5)a(k) = bbb(9, k)
     800     continue
 
-    astra = a(1) + a(2) * x + a(3) * x * x + a(4) * x**3. + a(5) * x**4. + a(6) * x**5.
+    !astra = a(1) + a(2) * x + a(3) * x * x + a(4) * x**3. + a(5) * x**4. + a(6) * x**5.
+
     if (x.lt.0.4)astra = 2.e-11
+
+    !       ALEX: start of modification ( please, see lines above)
+    !      **** change of code N1****
+    do 68 k = 1, 168
+
+        dif(k) = abs(x - xa(k))
+
+        if (dif(k).le.1.e-6) ks = k
+        if (dif(k).le.1.e-6) go to 69
+    68                continue
+
+    kss(1) = minloc(dif, 1)
+    l = kss(1)
+
+    delta = x - xa(l)
+    if (delta.le.0) LS1 = L - 1
+    if (delta.le.0) LS2 = L
+    if (delta.ge.0) LS1 = L
+    if (delta.ge.0) LS2 = L + 1
+    x0 = xa(ls1)
+    x1 = xa(ls2)
+    y0 = ya(ls1)
+    y1 = ya(ls2)
+    y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+    go to 18
+    69   continue
+    y = ya(ks)
+    18         continue
+
+    ASTRA = Y
+    !       end of modification ALEX
+
     dega = al * 4. * pi * astra / x
     pow = sqrt(dega)
     if (pow.gt.1.e-6)rsd = exp(-pow)
@@ -450,12 +481,12 @@ real function fun1(x)
     if (x.lt.0.4) funcs = p0 + p1 * exp(-0.4 / t1) + p2 * exp(-0.4 / t2)
 
     fun1 = f1 * funcs
-    !      write(*,*) r400, x,f1,funcs,rsd,x,astra,nsolo
+    !        write(*,*) r400, x,f1,funcs,rsd,x,astra,nsolo
     return
 END
 
 
-!     SOLAR LIGHT SPECTRUM AT THE GROUND:
+!       SOLAR LIGHT SPECTRUM AT THE GROUND:
 
 real function fun2(x)
 
@@ -478,7 +509,8 @@ SUBROUTINE qsimp(func, a, b, s, js)
 
     INTEGER j
     REAL os, ost, st
-    COMMON as, bs, cs, am1, am2, r400, r865, r1020, BBB, NSOLO, thv
+    common as, bs, cs, csza, cvza, r400, r865, r1020, bbb, NSOLO, thv
+    common xa(168), ya(168)
     ost = -1.e30
     os = -1.e30
 
@@ -486,7 +518,6 @@ SUBROUTINE qsimp(func, a, b, s, js)
 
         call trapzd(func, a, b, st, j, js)
         s = (4. * st - ost) / 3.
-
         if (js .eq. 30) write (*, *) "QSIMP: j, a, b, st, s, ost, os: ", &
                 j, ", ", a, ", ", b, ", ", st, ", ", s, ", ", ost, ", ", os
 
@@ -505,16 +536,22 @@ SUBROUTINE trapzd(func, a, b, s, n, js)
     EXTERNAL func
     INTEGER it, j
     REAL del, sum, tnm, x
-    COMMON as, bs, cs, am1, am2, r400, r865, r1020, BBB, NSOLO, thv
+    common as, bs, cs, csza, cvza, r400, r865, r1020, bbb, NSOLO, thv
+    common xa(168), ya(168)
 
     if (js .eq. 30) write (*, *) "TRAPZ IN: n, a, b, s: ", &
             n, ", ", a, ", ", b, ", ", s
-
     if (n.eq.1) then
         s = 0.5 * (b - a) * (func(a) + func(b))
-        if (js .eq. 30) write (*, *) "TRAPZ OUT: n, fa, fb, s: ", &
-                n, ", ", func(a), ", ", func(b), ", ", s
-
+        s1 = s
+        fa = func(a)
+        fb = func(b)
+        if (js .eq. 30) write (*, *) "TRAPZ OUT: fa: ", &
+                fa
+        if (js .eq. 30) write (*, *) "TRAPZ OUT: fb: ", &
+                fb
+        if (js .eq. 30) write (*, *) "TRAPZ OUT: s: ", &
+                s1
     else
         it = 2**(n - 2)
         tnm = it
@@ -523,6 +560,9 @@ SUBROUTINE trapzd(func, a, b, s, n, js)
         sum = 0.
         do 11 j = 1, it
             sum = sum + func(x)
+            if (js .eq. 30.and.n.eq.2) write (*, *) &
+                    "TRAPZ MID: j, x, func(x), sum: ", &
+                    j, ", ", x, ", ", func(x), ", ", sum
             x = x + del
         11                         continue
         s = 0.5 * (s + (b - a) * sum / tnm)
@@ -545,7 +585,6 @@ function falex1(am1, am2, co)
     scat = acos(co) * 180. / pi
     p = 11.1 * exp(-a1 * scat) + 1.1 * exp(-a2 * scat)
     falex1 = (a + b * (am1 + am2) + c * am1 * am2 + p) / 4. / (am1 + am2)
-    !				write (*,*) "p, falex1: ", p, ", ", falex1
 
     return
 end

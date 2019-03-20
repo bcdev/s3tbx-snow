@@ -124,7 +124,8 @@ public class Integrator {
 
         // todo: jmax is the most critical number for processor overall performance!!
         // The lower the better, but 7 is the minimum to keep BB differences within ~1% (0.01)
-        final int jmax = 7;
+//        final int jmax = 7;
+        final int jmax = 20;
         double trapezResult = 0.0;
         double s = 0.0;
 
@@ -162,8 +163,8 @@ public class Integrator {
 
         double s;
         if (n == 1) {
-            double funLower = fun.value(x[lowerIndex], params);
-            double funUpper = fun.value(x[upperIndex], params);
+            double funLower = fun.value(lower, params);
+            double funUpper = fun.value(upper, params);
             s = 0.5 * (upper - lower) * (funLower + funUpper);
         } else {
             int it = (int) Math.pow(2.0, n - 2);

@@ -2,6 +2,7 @@ package org.esa.s3tbx.snow;
 
 import org.esa.s3tbx.snow.math.Integrator;
 import org.esa.s3tbx.snow.math.SiceFun1Function;
+import org.esa.s3tbx.snow.math.SiceFun1InterpolInsideFunction;
 import org.esa.s3tbx.snow.math.SiceFun2Function;
 import org.esa.snap.core.gpf.Tile;
 import org.esa.snap.core.util.math.MathUtils;
@@ -136,19 +137,21 @@ class OlciSiceSnowPropertiesAlgorithm {
 
     /**
      * Provides broadband albedos
-     *  @param snowProperties -
+     * @param snowProperties -
      * @param brr400         -
      * @param sza            -
+     * @param refractiveIndexTable
      * @param wvlFullGrid    -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
      * @param astraFullGrid
      */
     static void computeBroadbandAlbedos(SiceSnowPropertiesResult snowProperties,
                                         double brr400,
                                         double sza,
+                                        RefractiveIndexTable refractiveIndexTable,
                                         double[] wvlFullGrid,
                                         double[] astraFullGrid) {
-        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid, astraFullGrid);
-        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, wvlFullGrid, astraFullGrid);
+        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable, wvlFullGrid, astraFullGrid);
+        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable, wvlFullGrid, astraFullGrid);
     }
 
     static double computeR0(double brr865, double brr1020) {
@@ -266,6 +269,7 @@ class OlciSiceSnowPropertiesAlgorithm {
     private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                      double brr400,
                                                      double sza,
+                                                     RefractiveIndexTable refractiveIndexTable,
                                                      double[] wvlFullGrid,
                                                      double[] astraFullGrid) {
         final double x1 = 0.4425;
@@ -289,8 +293,13 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
-        final SiceFun1Function fun1 = new SiceFun1Function();
+//        final SiceFun1Function fun1 = new SiceFun1Function();
+        final double[] xa = refractiveIndexTable.getWvl();
+        final double[] ya = refractiveIndexTable.getRefractiveIndexImag();
+        final SiceFun1InterpolInsideFunction fun1 = new SiceFun1InterpolInsideFunction(xa, ya);
         final SiceFun2Function fun2 = new SiceFun2Function();
+
+
 
         // fun1 params are:
         // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
@@ -327,7 +336,7 @@ class OlciSiceSnowPropertiesAlgorithm {
     private static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                         double brr400,
                                                         double sza,
-                                                        double[] wvlFullGrid,
+                                                        RefractiveIndexTable refractiveIndexTable, double[] wvlFullGrid,
                                                         double[] astraFullGrid) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;

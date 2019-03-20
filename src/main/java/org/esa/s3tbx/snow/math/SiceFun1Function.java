@@ -73,7 +73,7 @@ public class SiceFun1Function implements ParametricUnivariateFunction {
     private static double compute(double[] parms, double x, double astra) {
         // params:
 //        double brr400, double effAbsLength, double r0a1Thresh, double sza,
-//        double as, double bs, double cs, double planar, double astra
+//        double as, double bs, double cs, double planar
         final double brr400 = parms[0];
         final double effAbsLength = parms[1];
         final double r0a1Thresh = parms[2];

@@ -156,6 +156,7 @@ public class OlciSiceSnowPropertiesOp extends Operator {
     private Product targetProduct;
 
     private double[] wvlFullGrid;
+    private double[] refrIndexFullGrid;
     private double[] astraFullGrid;
 
     private int width;
@@ -316,6 +317,7 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                                                                    rhoToa, brr400, sza, vza, raa);
                             OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties,
                                                                                     brr400, sza,
+                                                                                    refractiveIndexTable,
                                                                                     wvlFullGrid,
                                                                                     astraFullGrid);
 
