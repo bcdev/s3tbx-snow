@@ -520,7 +520,7 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         SiceFun1InterpolInsideFunction fun1 = new SiceFun1InterpolInsideFunction(xa, ya);
         double[] params = new double[]{brr400, effAbsLength, r0a1Thresh, cosSza, as, bs, cs, 1.0};
         double result = fun1.value(x, params);
-        assertEquals(1000.0, result, 1.E-3);
+        assertEquals(1250.103, result, 1.E-3);
     }
 
 
