@@ -110,29 +110,34 @@ public class OlciSiceSnowPropertiesOp extends Operator {
             label = "NDSI threshold for snow identification")
     private double ndsiThresh;
 
-    @Parameter(defaultValue = "false",
-            label = "Write absorption Angstroem exponent",
-            description =
-                    "If selected, absorption Angstroem exponent will be written to the target product.")
-    private boolean writeAbsorptionAngstroemExponent;
+    // todo: discuss more options
+//    @Parameter(defaultValue = "false",
+//            label = "Write absorption Angstroem exponent",
+//            description =
+//                    "If selected, absorption Angstroem exponent will be written to the target product.")
+//    private boolean writeAbsorptionAngstroemExponent;
+    private boolean writeAbsorptionAngstroemExponent = false;
 
-    @Parameter(defaultValue = "false",
-            label = "Write normalized absorption coefficient",
-            description =
-                    "If selected, normalized absorption coefficient will be written to the target product.")
-    private boolean writeNormalizedAbsorptionCoefficient;
+//    @Parameter(defaultValue = "false",
+//            label = "Write normalized absorption coefficient",
+//            description =
+//                    "If selected, normalized absorption coefficient will be written to the target product.")
+//    private boolean writeNormalizedAbsorptionCoefficient;
+    private boolean writeNormalizedAbsorptionCoefficient = false;
 
-    @Parameter(defaultValue = "false",
-            label = "Write effective absorption length",
-            description =
-                    "If selected, effective absorption length will be written to the target product.")
-    private boolean writeEffectiveAbsorptionLength;
+//    @Parameter(defaultValue = "false",
+//            label = "Write effective absorption length",
+//            description =
+//                    "If selected, effective absorption length will be written to the target product.")
+//    private boolean writeEffectiveAbsorptionLength;
+    private boolean writeEffectiveAbsorptionLength = false;
 
-    @Parameter(defaultValue = "false",
-            label = "Copy Bottom-of-Atmosphere reflectance bands",
-            description =
-                    "If selected, Bottom-of-Atmosphere reflectance bands at selected OLCI wavelengths are written to target product")
-    private boolean copyBrrBands;
+//    @Parameter(defaultValue = "false",
+//            label = "Copy Bottom-of-Atmosphere reflectance bands",
+//            description =
+//                    "If selected, Bottom-of-Atmosphere reflectance bands at selected OLCI wavelengths are written to target product")
+//    private boolean copyBrrBands;
+    private boolean copyBrrBands = false;
 
     @SourceProduct(description = "OLCI L1b radiance product",
             label = "OLCI L1b radiance product")
@@ -148,16 +153,10 @@ public class OlciSiceSnowPropertiesOp extends Operator {
     private Product cloudMaskProduct;
 
     private Sensor sensor = Sensor.OLCI;
-    private double[] olciGains;
 
     private String[] requiredBrrBandNames;
-    private String[] requiredRadianceBandNamesAlbedo;
 
     private Product targetProduct;
-
-    private double[] wvlFullGrid;
-    private double[] refrIndexFullGrid;
-    private double[] astraFullGrid;
 
     private int width;
     private int height;
@@ -170,9 +169,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         System.out.println("entering initialize...");
         requiredBrrBandNames = new String[]{"rBRR_01", "rBRR_06", "rBRR_10", "rBRR_11", "rBRR_17", "rBRR_21"};
 
-        requiredRadianceBandNamesAlbedo = new String[]{"Oa01_radiance", "Oa06_radiance", "Oa10_radiance",
-                "Oa11_radiance", "Oa17_radiance", "Oa21_radiance"};
-
         if (!isValidL1bSourceProduct(sourceProduct)) {
             throw new OperatorException("Source product is not a valid OLCI L1b radiance product");
         }
@@ -182,18 +178,8 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         width = sourceProduct.getSceneRasterWidth();
         height = sourceProduct.getSceneRasterHeight();
 
-        // set up fine resolution wavelength grid (5nm step)
-        final double wvlStep = 0.02;
-        int numWvl = (int) ((OlciSnowPropertiesConstants.BB_WVL_3 - OlciSnowPropertiesConstants.BB_WVL_1) / wvlStep + 1);
-        wvlFullGrid = new double[numWvl];
-        for (int i = 0; i < numWvl; i++) {
-            wvlFullGrid[i] = OlciSnowPropertiesConstants.BB_WVL_1 + i * wvlStep;
-        }
-
         // read auxiliary data:
         refractiveIndexTable = new RefractiveIndexTable();
-        astraFullGrid = SnowUtils.linearInterpolate(wvlFullGrid, refractiveIndexTable.getWvl(),
-                                                    refractiveIndexTable.getRefractiveIndexImag());
 
         if (cloudMaskProduct != null) {
             validateCloudMaskProduct();
@@ -202,13 +188,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         createTargetProduct();
         System.out.println("done initialize...");
     }
-
-//    @Override
-//    public void doExecute(ProgressMonitor pm) throws OperatorException {
-//        if (!validateRayleighCorrectedSourceProduct(brrProduct)) {
-//            throw new OperatorException("BRR product is valid or required bands are missing.");
-//        }
-//    }
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
@@ -274,7 +253,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                     final boolean l1Valid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit());
                     final boolean isNotCloud = cloudMaskTile == null || cloudMaskTile.getSampleDouble(x, y) != 1.0;
 
-                    final boolean szaIsInvalid = sza > 75.0;
                     // 20181207: do not exclude high SZA, but just raise a flag
                     final boolean pixelIsValid = l1Valid && isNotCloud;
 
@@ -317,9 +295,7 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                                                                    rhoToa, brr400, sza, vza, raa);
                             OlciSiceSnowPropertiesAlgorithm.computeBroadbandAlbedos(siceSnowProperties,
                                                                                     brr400, sza,
-                                                                                    refractiveIndexTable,
-                                                                                    wvlFullGrid,
-                                                                                    astraFullGrid);
+                                                                                    refractiveIndexTable);
 
                             setTargetTilesSpectralAlbedos(siceSnowProperties.getSphericalSpectralAlbedos(),
                                                           ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
@@ -536,17 +512,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         }
     }
 
-    private void validateSourceProduct(Product sourceProduct) {
-        boolean isOlci = isValidL1bSourceProduct(sourceProduct);
-        if (!isOlci) {
-            isOlci = validateRayleighCorrectedSourceProduct(sourceProduct);
-            if (!isOlci) {
-                throw new OperatorException("Source product not applicable to this operator.\n" +
-                                                    "Only OLCI L1b or Rayleigh corrected products are currently supported");
-            }
-        }
-    }
-
     private void validateCloudMaskProduct() {
         Band cloudMaskBand = cloudMaskProduct.getBand(cloudMaskBandName);
         if (cloudMaskBand == null) {
@@ -568,7 +533,7 @@ public class OlciSiceSnowPropertiesOp extends Operator {
         return true;
     }
 
-    private boolean validateRayleighCorrectedSourceProduct(Product sourceProduct) {
+    private void validateRayleighCorrectedSourceProduct(Product sourceProduct) {
         for (String bandName : requiredBrrBandNames) {
             if (!sourceProduct.containsBand(bandName)) {
                 if (!sourceProduct.containsBand(bandName)) {
@@ -579,22 +544,6 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                                         "(400nm, 560, 681, 709, 865 and 1020nm), and in addition for " +
                                                         "all manually selected wavelengths.");
                 }
-            }
-        }
-        return true;
-    }
-
-    private void checkIfSourceProductIsFullRayleighCorrectedProduct(Product product) {
-        // check if input product is a Rayleigh corrected product with ALL rToa and BRR bands
-        for (int i = 0; i < OlciSnowPropertiesConstants.WAVELENGTH_GRID_OLCI.length; i++) {
-            // rToa band names: rtoa_%2d
-            // BRR band names: rBRR_%2d
-            String rToaBandName = "rtoa_" + String.format("%02d", i + 1);
-            String brrBandName = "rBRR_" + String.format("%02d", i + 1);
-            if (!product.containsBand(rToaBandName) || !product.containsBand(brrBandName)) {
-                throw new OperatorException("Source product is not a valid L1b radiance product and also not " +
-                                                    "a complete Rayleigh corrected product either, as it does not contain " +
-                                                    "mandatory bands '" + rToaBandName + "' / '" + brrBandName + "'.");
             }
         }
     }

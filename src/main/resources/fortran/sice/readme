@@ -1,0 +1,76 @@
+A. KOKHANOVSKY
+20.02.2019
+---------------------------
+The FORTRAN code proc1.f is aimed at the determination of snow/ice properties using spaceborne observations.
+------------------------------------------------------------------------------------------------------
+
+
+
+Please, use commands
+
+gfortran proc1.f
+./a.out
+
+These commands will produce output files.
+--------------------------------------------------------------------------------------------------------
+
+INPUT files:
+1)
+input1_TOA.dat
+structure: solar zenith angle, viewing zenith angle, solar azimuthal angle, viewing azimuthal angle, 21 OLCI reflectances - r(wavelength)
+2)
+input2_BOA.dat
+structure:21 OLCI reflectances ( atmospherically corrected and cloud screened)
+Please, note: No angles!
+3)
+nlines.dat
+the number of lines to ne processed
+4)
+key.dat
+if key.dat contains '1', then the BOA OLCI reflecatnces are used, otherwise - not
+it is advised to use '1'
+5)
+psi.dat
+This file contains a number (0.06)
+This number is used for the snow grain diamter determination.
+It is suggested to have this number as an input for advanced users
+6)
+kap_olci.dat
+imaginary part Im(m) of ice refractive index at OLCI 21 channels, structure: wavelength(microns), Im(m)
+7)
+ice_index.dat
+This files contains the coefficients 3 columns: wavelength ( microns), real part of ice refractive index, imaginarz part of ice refractive index
+
+-----------------------
+
+OUTPUT files:
+
+output_sp_albedo.dat
+structure: N, planar spectral albedo at 21 OLCI channels, spherical spectral albedo at 21 OLCI channels
+N is the pixel number, which must be related to Lat, Lon, time
+
+output_bba.dat
+structure: N, plane BBA: SW, VIS, NIR, spherical: Sw, VIS, NIR
+
+output_impurity.dat
+structure:  N, absorption Angstroem exponent, normalized absorption coefficient at 1000nm, concentration of pollutants, flag1, flag 2
+notes:
+1) the concentration is defined as the vlolumetric concentration of pollutants
+to that of ice grains except for algae, where the dimension is cells/ml;
+2) flag 1 is equal to zero for clean snow/ice; flag 1 is equal to one for polluted snow/ice
+3)flag 2 gives the type of pollutants: 1-soot, 2-dust,3-algae,4-uncertain
+
+output_flags.dat
+structure: N, effective absorption length (mm), grain diameter(mm),specific surface area(kg/m/m),
+scattering angle in degrees, NDSI, NDBI, delta=r(400nm)-r(1020nm)
+output_bba.dat, index1, index2, index3,index4
+
+----------------------------------------------------------------------
+Meaning of indices:
+index1=1  snow covered ground
+index2=1  bare ice(clean)
+index3=1  bare ice(polluted)
+index4=1  possibly cloud(uncertain retrievals)
+-----------------------------------------------------------------------
+
+If the index is zero then the above mentioned is highly likely  not true.

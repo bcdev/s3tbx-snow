@@ -263,18 +263,18 @@ class OlciSnowPropertiesAlgorithm {
         final double[] fLambda = SnowUtils.computeFLambda(solarSpectrumExtendedTable, sza);
 
         double[] planarSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
-                refractiveIndexTable,
-                solarSpectrumExtendedTable, vza,
-                isPolluted);
+                                                                        refractiveIndexTable,
+                                                                        solarSpectrumExtendedTable, vza,
+                                                                        isPolluted);
         double[] planarCleanSpectralAlbedo = null;
         if (isPolluted) {
             planarSpectralAlbedo = computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
-                    refractiveIndexTable,
-                    solarSpectrumExtendedTable, vza);
+                                                                           refractiveIndexTable,
+                                                                           solarSpectrumExtendedTable, vza);
             planarCleanSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
-                    refractiveIndexTable,
-                    solarSpectrumExtendedTable, vza,
-                    false);
+                                                                        refractiveIndexTable,
+                                                                        solarSpectrumExtendedTable, vza,
+                                                                        false);
         }
         double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
         final double wvlMax =
@@ -289,29 +289,29 @@ class OlciSnowPropertiesAlgorithm {
 
 
         numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                OlciSnowPropertiesConstants.BB_WVL_2,
-                fLambdaTimesPlanarSpectralAlbedo,
-                wvlsFull);
+                                                   OlciSnowPropertiesConstants.BB_WVL_2,
+                                                   fLambdaTimesPlanarSpectralAlbedo,
+                                                   wvlsFull);
         denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                OlciSnowPropertiesConstants.BB_WVL_2,
-                fLambda,
-                wvlsFull);
+                                                     OlciSnowPropertiesConstants.BB_WVL_2,
+                                                     fLambda,
+                                                     wvlsFull);
         numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                OlciSnowPropertiesConstants.BB_WVL_3,
-                fLambdaTimesPlanarSpectralAlbedo,
-                wvlsFull);
+                                                  OlciSnowPropertiesConstants.BB_WVL_3,
+                                                  fLambdaTimesPlanarSpectralAlbedo,
+                                                  wvlsFull);
         denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
-                OlciSnowPropertiesConstants.BB_WVL_3,
-                fLambda,
-                wvlsFull);
+                                                    OlciSnowPropertiesConstants.BB_WVL_3,
+                                                    fLambda,
+                                                    wvlsFull);
         numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                OlciSnowPropertiesConstants.BB_WVL_3,
-                fLambdaTimesPlanarSpectralAlbedo,
-                wvlsFull);
+                                                   OlciSnowPropertiesConstants.BB_WVL_3,
+                                                   fLambdaTimesPlanarSpectralAlbedo,
+                                                   wvlsFull);
         denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
-                OlciSnowPropertiesConstants.BB_WVL_3,
-                fLambda,
-                wvlsFull);
+                                                     OlciSnowPropertiesConstants.BB_WVL_3,
+                                                     fLambda,
+                                                     wvlsFull);
 
         bbaVis = numeratorVis / denominatorVis;
         bbaNir = numeratorNir / denominatorNir;
@@ -319,6 +319,61 @@ class OlciSnowPropertiesAlgorithm {
 
         return new double[]{bbaVis, bbaNir, bbaSw};
     }
+
+    static double[] computeBroadbandAlbedo_march2019(double[] spectralAlbedo,
+                                                     SolarSpectrumExtendedTable solarSpectrumExtendedTable,
+                                                     double sza, double vza) {
+
+        double bbaVis;
+        double bbaNir;
+        double bbaSw;
+        double numeratorVis;
+        double denominatorVis;
+        double numeratorNir;
+        double denominatorNir;
+        double numeratorSw;
+        double denominatorSw;
+
+        double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
+        final double[] fLambda = SnowUtils.computeFLambda(solarSpectrumExtendedTable, sza);
+
+        double[] fLambdaTimesSpectralAlbedo = new double[wvlsFull.length];
+        for (int i = 0; i < fLambdaTimesSpectralAlbedo.length; i++) {
+            fLambdaTimesSpectralAlbedo[i] = spectralAlbedo[i] * fLambda[i];
+        }
+
+        numeratorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                   OlciSnowPropertiesConstants.BB_WVL_2,
+                                                   fLambdaTimesSpectralAlbedo,
+                                                   wvlsFull);
+        denominatorVis = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                     OlciSnowPropertiesConstants.BB_WVL_2,
+                                                     fLambda,
+                                                     wvlsFull);
+        numeratorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                  OlciSnowPropertiesConstants.BB_WVL_3,
+                                                  fLambdaTimesSpectralAlbedo,
+                                                  wvlsFull);
+        denominatorSw = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_1,
+                                                    OlciSnowPropertiesConstants.BB_WVL_3,
+                                                    fLambda,
+                                                    wvlsFull);
+        numeratorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
+                                                   OlciSnowPropertiesConstants.BB_WVL_3,
+                                                   fLambdaTimesSpectralAlbedo,
+                                                   wvlsFull);
+        denominatorNir = Integrator.integrateSimpson(OlciSnowPropertiesConstants.BB_WVL_2,
+                                                     OlciSnowPropertiesConstants.BB_WVL_3,
+                                                     fLambda,
+                                                     wvlsFull);
+
+        bbaVis = numeratorVis / denominatorVis;
+        bbaNir = numeratorNir / denominatorNir;
+        bbaSw = numeratorSw / denominatorSw;
+
+        return new double[]{bbaVis, bbaNir, bbaSw};
+    }
+
 
     /**
      * Computes probability of photon absorption (PPA) at considered wavelengths.
@@ -557,7 +612,7 @@ class OlciSnowPropertiesAlgorithm {
         final double eps1 = 1.547269070091289;
         final double eps2 = -0.547269070091289;
         double r0RelErr = Math.sqrt(eps1 * eps1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
-                eps2 * eps2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+                                            eps2 * eps2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
         // make sure error is positive and does not exceed value itself
         return Math.min(Math.abs(r0), Math.abs(r0RelErr));
     }
@@ -565,7 +620,7 @@ class OlciSnowPropertiesAlgorithm {
     private static double computeLRelErr(double l, double[] brr, double nu_1, double nu_2, double deltaBrr) {
         // AK: 'technical_note_JUNE_20_2018.docx', eq. (4)
         double lRelErr = Math.sqrt(nu_1 * nu_1 * deltaBrr * deltaBrr / (brr[2] * brr[2]) +
-                nu_2 * nu_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
+                                           nu_2 * nu_2 * deltaBrr * deltaBrr / (brr[3] * brr[3]));
         // make sure error is positive and does not exceed value itself
         return Math.min(Math.abs(l), Math.abs(lRelErr));
     }

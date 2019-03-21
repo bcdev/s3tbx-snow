@@ -5,7 +5,6 @@ import org.apache.commons.math3.exception.NoDataException;
 import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.exception.util.LocalizedFormats;
 import org.apache.commons.math3.util.MathUtils;
-import org.esa.s3tbx.snow.OlciSnowPropertiesConstants;
 import org.esa.s3tbx.snow.SnowUtils;
 
 /**
@@ -69,7 +68,7 @@ public class SiceFun1InterpolInsideFunction implements ParametricUnivariateFunct
         if (brr400 <= r0a1Thresh && x <= 1.02) {
             f1 = as * x * x + bs * x + cs;
         } else {
-            f1 = planar == 1.0 ? rsd : Math.pow(rsd, um1);
+            f1 = planar == 0.0 ? rsd : Math.pow(rsd, um1);
         }
 
         final double p0 = 32.38;

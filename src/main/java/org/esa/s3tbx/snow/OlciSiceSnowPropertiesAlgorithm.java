@@ -12,21 +12,6 @@ import org.esa.snap.core.util.math.MathUtils;
  */
 class OlciSiceSnowPropertiesAlgorithm {
 
-    static int computeSnowFlags() {
-        // todo : NDSI, NDBI
-//        !         NDSI
-//        andsi=(r(17)-r(21))/(r(17)+r(21))
-//        if (aNDSI.gt.0.03.and.r(1).gt.0.5) indexs=1
-//
-//        !         NDBI
-//        andbi=(r(1)-r(21))/(r(1)+r(21))
-//        if (aNDBI.gt.0.33) indexi=1
-//        if (aNDBI.gt.0.66) indexd=1
-
-
-        return 0;
-    }
-
     /**
      * Provides general snow properties:
      * - effective absorption length
@@ -141,17 +126,13 @@ class OlciSiceSnowPropertiesAlgorithm {
      * @param brr400         -
      * @param sza            -
      * @param refractiveIndexTable
-     * @param wvlFullGrid    -  0.3 + i*0.005 in [0.3, 2.4], todo: set up array in initialize method!
-     * @param astraFullGrid
      */
     static void computeBroadbandAlbedos(SiceSnowPropertiesResult snowProperties,
                                         double brr400,
                                         double sza,
-                                        RefractiveIndexTable refractiveIndexTable,
-                                        double[] wvlFullGrid,
-                                        double[] astraFullGrid) {
-        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable, wvlFullGrid, astraFullGrid);
-        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable, wvlFullGrid, astraFullGrid);
+                                        RefractiveIndexTable refractiveIndexTable) {
+        computePlanarBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable);
+        computeSphericalBroadbandAlbedo(snowProperties, brr400, sza, refractiveIndexTable);
     }
 
     static double computeR0(double brr865, double brr1020) {
@@ -209,69 +190,10 @@ class OlciSiceSnowPropertiesAlgorithm {
         }
     }
 
-    static double getAstra(double x, double[] xa, double[] ya) {
-        double mindiff = Double.MAX_VALUE;
-        int kss = 0;
-        for (int k = 0; k < xa.length; k++) {
-            double dif = Math.abs(x - xa[k]);
-            if (dif < mindiff) {
-                mindiff = dif;
-                kss = k;
-                if (dif <= 1.E-6) {
-                    return ya[k];
-                }
-                break;
-            }
-            if (dif <= 1.E-6) {
-                return ya[k];
-            }
-        }
-        double delta = x - xa[kss];
-        int kss2 = delta <= 0 ? kss - 1 : kss;
-        double x0, x1, y0, y1;
-        x0 = xa[kss2];
-        x1 = xa[kss2 + 1];
-        y0 = ya[kss2];
-        y1 = ya[kss + 1];
-
-        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-    }
-
-    static double getAstra2(double x, double[] xa, double[] ya) {
-        double mindiff = Double.MAX_VALUE;
-        int kss = 0;
-        for (int k = 0; k < xa.length; k++) {
-            double dif = Math.abs(x - xa[k]);
-            if (dif < mindiff) {
-                mindiff = dif;
-                kss = k;
-                if (dif <= 1.E-6) {
-                    return ya[k];
-                }
-                break;
-            }
-            if (dif <= 1.E-6) {
-                return ya[k];
-            }
-        }
-        double delta = x - xa[kss];
-        int kss2 = delta <= 0 ? kss - 1 : kss;
-        double x0, x1, y0, y1;
-        x0 = xa[kss2];
-        x1 = xa[kss2 + 1];
-        y0 = ya[kss2];
-        y1 = ya[kss + 1];
-
-        return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
-    }
-
-
     private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                      double brr400,
                                                      double sza,
-                                                     RefractiveIndexTable refractiveIndexTable,
-                                                     double[] wvlFullGrid,
-                                                     double[] astraFullGrid) {
+                                                     RefractiveIndexTable refractiveIndexTable) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
@@ -293,13 +215,10 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
-//        final SiceFun1Function fun1 = new SiceFun1Function();
         final double[] xa = refractiveIndexTable.getWvl();
         final double[] ya = refractiveIndexTable.getRefractiveIndexImag();
         final SiceFun1InterpolInsideFunction fun1 = new SiceFun1InterpolInsideFunction(xa, ya);
         final SiceFun2Function fun2 = new SiceFun2Function();
-
-
 
         // fun1 params are:
         // double brr400, double effAbsLength, double r0a1Thresh, double cosSza,
@@ -310,18 +229,12 @@ class OlciSiceSnowPropertiesAlgorithm {
         double[] paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0};
         double[] paramsFun2 = new double[]{}; // no parameters needed
 
-        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
-//        paramsFun1Planar = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 1.0, 0.0};
-//        paramsFun2 = new double[]{0.0};
-//        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceOlaf(at, aat, fun1, paramsFun1Planar, wvlFullGrid, astraFullGrid);
-//        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceOlaf(at, aat, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
+        final double numeratorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Planar);
+        final double denominatorVisPlanar = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2);
         final double bbVisPlanar = numeratorVisPlanar / denominatorVisPlanar;
 
-        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Planar, wvlFullGrid);
-        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
-//        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun1, paramsFun1Planar, wvlFullGrid, astraFullGrid);
-//        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
+        final double numeratorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Planar);
+        final double denominatorNirPlanar = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2);
         final double bbNirPlanar = numeratorNirPlanar / denominatorNirPlanar;
 
         final double numeratorSwPlanar = numeratorVisPlanar + numeratorNirPlanar;
@@ -336,8 +249,7 @@ class OlciSiceSnowPropertiesAlgorithm {
     private static void computeSphericalBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                         double brr400,
                                                         double sza,
-                                                        RefractiveIndexTable refractiveIndexTable, double[] wvlFullGrid,
-                                                        double[] astraFullGrid) {
+                                                        RefractiveIndexTable refractiveIndexTable) {
         final double x1 = 0.4425;
         final double x2 = 0.70875;
         final double x3 = 1.020;
@@ -359,7 +271,9 @@ class OlciSiceSnowPropertiesAlgorithm {
         final double aat = OlciSnowPropertiesConstants.BB_WVL_2;
         final double bt = OlciSnowPropertiesConstants.BB_WVL_3;
 
-        final SiceFun1Function fun1 = new SiceFun1Function();
+        final double[] xa = refractiveIndexTable.getWvl();
+        final double[] ya = refractiveIndexTable.getRefractiveIndexImag();
+        final SiceFun1InterpolInsideFunction fun1 = new SiceFun1InterpolInsideFunction(xa, ya);
         final SiceFun2Function fun2 = new SiceFun2Function();
 
         // fun1 params are:
@@ -371,18 +285,12 @@ class OlciSiceSnowPropertiesAlgorithm {
         double[] paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0};
         double[] paramsFun2 = new double[]{}; // no parameters needed
 
-        final double numeratorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2, wvlFullGrid);
-//        paramsFun1Spherical = new double[]{brr400, effAbsLength, r0a1Thresh, camu1, as, bs, cs, 0.0, 0.0};
-//        paramsFun2 = new double[]{0.0}; // no parameters needed
-//        final double numeratorVisSpherical = Integrator.integrateSimpsonSiceOlaf(at, aat, fun1, paramsFun1Spherical, wvlFullGrid, astraFullGrid);
-//        final double denominatorVisSpherical = Integrator.integrateSimpsonSiceOlaf(at, aat, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
+        final double numeratorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun1, paramsFun1Spherical);
+        final double denominatorVisSpherical = Integrator.integrateSimpsonSiceAlex(at, aat, fun2, paramsFun2);
         final double bbVisSpherical = numeratorVisSpherical / denominatorVisSpherical;
 
-        final double numeratorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid);
-        final double denominatorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2, wvlFullGrid);
-//        final double numeratorNirSpherical = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun1, paramsFun1Spherical, wvlFullGrid, astraFullGrid);
-//        final double denominatorNirSpherical = Integrator.integrateSimpsonSiceOlaf(aat, bt, fun2, paramsFun2, wvlFullGrid, astraFullGrid);
+        final double numeratorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun1, paramsFun1Spherical);
+        final double denominatorNirSpherical = Integrator.integrateSimpsonSiceAlex(aat, bt, fun2, paramsFun2);
         final double bbNirSpherical = numeratorNirSpherical / denominatorNirSpherical;
 
         final double numeratorSwSpherical = numeratorVisSpherical + numeratorNirSpherical;

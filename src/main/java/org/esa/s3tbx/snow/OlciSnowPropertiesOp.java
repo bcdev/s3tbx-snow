@@ -266,7 +266,7 @@ public class OlciSnowPropertiesOp extends Operator {
             rayleighCorrectionOp.setParameterDefaultValues();
             rayleighCorrectionOp.setParameter("computeTaur", false);
             final String[] sourceBandNames = SnowUtils.setupRcSourceBands(requiredRadianceBandNamesAlbedo,
-                    requiredRadianceBandNamesPPA);
+                                                                          requiredRadianceBandNamesPPA);
             rayleighCorrectionOp.setParameter("sourceBandNames", sourceBandNames);
             reflProduct = rayleighCorrectionOp.getTargetProduct();
         } else {
@@ -279,7 +279,7 @@ public class OlciSnowPropertiesOp extends Operator {
 
         // interpolate input refractive indices (at 83 wavelengths) to full grid 0.3-1.02um from solar spectrum auxdata
         refractiveIndexInterpolatedTable = SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
-                solarSpectrumExtendedTable);
+                                                                                    solarSpectrumExtendedTable);
 
         if (cloudMaskProduct != null) {
             validateCloudMaskProduct();
@@ -290,15 +290,6 @@ public class OlciSnowPropertiesOp extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
-//        if (targetRectangle.x == 0 && targetRectangle.y == 0) {
-////            System.out.println("calling computeTileStack: targetRectangle = " + targetRectangle);
-//
-//            Set<Map.Entry<Band, Tile>> entries = targetTiles.entrySet();
-//            entries.forEach(targetTileStream -> {
-//                Band targetBand = targetTileStream.getKey();
-////                System.out.println("targetBand.getName() = " + targetBand.getName());
-//            });
-//        }
         try {
             Tile[] rhoToaTilesAlbedo = new Tile[requiredBrrBandNamesAlbedo.length];
             for (int i = 0; i < requiredBrrBandNamesAlbedo.length; i++) {
@@ -362,8 +353,8 @@ public class OlciSnowPropertiesOp extends Operator {
                     final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud;
                     final Band s3SnowFlagBand = targetProduct.getBand(S3_SNOW_FLAG_BAND_NAME);
                     targetTiles.get(s3SnowFlagBand).setSample(x, y,
-                            OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH,
-                            szaIsInvalid);
+                                                              OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH,
+                                                              szaIsInvalid);
 
                     if (pixelIsValid) {
 
@@ -412,12 +403,12 @@ public class OlciSnowPropertiesOp extends Operator {
                             // check for 'backscattering' and 'glint' (AK 20181207):
                             final boolean isBackscattering = Math.abs(raa) < 5.0 && Math.abs(sza - vza) < 5.0;
                             targetTiles.get(s3SnowFlagBand).setSample(x, y,
-                                    OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING,
-                                    isBackscattering);
+                                                                      OlciSnowPropertiesConstants.S3_SNOW_BACKSCATTERING,
+                                                                      isBackscattering);
                             final boolean isGlint = Math.abs(180. - raa) < 5.0 && Math.abs(sza - vza) < 5.0;
                             targetTiles.get(s3SnowFlagBand).setSample(x, y,
-                                    OlciSnowPropertiesConstants.S3_SNOW_GLINT,
-                                    isGlint);
+                                                                      OlciSnowPropertiesConstants.S3_SNOW_GLINT,
+                                                                      isGlint);
 
                             final double r0Thresh =
                                     OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
@@ -430,7 +421,7 @@ public class OlciSnowPropertiesOp extends Operator {
                                 if (isPollutedSnow) {
                                     spectralAlbedoResult =
                                             OlciSnowPropertiesAlgorithm.computeSpectralAlbedosPolluted(rhoToaAlbedo,
-                                                    deltaBrr, sza, vza, r0Thresh);
+                                                                                                       deltaBrr, sza, vza, r0Thresh);
                                 } else {
                                     spectralAlbedoResult =
                                             OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
@@ -451,9 +442,9 @@ public class OlciSnowPropertiesOp extends Operator {
                             final double m = spectralAlbedoResult.getM();
 
                             setTargetTilesSpectralAlbedos(spectralSphericalAlbedos,
-                                    ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
+                                                          ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX, targetTiles, x, y);
                             setTargetTilesSpectralAlbedos(spectralPlanarAlbedos,
-                                    ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
+                                                          ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX, targetTiles, x, y);
 
                             final double refAlbedo = refWvl == 1020.0 ?
                                     spectralSphericalAlbedos[spectralSphericalAlbedos.length - 1] :
@@ -465,22 +456,36 @@ public class OlciSnowPropertiesOp extends Operator {
 //                                grainDiam = l / 11.38;      //  AK, October 2018. l and grainDiam are in mm !!
                                 grainDiam = l / 16.36;      //  AK, 20181207. l and grainDiam are in mm !!
                             }
-                            final double[] broadbandPlanarAlbedo =
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(mu_0,
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
-                                            rhoToaAlbedo,
-                                            isPollutedSnow,
-                                            refractiveIndexInterpolatedTable,
-                                            solarSpectrumExtendedTable,
-                                            sza, vza);
-                            final double[] broadbandSphericalAlbedo =
-//                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_old(1.0,
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
-                                            rhoToaAlbedo,
-                                            isPollutedSnow,
-                                            refractiveIndexInterpolatedTable,
-                                            solarSpectrumExtendedTable,
-                                            sza, vza);
+
+                            double[] broadbandPlanarAlbedo;
+                            double[] broadbandSphericalAlbedo;
+                            if (isPollutedSnow) {
+                                // polluted snow fix March 2019
+                                broadbandPlanarAlbedo =
+                                        OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_march2019(spectralPlanarAlbedos,
+                                                                                                     solarSpectrumExtendedTable,
+                                                                                                     sza, vza);
+                                broadbandSphericalAlbedo =
+                                        OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo_march2019(spectralSphericalAlbedos,
+                                                                                                     solarSpectrumExtendedTable,
+                                                                                                     sza, vza);
+                            } else {
+                                // keep old approach
+                                broadbandPlanarAlbedo =
+                                        OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
+                                                                                           rhoToaAlbedo,
+                                                                                           isPollutedSnow,
+                                                                                           refractiveIndexInterpolatedTable,
+                                                                                           solarSpectrumExtendedTable,
+                                                                                           sza, vza);
+                                broadbandSphericalAlbedo =
+                                        OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
+                                                                                           rhoToaAlbedo,
+                                                                                           isPollutedSnow,
+                                                                                           refractiveIndexInterpolatedTable,
+                                                                                           solarSpectrumExtendedTable,
+                                                                                           sza, vza);
+                            }
 
                             setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
                             setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
@@ -488,13 +493,7 @@ public class OlciSnowPropertiesOp extends Operator {
                             if (computePPA && spectralAlbedoTargetBands != null) {
                                 double[] spectralPPA =
                                         OlciSnowPropertiesAlgorithm.computeSpectralPPA_nov2018(spectralAlbedoResult,
-                                                isPollutedSnow);
-//                                double[] spectralPPA;
-//                                if (isPollutedSnow) {
-//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, f, m);
-//                                } else {
-//                                    spectralPPA = OlciSnowPropertiesAlgorithm.computeSpectralPPA_oct2018(grainDiam, 0.0, 0.0);
-//                                }
+                                                                                               isPollutedSnow);
                                 setTargetTilesSpectralPPA(spectralPPA, PPA_SPECTRAL_OUTPUT_PREFIX, targetTiles, x, y);
                             }
 
@@ -634,7 +633,7 @@ public class OlciSnowPropertiesOp extends Operator {
 
             if (copyReflectanceBands) {
                 final String[] allBrrBands = (String[]) ArrayUtils.addAll(requiredBrrBandNamesAlbedo,
-                        requiredBrrBandNamesPPA);
+                                                                          requiredBrrBandNamesPPA);
                 for (Band band : reflProduct.getBands()) {
                     for (String brrBandName : allBrrBands) {
                         if (band.getName().equals(brrBandName) && !targetProduct.containsBand(brrBandName)) {
@@ -742,7 +741,7 @@ public class OlciSnowPropertiesOp extends Operator {
             isOlci = isValidRayleighCorrectedSourceProduct(sourceProduct);
             if (!isOlci) {
                 throw new OperatorException("Source product not applicable to this operator.\n" +
-                        "Only OLCI L1b or Rayleigh corrected products are currently supported");
+                                                    "Only OLCI L1b or Rayleigh corrected products are currently supported");
             }
         }
     }
@@ -751,7 +750,7 @@ public class OlciSnowPropertiesOp extends Operator {
         Band cloudMaskBand = cloudMaskProduct.getBand(cloudMaskBandName);
         if (cloudMaskBand == null) {
             throw new OperatorException("Specified cloud mask product does not contain a band named '" +
-                    cloudMaskBandName + "'. Please check.");
+                                                cloudMaskBandName + "'. Please check.");
         }
         if (cloudMaskProduct.getSceneRasterWidth() != width || cloudMaskProduct.getSceneRasterHeight() != height) {
             throw new OperatorException("Dimensions of cloud mask product differ from source product. Please check.");
@@ -770,16 +769,16 @@ public class OlciSnowPropertiesOp extends Operator {
 
     private boolean isValidRayleighCorrectedSourceProduct(Product sourceProduct) {
         final String[] allRequiredBrrBands = (String[]) ArrayUtils.addAll(requiredBrrBandNamesAlbedo,
-                requiredBrrBandNamesPPA);
+                                                                          requiredBrrBandNamesPPA);
         for (String bandName : allRequiredBrrBands) {
             if (!sourceProduct.containsBand(bandName)) {
                 if (!sourceProduct.containsBand(bandName)) {
                     throw new OperatorException("Source product is not a valid L1b product and cannot be handled as " +
-                            "Rayleigh corrected product either, as it does not contain " +
-                            "mandatory band '" + bandName + "'. \n Mandatory bands are " +
-                            "'rBRR_*' for indices 1, 5, 17, 21 " +
-                            "(400nm, 510, 865 and 1020nm), and in addition for " +
-                            "all manually selected wavelengths.");
+                                                        "Rayleigh corrected product either, as it does not contain " +
+                                                        "mandatory band '" + bandName + "'. \n Mandatory bands are " +
+                                                        "'rBRR_*' for indices 1, 5, 17, 21 " +
+                                                        "(400nm, 510, 865 and 1020nm), and in addition for " +
+                                                        "all manually selected wavelengths.");
                 }
             }
         }
