@@ -247,7 +247,7 @@ class OlciSnowPropertiesAlgorithm {
                                            boolean isPolluted,
                                            RefractiveIndexTable refractiveIndexTable,
                                            SolarSpectrumExtendedTable solarSpectrumExtendedTable,
-                                           double sza, double vza) {
+                                           double sza, double vza, double r0thresh) {
 
         double bbaVis;
         double bbaNir;
@@ -265,16 +265,16 @@ class OlciSnowPropertiesAlgorithm {
         double[] planarSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
                                                                         refractiveIndexTable,
                                                                         solarSpectrumExtendedTable, vza,
-                                                                        isPolluted);
+                                                                        isPolluted, r0thresh);
         double[] planarCleanSpectralAlbedo = null;
         if (isPolluted) {
-            planarSpectralAlbedo = computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
-                                                                           refractiveIndexTable,
-                                                                           solarSpectrumExtendedTable, vza);
+//            planarSpectralAlbedo = computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
+//                                                                           refractiveIndexTable,
+//                                                                           solarSpectrumExtendedTable, vza, r0thresh);
             planarCleanSpectralAlbedo = computeFullPlanarSpectralAlbedo(mu_0, brr,
                                                                         refractiveIndexTable,
                                                                         solarSpectrumExtendedTable, vza,
-                                                                        false);
+                                                                        false, r0thresh);
         }
         double[] fLambdaTimesPlanarSpectralAlbedo = new double[wvlsFull.length];
         final double wvlMax =
@@ -322,7 +322,7 @@ class OlciSnowPropertiesAlgorithm {
 
     static double[] computeBroadbandAlbedo_march2019(double[] spectralAlbedo,
                                                      SolarSpectrumExtendedTable solarSpectrumExtendedTable,
-                                                     double sza, double vza) {
+                                                     double sza, double vza, double r0Thresh) {
 
         double bbaVis;
         double bbaNir;
@@ -457,7 +457,7 @@ class OlciSnowPropertiesAlgorithm {
                                                     RefractiveIndexTable refractiveIndexTable,
                                                     SolarSpectrumExtendedTable solarSpectrumExtendedTable,
                                                     double vza,
-                                                    boolean polluted) {
+                                                    boolean polluted, double r0Thresh) {
 
         // Same as computeSpectralAlbedoFromTwoWavelengths, but for computation of only planarSpectralAlbedo,
         // but here on fine 5nm grid rather than OLCI wavelengths only.
@@ -514,7 +514,7 @@ class OlciSnowPropertiesAlgorithm {
                 final double sd9 = f * Math.pow(wvlNm / refWvl[3], -m);
                 final double tt = alka * 1.E6 + sd9;
                 final double arr = r0 * Math.exp(-x * Math.sqrt(tt * l));
-                planarSpectralAlbedo[i] = Math.pow(arr / r0, r0 / u2);
+                planarSpectralAlbedo[i] = Math.pow(arr / r0Thresh, r0Thresh / u2);
             } else {
                 // FORTRAN:
                 // TT(j)=alka(j)*1.e+6
@@ -531,7 +531,7 @@ class OlciSnowPropertiesAlgorithm {
     static double[] computeFullPlanarSpectralAlbedoPolluted(double mu_0, double[] brr,
                                                             RefractiveIndexTable refractiveIndexTable,
                                                             SolarSpectrumExtendedTable solarSpectrumExtendedTable,
-                                                            double vza) {
+                                                            double vza, double r0Thresh) {
 
         // Same as computeSpectralAlbedoFromTwoWavelengths, but for computation of only planarSpectralAlbedo,
         // but here on fine 5nm grid rather than OLCI wavelengths only.
@@ -588,7 +588,7 @@ class OlciSnowPropertiesAlgorithm {
             final double sd9 = f * Math.pow(wvlNm / refWvl[3], -m);
             final double tt = alka * 1.E6 + sd9;
             final double arr = r0 * Math.exp(-x * Math.sqrt(tt * l));
-            planarSpectralAlbedo[i] = Math.pow(arr / r0, r0 / u2);
+            planarSpectralAlbedo[i] = Math.pow(arr / r0Thresh, r0Thresh / u2);
         }
 
         // NEW: this is for wvl < 400nm:

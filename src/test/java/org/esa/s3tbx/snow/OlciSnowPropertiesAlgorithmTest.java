@@ -409,7 +409,7 @@ public class OlciSnowPropertiesAlgorithmTest {
                 OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, false,
                                                                    refractiveIndexInterpolatedTable,
                                                                    solarSpectrumExtendedTable,
-                                                                   sza, vza);
+                                                                   sza, vza, 0.0);
         for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo_simpson) {
             System.out.println("planarBroadbandAlbedo_simpson = " + aPlanarBroadbandAlbedo);
         }
@@ -450,7 +450,7 @@ public class OlciSnowPropertiesAlgorithmTest {
                 OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0, brr, true,
                                                                            refractiveIndexInterpolatedTable,
                                                                            solarSpectrumExtendedTable,
-                                                                           sza, vza);
+                                                                           sza, vza, 0.0);
         for (double aPlanarBroadbandAlbedo : planarBroadbandAlbedo_simpson) {
             System.out.println("NOV 2018 planarBroadbandAlbedo_simpson = " + aPlanarBroadbandAlbedo);
         }
@@ -465,6 +465,8 @@ public class OlciSnowPropertiesAlgorithmTest {
 
         final double sza = 36.9;
         final double vza = 3.08;
+        final double saa = 143.8;
+        final double vaa = 104.593;
 
         double brr400 = 0.72778;
         double brr560 = 0.88665;
@@ -486,12 +488,15 @@ public class OlciSnowPropertiesAlgorithmTest {
         RefractiveIndexTable refractiveIndexInterpolatedTable =
                 SnowUtils.getRefractiveIndexInterpolated(refractiveIndexTable,
                                                          solarSpectrumExtendedTable);
+        final double raa = SnowUtils.getRelAzi(saa, vaa);
+        final double r0Thresh =
+                OlciSnowPropertiesAlgorithm.computeR0ReflectancePollutionThresh(sza, vza, raa);
 
         double[] planarSpectralAlbedoPolluted_1 =
                 OlciSnowPropertiesAlgorithm.computeFullPlanarSpectralAlbedo(mu_0, brr,
                                                                             refractiveIndexInterpolatedTable,
                                                                             solarSpectrumExtendedTable,
-                                                                            vza, true);
+                                                                            vza, true, r0Thresh);
         for (double aPlanarBroadbandAlbedo : planarSpectralAlbedoPolluted_1) {
             System.out.println("NOV 2018 planarSpectralAlbedoPolluted_1 = " + aPlanarBroadbandAlbedo);
         }
@@ -500,7 +505,7 @@ public class OlciSnowPropertiesAlgorithmTest {
                 OlciSnowPropertiesAlgorithm.computeFullPlanarSpectralAlbedoPolluted(mu_0, brr,
                                                                                             refractiveIndexInterpolatedTable,
                                                                                             solarSpectrumExtendedTable,
-                                                                                            vza);
+                                                                                            vza, r0Thresh);
         for (double aPlanarBroadbandAlbedo : planarSpectralAlbedoPolluted_2) {
             System.out.println("NOV 2018 planarSpectralAlbedoPolluted_2 = " + aPlanarBroadbandAlbedo);
         }
