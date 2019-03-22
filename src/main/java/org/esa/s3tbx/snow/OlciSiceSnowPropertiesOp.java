@@ -118,21 +118,21 @@ public class OlciSiceSnowPropertiesOp extends Operator {
 //    private boolean writeAbsorptionAngstroemExponent;
     private boolean writeAbsorptionAngstroemExponent = false;
 
-//    @Parameter(defaultValue = "false",
+    //    @Parameter(defaultValue = "false",
 //            label = "Write normalized absorption coefficient",
 //            description =
 //                    "If selected, normalized absorption coefficient will be written to the target product.")
 //    private boolean writeNormalizedAbsorptionCoefficient;
     private boolean writeNormalizedAbsorptionCoefficient = false;
 
-//    @Parameter(defaultValue = "false",
+    //    @Parameter(defaultValue = "false",
 //            label = "Write effective absorption length",
 //            description =
 //                    "If selected, effective absorption length will be written to the target product.")
 //    private boolean writeEffectiveAbsorptionLength;
     private boolean writeEffectiveAbsorptionLength = false;
 
-//    @Parameter(defaultValue = "false",
+    //    @Parameter(defaultValue = "false",
 //            label = "Copy Bottom-of-Atmosphere reflectance bands",
 //            description =
 //                    "If selected, Bottom-of-Atmosphere reflectance bands at selected OLCI wavelengths are written to target product")
@@ -329,11 +329,13 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                                                                             SnowUtils.cutTo4DecimalPlaces(concentrationOfPollutants));
 
                             // set flags:
-                            OlciSiceSnowPropertiesAlgorithm.
-                                    setPollutionTypeFlag(x, y, sicePollutionFlagTile, siceSnowProperties, ndbi);
-                            OlciSiceSnowPropertiesAlgorithm.
-                                    setGroundTypeFlag(x, y, siceGroundFlagTile, siceSnowProperties,
-                                                      rtoa400, rtoa1020, ndsi, ndbi);
+                            final int pollutionTypeFlag =
+                                    OlciSiceSnowPropertiesAlgorithm.computePollutionTypeFlag(siceSnowProperties, ndbi);
+                            sicePollutionFlagTile.setSample(x, y, pollutionTypeFlag);
+                            final int groundTypeFlag =
+                                    OlciSiceSnowPropertiesAlgorithm.computeGroundTypeFlag(siceSnowProperties,
+                                                                                          rtoa400, rtoa1020, ndsi, ndbi);
+                            siceGroundFlagTile.setSample(x, y, groundTypeFlag);
 
                             // write optional output:
                             if (considerNdsiSnowMask) {

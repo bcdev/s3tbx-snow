@@ -48,7 +48,7 @@ import java.util.Map;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.2-SNAPSHOT")
+        version = "2.3-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
@@ -336,7 +336,6 @@ public class OlciSnowPropertiesOp extends Operator {
                         final double iceIndicator = brr400 / brr1020;
                         ndbi = (iceIndicator - 1) / (iceIndicator + 1);
                         ndbi = Math.max(-1.0, Math.min(ndbi, 1.0));
-//                        isBareIce = ndbi > OlciSnowPropertiesConstants.BARE_ICE_THRESH;
                         isBareIce = considerBareIce && ndbi > ndbiThresh;
                     }
 
@@ -424,11 +423,11 @@ public class OlciSnowPropertiesOp extends Operator {
                                                     deltaBrr, sza, vza, r0Thresh);
                                 } else {
                                     spectralAlbedoResult =
-                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
+                                            OlciSnowPropertiesAlgorithm.computeSpectralAlbedosClean(rhoToaAlbedo, deltaBrr, sza, vza);
                                 }
                             } else {
                                 spectralAlbedoResult =
-                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedos(rhoToaAlbedo, deltaBrr, sza, vza);
+                                        OlciSnowPropertiesAlgorithm.computeSpectralAlbedosClean(rhoToaAlbedo, deltaBrr, sza, vza);
                             }
 
                             spectralAlbedos = spectralAlbedoResult.getSpectralAlbedos();
@@ -457,26 +456,15 @@ public class OlciSnowPropertiesOp extends Operator {
                                 grainDiam = l / 16.36;      //  AK, 20181207. l and grainDiam are in mm !!
                             }
 
-                            double[] broadbandPlanarAlbedo;
-                            double[] broadbandSphericalAlbedo;
+                            final double[][] broadbandAlbedo =
+                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(rhoToaAlbedo,
+                                                                                       isPollutedSnow,
+                                                                                       refractiveIndexInterpolatedTable,
+                                                                                       solarSpectrumExtendedTable,
+                                                                                       sza, vza, r0Thresh);
 
-                            broadbandPlanarAlbedo =
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(mu_0,
-                                            rhoToaAlbedo,
-                                            isPollutedSnow,
-                                            refractiveIndexInterpolatedTable,
-                                            solarSpectrumExtendedTable,
-                                            sza, vza, r0Thresh);
-                            broadbandSphericalAlbedo =
-                                    OlciSnowPropertiesAlgorithm.computeBroadbandAlbedo(1.0,
-                                            rhoToaAlbedo,
-                                            isPollutedSnow,
-                                            refractiveIndexInterpolatedTable,
-                                            solarSpectrumExtendedTable,
-                                            sza, vza, r0Thresh);
-
-                            setTargetTilesBroadbandAlbedos(broadbandPlanarAlbedo, targetTiles, "planar", x, y);
-                            setTargetTilesBroadbandAlbedos(broadbandSphericalAlbedo, targetTiles, "spherical", x, y);
+                            setTargetTilesBroadbandAlbedos(broadbandAlbedo[0], targetTiles, "spherical", x, y);
+                            setTargetTilesBroadbandAlbedos(broadbandAlbedo[1], targetTiles, "planar", x, y);
 
                             if (computePPA && spectralAlbedoTargetBands != null) {
                                 double[] spectralPPA =

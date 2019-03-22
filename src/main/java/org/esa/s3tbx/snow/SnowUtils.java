@@ -24,7 +24,7 @@ public class SnowUtils {
         return 3.0 * (1.0 + 2.0 * mu) / 7.0;
     }
 
-    public static RefractiveIndexTable getRefractiveIndexInterpolated(RefractiveIndexTable refractiveIndexTable,
+    static RefractiveIndexTable getRefractiveIndexInterpolated(RefractiveIndexTable refractiveIndexTable,
                                                                       SolarSpectrumExtendedTable solarSpectrumExtendedTable) {
         double[] wvlsFull = solarSpectrumExtendedTable.getWvl();
 
@@ -39,7 +39,7 @@ public class SnowUtils {
         return refractiveIndexTableInterpolated;
     }
 
-    public static double[] computeFLambda(SolarSpectrumExtendedTable solarSpectrumTable, double sza) {
+    static double[] computeFLambda(SolarSpectrumExtendedTable solarSpectrumTable, double sza) {
 
         final double[][] solarSpectrum = solarSpectrumTable.getSolarSpectrum();
 
@@ -57,18 +57,7 @@ public class SnowUtils {
         return fLambda;
     }
 
-    public static double[] linearInterpolateWithSplineFunction(double[] x, double[] y, double[] xi) {
-        final LinearInterpolator linearInterpolator = new LinearInterpolator();
-        PolynomialSplineFunction psf = linearInterpolator.interpolate(x, y);
-
-        double[] yi = new double[xi.length];
-        for (int i = 0; i < xi.length; i++) {
-            yi[i] = psf.value(xi[i]);
-        }
-        return yi;
-    }
-
-    public static double[] linearInterpolate(double[] x, double[] xa, double[] ya) {
+    static double[] linearInterpolate(double[] x, double[] xa, double[] ya) {
         double[] result = new double[x.length];
         for (int i = 0; i < x.length; i++) {
             result[i] = linearInterpolate(x[i], xa, ya);
@@ -97,7 +86,7 @@ public class SnowUtils {
         return y0 + (x - x0) * (y1 - y0) / (x1 - x0);
     }
 
-    public static String[] setupRcSourceBands(String[] requiredRadianceBandNamesAlbedo, String[] requiredRadianceBandNamesPpa) {
+    static String[] setupRcSourceBands(String[] requiredRadianceBandNamesAlbedo, String[] requiredRadianceBandNamesPpa) {
         ArrayList<String> rcSourceBands = new ArrayList<>();
         Collections.addAll(rcSourceBands, requiredRadianceBandNamesAlbedo);
         if (requiredRadianceBandNamesPpa != null) {
@@ -110,7 +99,7 @@ public class SnowUtils {
         return rcSourceBands.toArray(new String[rcSourceBands.size()]);
     }
 
-    public static double cutTo4DecimalPlaces(double value) {
+    static double cutTo4DecimalPlaces(double value) {
         if (Double.isNaN(value) || Double.isInfinite(value)) {
             return Double.NaN;
         }
@@ -119,7 +108,7 @@ public class SnowUtils {
         return x2 / 10000.0;
     }
 
-    public static double cutTo7DecimalPlaces(double value) {
+    static double cutTo7DecimalPlaces(double value) {
         if (Double.isNaN(value) || Double.isInfinite(value)) {
             return Double.NaN;
         }
@@ -128,18 +117,18 @@ public class SnowUtils {
         return x2 / 10000000.0;
     }
 
-    public static double getRelAzi(double saa, double vaa) {
+    static double getRelAzi(double saa, double vaa) {
         final double saaRad = Math.toRadians(saa);
         final double vaaRad = Math.toRadians(vaa);
         return Math.toDegrees(Math.acos(Math.cos(saaRad) * Math.cos(vaaRad) + Math.sin(saaRad) * Math.sin(vaaRad)));
     }
 
-    public static double getRelAziSice(double saa, double vaa) {
+    static double getRelAziSice(double saa, double vaa) {
         // this is the definition as in Fortran breadboard for SICE
         return Math.abs(180.0 - (vaa - saa));
     }
 
-    public static double calcScatteringCos(double sza, double vza, double raa) {
+    static double calcScatteringCos(double sza, double vza, double raa) {
         final double sins = (float) Math.sin(sza * MathUtils.DTOR);
         final double sinv = (float) Math.sin(vza * MathUtils.DTOR);
         final double coss = (float) Math.cos(sza * MathUtils.DTOR);
@@ -170,32 +159,13 @@ public class SnowUtils {
         return lowerFlux + frac * (upperFlux - lowerFlux);
     }
 
-    // currently not used
-//    private static double[] getSolarSpectrumInterpolated(double[][] solarSpectrum, double sza) {
-//        int lowerIndex = (int) sza / 15;   // 0, 1, 2, 3, 4, 5
-//        int upperIndex = lowerIndex + 1;
-//
-//        double[] solarSpectrumInterpolated = new double[solarSpectrum[0].length];
-//        for (int i = 0; i < solarSpectrumInterpolated.length; i++) {
-//            if (upperIndex <= 5) {
-//                final double interpolFlux = getInterpolFlux(solarSpectrum, sza, lowerIndex, upperIndex, i);
-//                solarSpectrumInterpolated[i] = interpolFlux;
-//            } else {
-//                final double extrapolFlux = getExtrapolFlux(solarSpectrum[5][i], sza);
-//                solarSpectrumInterpolated[i] = extrapolFlux;
-//            }
-//        }
-//
-//        return solarSpectrumInterpolated;
-//    }
-
     /**
      * Provides S3 Snow flag coding
      *
      * @param flagId - the flag ID
      * @return - the flag coding
      */
-    public static FlagCoding createS3SnowFlagCoding(String flagId) {
+    static FlagCoding createS3SnowFlagCoding(String flagId) {
         FlagCoding flagCoding = new FlagCoding(flagId);
 
         flagCoding.addFlag("S3_SNOW_SZA_HIGH", BitSetter.setFlag(0, OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH),
@@ -213,7 +183,7 @@ public class SnowUtils {
      *
      * @param s3snowProduct - the S3 Snow product
      */
-    public static void setupS3SnowBitmask(Product s3snowProduct) {
+    static void setupS3SnowBitmask(Product s3snowProduct) {
 
         int index = 0;
         int w = s3snowProduct.getSceneRasterWidth();
@@ -248,17 +218,19 @@ public class SnowUtils {
      * @param flagId - the flag ID
      * @return - the flag coding
      */
-    public static FlagCoding createSicePollutionTypeFlagCoding(String flagId) {
+    static FlagCoding createSicePollutionTypeFlagCoding(String flagId) {
         FlagCoding flagCoding = new FlagCoding(flagId);
 
-        flagCoding.addFlag("SICE_POLLUTION_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN),
-                           OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN_DESCR_TEXT);
+        flagCoding.addFlag("SICE_POLLUTION_CLEAN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_CLEAN),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_CLEAN_DESCR_TEXT);
         flagCoding.addFlag("SICE_POLLUTION_SOOT", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_SOOT),
                            OlciSnowPropertiesConstants.SICE_POLLUTION_SOOT_DESCR_TEXT);
         flagCoding.addFlag("SICE_POLLUTION_DUST", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_DUST),
                            OlciSnowPropertiesConstants.SICE_POLLUTION_DUST_DESCR_TEXT);
         flagCoding.addFlag("SICE_POLLUTION_ALGAE", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_ALGAE),
                            OlciSnowPropertiesConstants.SICE_POLLUTION_ALGAE_DESCR_TEXT);
+        flagCoding.addFlag("SICE_POLLUTION_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN),
+                           OlciSnowPropertiesConstants.SICE_POLLUTION_UNCERTAIN_DESCR_TEXT);
 
         return flagCoding;
     }
@@ -268,7 +240,7 @@ public class SnowUtils {
      *
      * @param siceProduct - the SICE product
      */
-    public static void setupSicePollutionTypeBitmask(Product siceProduct) {
+    static void setupSicePollutionTypeBitmask(Product siceProduct) {
 
         int index = 0;
         int w = siceProduct.getSceneRasterWidth();
@@ -311,16 +283,16 @@ public class SnowUtils {
      * @param flagId - the flag ID
      * @return - the flag coding
      */
-    public static FlagCoding createSiceGroundTypeFlagCoding(String flagId) {
+    static FlagCoding createSiceGroundTypeFlagCoding(String flagId) {
         FlagCoding flagCoding = new FlagCoding(flagId);
 
-        flagCoding.addFlag("SICE_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_UNCERTAIN),
+        flagCoding.addFlag("SICE_GROUND_UNCERTAIN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_UNCERTAIN),
                            OlciSnowPropertiesConstants.SICE_UNCERTAIN_DESCR_TEXT);
-        flagCoding.addFlag("SICE_SNOW", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_SNOW),
+        flagCoding.addFlag("SICE_GROUND_SNOW", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_SNOW),
                            OlciSnowPropertiesConstants.SICE_SNOW_DESCR_TEXT);
-        flagCoding.addFlag("SICE_BARE_ICE_CLEAN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN),
+        flagCoding.addFlag("SICE_GROUND_BARE_ICE_CLEAN", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN),
                            OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN_DESCR_TEXT);
-        flagCoding.addFlag("SICE_BARE_ICE_POLLUTED", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED),
+        flagCoding.addFlag("SICE_GROUND_BARE_ICE_POLLUTED", BitSetter.setFlag(0, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED),
                            OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED_DESCR_TEXT);
 
         return flagCoding;
@@ -331,41 +303,51 @@ public class SnowUtils {
      *
      * @param siceProduct - the SICE product
      */
-    public static void setupSiceGroundTypeBitmask(Product siceProduct) {
+    static void setupSiceGroundTypeBitmask(Product siceProduct) {
 
         int index = 0;
         int w = siceProduct.getSceneRasterWidth();
         int h = siceProduct.getSceneRasterHeight();
         Mask mask;
 
-        mask = Mask.BandMathsType.create("SICE_UNCERTAIN",
-                                         OlciSnowPropertiesConstants.SICE_UNCERTAIN_DESCR_TEXT,
-                                         w, h,
-                                         "sice_ground_type_flags.SICE_UNCERTAIN",
-                                         Color.red, 0.5f);
-        siceProduct.getMaskGroup().add(index++, mask);
-
-        mask = Mask.BandMathsType.create("SICE_SNOW",
+        mask = Mask.BandMathsType.create("SICE_GROUND_SNOW",
                                          OlciSnowPropertiesConstants.SICE_SNOW_DESCR_TEXT,
                                          w, h,
-                                         "sice_ground_type_flags.SICE_SNOW",
+                                         "sice_ground_type_flags.SICE_GROUND_SNOW",
                                          Color.yellow, 0.5f);
         siceProduct.getMaskGroup().add(index++, mask);
 
-        mask = Mask.BandMathsType.create("SICE_BARE_ICE_CLEAN",
+        mask = Mask.BandMathsType.create("SICE_GROUND_BARE_ICE_CLEAN",
                                          OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN_DESCR_TEXT,
                                          w, h,
-                                         "sice_ground_type_flags.SICE_BARE_ICE_CLEAN",
+                                         "sice_ground_type_flags.SICE_GROUND_BARE_ICE_CLEAN",
                                          Color.yellow, 0.5f);
         siceProduct.getMaskGroup().add(index++, mask);
 
-        mask = Mask.BandMathsType.create("SICE_BARE_ICE_POLLUTED",
+        mask = Mask.BandMathsType.create("SICE_GROUND_BARE_ICE_POLLUTED",
                                          OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED_DESCR_TEXT,
                                          w, h,
-                                         "sice_ground_type_flags.SICE_BARE_ICE_POLLUTED",
+                                         "sice_ground_type_flags.SICE_GROUND_BARE_ICE_POLLUTED",
                                          Color.blue, 0.5f);
+        siceProduct.getMaskGroup().add(index++, mask);
+
+        mask = Mask.BandMathsType.create("SICE_GROUND_UNCERTAIN",
+                                         OlciSnowPropertiesConstants.SICE_UNCERTAIN_DESCR_TEXT,
+                                         w, h,
+                                         "sice_ground_type_flags.SICE_GROUND_UNCERTAIN",
+                                         Color.red, 0.5f);
         siceProduct.getMaskGroup().add(index, mask);
     }
 
+    private static double[] linearInterpolateWithSplineFunction(double[] x, double[] y, double[] xi) {
+        final LinearInterpolator linearInterpolator = new LinearInterpolator();
+        PolynomialSplineFunction psf = linearInterpolator.interpolate(x, y);
+
+        double[] yi = new double[xi.length];
+        for (int i = 0; i < xi.length; i++) {
+            yi[i] = psf.value(xi[i]);
+        }
+        return yi;
+    }
 
 }

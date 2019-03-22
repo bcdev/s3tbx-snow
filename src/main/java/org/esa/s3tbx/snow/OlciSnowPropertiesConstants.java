@@ -8,7 +8,7 @@ package org.esa.s3tbx.snow;
 public class OlciSnowPropertiesConstants {
 
 
-    public static final double[] WAVELENGTH_GRID_OLCI = {
+    static final double[] WAVELENGTH_GRID_OLCI = {
             0.400,         // OA01
             0.4125,        // OA02
             0.4425,        // OA03
@@ -32,31 +32,22 @@ public class OlciSnowPropertiesConstants {
             1.02           // OA21
     };
 
-    public static final int OLCI_NUM_WVLS = WAVELENGTH_GRID_OLCI.length;
+    static final int OLCI_NUM_WVLS = WAVELENGTH_GRID_OLCI.length;
 
-    // Table 1 from spectral_albedo_october_5_2017.doc:
-    // no longer used
-//    static final double[] LAMBDA_0 = {0.35, 0.525, 0.7, 1.98};
-//    static final double[] H = {0.175, 0.175, 1.28, 0.4675};
-//    static final double[] c0 = {3.85E-9, 2.2E-9, 1.30689, 1.27525};
-//    static final double[] c1 = {-5.287E-9, 3.384E-9, -0.026, -0.026};
-//    static final double[] c2 = {2.2594E-9, 6.41E-9, 0.017956, -0.00149};
-//    static final double[] c3 = {1.38411E-9, 1.63665E-8, -0.024, -0.0128};
-
-    public static final double[] ICE_REFR_INDEX = {
-            2.365E-011,2.669E-011,6.268E-011,4.172E-010,8.036E-010,
-            2.839E-009,8.580E-009,1.770E-008,1.890E-008,2.090E-008,
-            3.440E-008,5.870E-008,7.080E-008,7.500E-008,8.080E-008,
-            1.020E-007,2.400E-007,3.600E-007,4.200E-007,5.530E-007,
+    static final double[] ICE_REFR_INDEX = {
+            2.365E-011, 2.669E-011, 6.268E-011, 4.172E-010, 8.036E-010,
+            2.839E-009, 8.580E-009, 1.770E-008, 1.890E-008, 2.090E-008,
+            3.440E-008, 5.870E-008, 7.080E-008, 7.500E-008, 8.080E-008,
+            1.020E-007, 2.400E-007, 3.600E-007, 4.200E-007, 5.530E-007,
             2.250E-006
     };
 
     // from file 'kap_olci.dat'. They are partly different from ICE_REFR_INDEX. todo: ask Alex why
-    public static final double[] ICE_REFR_INDEX_SICE_OLCI = {
-            2.365E-011,2.669E-011,7.0E-011,4.17E-010,8.04E-010,
-            2.84E-009,8.580E-009,1.78E-008,1.95E-008,2.1E-008,
-            3.3E-008,6.23E-008,7.1E-008,7.68E-008,8.13E-008,
-            9.88E-008,2.400E-007,3.64E-007,4.200E-007,5.530E-007,
+    static final double[] ICE_REFR_INDEX_SICE_OLCI = {
+            2.365E-011, 2.669E-011, 7.0E-011, 4.17E-010, 8.04E-010,
+            2.84E-009, 8.580E-009, 1.78E-008, 1.95E-008, 2.1E-008,
+            3.3E-008, 6.23E-008, 7.1E-008, 7.68E-008, 8.13E-008,
+            9.88E-008, 2.400E-007, 3.64E-007, 4.200E-007, 5.530E-007,
             2.250E-006
     };
 
@@ -81,23 +72,23 @@ public class OlciSnowPropertiesConstants {
             // from fit to https://atmos.washington.edu/ice_optical_constants/IOP_2008_ASCIItable.dat
             {
                     // 4th order spline fit, 400-525nm:
-                    4.913273573521765E-8 ,
+                    4.913273573521765E-8,
                     -5.446912137768008E-7,
                     2.2340617964072435E-6,
                     -4.029955265312061E-6,
-                    2.70443404633965E-6  ,
+                    2.70443404633965E-6,
             },
             {
                     // 4th order spline fit, 525-700nm:
-                     7.871975805631149E-7  ,
-                     -5.5075218680064285E-6,
-                     1.4735203245000926E-5 ,
-                     -1.7996480996799473E-5,
-                     8.533638647997086E-6  ,
+                    7.871975805631149E-7,
+                    -5.5075218680064285E-6,
+                    1.4735203245000926E-5,
+                    -1.7996480996799473E-5,
+                    8.533638647997086E-6,
             },
             {
                     // 4th order spline fit, 700-1020nm:
-                   3.20662332955914E-4   ,
+                    3.20662332955914E-4,
                     -0.0016037321152243488,
                     0.0030016823137293783,
                     -0.0024933767575023914,
@@ -107,53 +98,56 @@ public class OlciSnowPropertiesConstants {
 
     // constants for planar BB albedo retrieval (AK, 20171201):
 //    public static final double BB_WVL_0 = 0.3;
-    public static final double BB_WVL_1 = 0.3;
-    public static final double BB_WVL_2 = 0.7;
-    public static final double BB_WVL_3 = 2.4;
+    static final double BB_WVL_1 = 0.3;
+    static final double BB_WVL_2 = 0.7;
+    static final double BB_WVL_3 = 2.4;
 
-    public static final double RHO_ICE = 917.0;  // in kg*m^-3
+    static final double RHO_ICE = 917.0;  // in kg*m^-3
 
 //    public static final double BARE_ICE_THRESH = 1./3.;   // AK, 20181001
 
     // define here, we do not want a dependency to Idepix just for this:
-    public static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
+    static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
 
-    public static final int S3_SNOW_SZA_HIGH = 0;
-    public static final int S3_SNOW_GLINT = 1;
-    public static final int S3_SNOW_BACKSCATTERING = 2;
+    static final int S3_SNOW_SZA_HIGH = 0;
+    static final int S3_SNOW_GLINT = 1;
+    static final int S3_SNOW_BACKSCATTERING = 2;
 
-    public static final String S3_SNOW_SZA_HIGH_DESCR_TEXT =
+    static final String S3_SNOW_SZA_HIGH_DESCR_TEXT =
             "SZA high (> 75 deg), retrievals may be doubtful";
-    public static final String S3_SNOW_GLINT_DESCR_TEXT =
+    static final String S3_SNOW_GLINT_DESCR_TEXT =
             "Pixel is in glint region (relative azimuth close to 180 deg)";
-    public static final String S3_SNOW_BACKSCATTERING_DESCR_TEXT =
+    static final String S3_SNOW_BACKSCATTERING_DESCR_TEXT =
             "Pixel is in backscattering region (relative azimuth close to 0 deg)";
 
-    public static final int SICE_POLLUTION_UNCERTAIN = 0;
-    public static final int SICE_POLLUTION_SOOT = 1;
-    public static final int SICE_POLLUTION_DUST = 2;
-    public static final int SICE_POLLUTION_ALGAE = 3;
+    static final int SICE_POLLUTION_CLEAN = 0;
+    static final int SICE_POLLUTION_SOOT = 1;
+    static final int SICE_POLLUTION_DUST = 2;
+    static final int SICE_POLLUTION_ALGAE = 3;
+    static final int SICE_POLLUTION_UNCERTAIN = 4;
 
-    public static final String SICE_POLLUTION_UNCERTAIN_DESCR_TEXT =
-            "Uncertain pollution of snow/ice";
-    public static final String SICE_POLLUTION_SOOT_DESCR_TEXT =
+    static final String SICE_POLLUTION_CLEAN_DESCR_TEXT =
+            "Snow/ice clean (no pollution)";
+    static final String SICE_POLLUTION_SOOT_DESCR_TEXT =
             "Snow/ice polluted by soot";
-    public static final String SICE_POLLUTION_DUST_DESCR_TEXT =
+    static final String SICE_POLLUTION_DUST_DESCR_TEXT =
             "Snow/ice polluted by dust";
-    public static final String SICE_POLLUTION_ALGAE_DESCR_TEXT =
+    static final String SICE_POLLUTION_ALGAE_DESCR_TEXT =
             "Snow/ice polluted by algae";
+    static final String SICE_POLLUTION_UNCERTAIN_DESCR_TEXT =
+            "Uncertain pollution of snow/ice";
 
-    public static final int SICE_UNCERTAIN = 0;
-    public static final int SICE_SNOW = 1;
-    public static final int SICE_BARE_ICE_CLEAN = 2;
-    public static final int SICE_BARE_ICE_POLLUTED = 3;
+    static final int SICE_UNCERTAIN = 0;
+    static final int SICE_SNOW = 1;
+    static final int SICE_BARE_ICE_CLEAN = 2;
+    static final int SICE_BARE_ICE_POLLUTED = 3;
 
-    public static final String SICE_UNCERTAIN_DESCR_TEXT =
+    static final String SICE_UNCERTAIN_DESCR_TEXT =
             "Uncertain type of snow/ice coverage";
-    public static final String SICE_SNOW_DESCR_TEXT =
+    static final String SICE_SNOW_DESCR_TEXT =
             "Snow covered pixel";
-    public static final String SICE_BARE_ICE_CLEAN_DESCR_TEXT =
+    static final String SICE_BARE_ICE_CLEAN_DESCR_TEXT =
             "Clean bare ice pixel";
-    public static final String SICE_BARE_ICE_POLLUTED_DESCR_TEXT =
+    static final String SICE_BARE_ICE_POLLUTED_DESCR_TEXT =
             "Polluted bare ice pixel";
 }

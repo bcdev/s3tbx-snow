@@ -1,7 +1,7 @@
 package org.esa.s3tbx.snow;
 
 import org.esa.s3tbx.snow.math.*;
-import org.esa.snap.core.util.math.MathUtils;
+import org.esa.snap.core.gpf.Tile;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -419,6 +419,24 @@ public class OlciSiceSnowPropertiesAlgorithmTest {
         assertEquals(0.343, siceSnowProperties.getSphericalBroadbandAlbedos()[2], 1.E-2);
     }
 
+    @Test
+    public void testComputeFlags_xx() {
+        double r0 = OlciSiceSnowPropertiesAlgorithm.computeR0(brr_xx[16], brr_xx[20]);
+        double xx = OlciSiceSnowPropertiesAlgorithm.computeXX(r0, sza_xx, vza_xx);
+        SiceSnowPropertiesResult siceSnowProperties =
+                OlciSiceSnowPropertiesAlgorithm.computeGeneralSnowProperties
+                        (brr_xx[0], brr_xx[5], brr_xx[9], brr_xx[10], brr_xx[20], r0, xx);
+
+        double ndsi = (rtoa_xx[16] - rtoa_xx[20]) / (rtoa_xx[16] + rtoa_xx[20]);
+        double ndbi = (rtoa_xx[0] - rtoa_xx[20]) / (rtoa_xx[0] + rtoa_xx[20]);
+        final int groundTypeFlag =
+                OlciSiceSnowPropertiesAlgorithm.computeGroundTypeFlag(siceSnowProperties,
+                                                                      rtoa_xx[0], rtoa_xx[20], ndsi, ndbi);
+        assertEquals(2, groundTypeFlag);
+
+        final int pollutionTypeFlag = OlciSiceSnowPropertiesAlgorithm.computePollutionTypeFlag(siceSnowProperties, ndbi);
+        assertEquals(0, pollutionTypeFlag);
+    }
 
     @Test
     public void testFun1() {

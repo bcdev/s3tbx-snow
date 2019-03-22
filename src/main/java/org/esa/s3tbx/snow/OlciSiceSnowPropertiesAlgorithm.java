@@ -162,22 +162,34 @@ class OlciSiceSnowPropertiesAlgorithm {
         return u1 * u2 / r0;
     }
 
-    static void setPollutionTypeFlag(int x, int y,
-                                     Tile sicePollutionFlagTile,
-                                     SiceSnowPropertiesResult siceSnowProperties,
-                                     double ndbi) {
-        if (ndbi <= 0.33) {
-            // otherwise we have clean ice,i.e. no pollution at all
-            final int pollutionType = siceSnowProperties.getSnowImpurity().getPollutionType();
-            sicePollutionFlagTile.setSample(x, y, pollutionType, true);
-        }
+    static int computePollutionTypeFlag(SiceSnowPropertiesResult siceSnowProperties,
+                                        double ndbi) {
+
+        return ndbi <= 0.33 ? siceSnowProperties.getSnowImpurity().getPollutionType() : 0;
     }
 
-    static void setGroundTypeFlag(int x, int y,
-                                  Tile siceGroundFlagTile,
-                                  SiceSnowPropertiesResult siceSnowProperties,
-                                  double rtoa400, double rtoa1020,
-                                  double ndsi, double ndbi) {
+    static int computeGroundTypeFlag(SiceSnowPropertiesResult siceSnowProperties,
+                                     double rtoa400, double rtoa1020,
+                                     double ndsi, double ndbi) {
+        double groundTypeFlag = 0;
+        if (ndsi > 0.03 && rtoa400 > 0.5) {
+            groundTypeFlag = Math.pow(2.0, OlciSnowPropertiesConstants.SICE_SNOW-1);
+        } else if (ndbi > 0.33) {
+            groundTypeFlag = Math.pow(2.0, OlciSnowPropertiesConstants.SICE_BARE_ICE_CLEAN-1);
+        } else if (ndbi > 0.66) {
+            groundTypeFlag = Math.pow(2.0, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED-1);
+        } else if (siceSnowProperties.getSnowGrainSize() <= 0.01 || (rtoa400 - rtoa1020 <= 0.13)) {
+            groundTypeFlag = Math.pow(2.0, OlciSnowPropertiesConstants.SICE_BARE_ICE_POLLUTED-1);
+        }
+        return (int) groundTypeFlag;
+    }
+
+    static int setTargetGroundTypeFlag(int x, int y,
+                                     Tile siceGroundFlagTile,
+                                     int groundTypeFlag,
+                                     SiceSnowPropertiesResult siceSnowProperties,
+                                     double rtoa400, double rtoa1020,
+                                     double ndsi, double ndbi) {
 
         if (ndsi > 0.03 && rtoa400 > 0.5) {
             siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_SNOW, true);
@@ -188,7 +200,9 @@ class OlciSiceSnowPropertiesAlgorithm {
         } else if (siceSnowProperties.getSnowGrainSize() <= 0.01 || (rtoa400 - rtoa1020 <= 0.13)) {
             siceGroundFlagTile.setSample(x, y, OlciSnowPropertiesConstants.SICE_UNCERTAIN, true);
         }
+        return siceGroundFlagTile.getSampleInt(x, y);
     }
+
 
     private static void computePlanarBroadbandAlbedo(SiceSnowPropertiesResult snowProperties,
                                                      double brr400,
@@ -332,7 +346,7 @@ class OlciSiceSnowPropertiesAlgorithm {
 
         // todo: make the following nicer, taken 1:1 from breadboard
         int ipol = 1;    // this means polluted snow
-        int ntype = 0;   // meaning of ntype: type of pollutants --> 1-soot, 2-dust, 3-algae, 0-uncertain
+        int ntype = 4;   // meaning of ntype: type of pollutants --> 1-soot, 2-dust, 3-algae, 4-uncertain
 
         if (ang < 0.5 || ang > 10.0) {
             ipol = 0;
@@ -365,6 +379,7 @@ class OlciSiceSnowPropertiesAlgorithm {
         }
         if (ipol == 0) {    // this means clean snow
             conc = 0.0;
+            ntype = 0;
         }
         final double a680 = 1.E7;
         final double b680 = 600.0;
