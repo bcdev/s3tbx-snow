@@ -48,11 +48,11 @@ import java.util.Map;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "2.3-SNAPSHOT")
+        version = "3.0-SNAPSHOT")
 
 public class OlciSnowPropertiesOp extends Operator {
 
-    public static final String S3_SNOW_FLAG_BAND_NAME = "s3snow_flags";
+    private static final String S3_SNOW_FLAG_BAND_NAME = "s3snow_flags";
     private static final String ALBEDO_SPECTRAL_SPHERICAL_OUTPUT_PREFIX = "albedo_spectral_spherical_";
     private static final String ALBEDO_SPECTRAL_PLANAR_OUTPUT_PREFIX = "albedo_spectral_planar_";
     private static final String PPA_SPECTRAL_OUTPUT_PREFIX = "ppa_spectral_";
@@ -98,11 +98,6 @@ public class OlciSnowPropertiesOp extends Operator {
             },
             defaultValue = "")
     private String[] spectralAlbedoTargetBands;
-
-    @Parameter(description = "Name of binary mask band in cloud mask product (if present)",
-            label = "Name of binary mask band in cloud mask product (if present)",
-            defaultValue = "cloud_over_snow")
-    private String cloudMaskBandName;
 
     @Parameter(defaultValue = "false",
             label = "Consider NDSI snow mask",
@@ -311,9 +306,10 @@ public class OlciSnowPropertiesOp extends Operator {
             Tile vaaTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getVaaName()), targetRectangle);
             Tile l1FlagsTile = getSourceTile(sourceProduct.getRasterDataNode(sensor.getL1bFlagsName()), targetRectangle);
 
-            Tile cloudMaskTile = null;
+            Tile idepixClassifTile = null;
             if (cloudMaskProduct != null) {
-                cloudMaskTile = getSourceTile(cloudMaskProduct.getRasterDataNode(cloudMaskBandName), targetRectangle);
+                idepixClassifTile = getSourceTile(cloudMaskProduct.getRasterDataNode
+                        (OlciSnowPropertiesConstants.IDEPIX_CLASSIF_BAND_NAME), targetRectangle);
             }
 
             for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
@@ -341,15 +337,19 @@ public class OlciSnowPropertiesOp extends Operator {
 
                     final boolean l1Valid = !l1FlagsTile.getSampleBit(x, y, sensor.getInvalidBit());
                     final boolean isLandOrBareIce = l1FlagsTile.getSampleBit(x, y, sensor.getLandBit()) || isBareIce;
-                    final boolean isNotCloud = cloudMaskTile == null ||
-                            (cloudMaskTile != null && cloudMaskTile.getSampleDouble(x, y) != 1.0);
 
+                    boolean isCloud = false;
+                    if (idepixClassifTile != null) {
+                        isCloud = idepixClassifTile.getSampleBit(x, y, OlciSnowPropertiesConstants.IDEPIX_CLOUD) ||
+                                idepixClassifTile.getSampleBit(x, y, OlciSnowPropertiesConstants.IDEPIX_CLOUD_BUFFER) ||
+                                idepixClassifTile.getSampleBit(x, y, OlciSnowPropertiesConstants.IDEPIX_CLOUD_SHADOW);
+                    }
                     final double sza = szaTile.getSampleDouble(x, y);
 
                     final boolean szaIsInvalid = sza > 75.0;
 //                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud && !szaIsInvalid;
                     // 20181207: do not exclude high SZA, but just raise a flag
-                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && isNotCloud;
+                    final boolean pixelIsValid = l1Valid && isLandOrBareIce && !isCloud;
                     final Band s3SnowFlagBand = targetProduct.getBand(S3_SNOW_FLAG_BAND_NAME);
                     targetTiles.get(s3SnowFlagBand).setSample(x, y,
                             OlciSnowPropertiesConstants.S3_SNOW_SZA_HIGH,
@@ -642,7 +642,6 @@ public class OlciSnowPropertiesOp extends Operator {
         }
 
         if (cloudMaskProduct != null) {
-            ProductUtils.copyBand(cloudMaskBandName, cloudMaskProduct, targetProduct, true);
             ProductUtils.copyFlagBands(cloudMaskProduct, targetProduct, true);
             FlagCoding idepixFlagCoding =
                     cloudMaskProduct.getFlagCodingGroup().get(OlciSnowPropertiesConstants.IDEPIX_CLASSIF_BAND_NAME);
@@ -723,11 +722,13 @@ public class OlciSnowPropertiesOp extends Operator {
     }
 
     private void validateCloudMaskProduct() {
-        Band cloudMaskBand = cloudMaskProduct.getBand(cloudMaskBandName);
-        if (cloudMaskBand == null) {
-            throw new OperatorException("Specified cloud mask product does not contain a band named '" +
-                    cloudMaskBandName + "'. Please check.");
+        Band pixelClassifBand = cloudMaskProduct.getBand(OlciSnowPropertiesConstants.IDEPIX_CLASSIF_BAND_NAME);
+        if (pixelClassifBand == null) {
+            throw new OperatorException("Specified cloud mask product does not contain the IdePix flag band '" +
+                                                OlciSnowPropertiesConstants.IDEPIX_CLASSIF_BAND_NAME +
+                                                "'. Please check.");
         }
+
         if (cloudMaskProduct.getSceneRasterWidth() != width || cloudMaskProduct.getSceneRasterHeight() != height) {
             throw new OperatorException("Dimensions of cloud mask product differ from source product. Please check.");
         }

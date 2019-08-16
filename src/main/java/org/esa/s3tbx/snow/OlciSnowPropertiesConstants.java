@@ -109,6 +109,13 @@ public class OlciSnowPropertiesConstants {
     // define here, we do not want a dependency to Idepix just for this:
     static final String IDEPIX_CLASSIF_BAND_NAME = "pixel_classif_flags";
 
+    public static final int IDEPIX_INVALID = 0;
+    public static final int IDEPIX_CLOUD = 1;
+    public static final int IDEPIX_CLOUD_AMBIGUOUS = 2;
+    public static final int IDEPIX_CLOUD_SURE = 3;
+    public static final int IDEPIX_CLOUD_BUFFER = 4;
+    public static final int IDEPIX_CLOUD_SHADOW = 5;
+
     static final int S3_SNOW_SZA_HIGH = 0;
     static final int S3_SNOW_GLINT = 1;
     static final int S3_SNOW_BACKSCATTERING = 2;
