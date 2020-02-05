@@ -16,7 +16,7 @@
 
 <html>
 <head>
-    <title>SNAP Data Processors - SNAP Sentinel-3 Snow Properties Processsor</title>
+    <title>SNAP Data Processors - SNAP Sentinel-3 Snow Properties Processsors</title>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" href="../style.css">
 </head>
@@ -25,23 +25,48 @@
 <table class="header">
     <tr class="header">
         <td class="header">&nbsp;
-            SNAP Data Processors - SNAP Sentinel-3 Snow Properties Processor</td>
+            SNAP Data Processors - SNAP Sentinel-3 Snow Properties Processors</td>
         <td class="header" align="right"><a href="nbdocs://org.esa.snap.snap.help/org/esa/snap/snap/help/docs/general/overview/SnapOverview.html"><img src="../images/snap_header.jpg" border=0></a>
         </td>
     </tr>
 </table>
 
-<h3>SNAP Sentinel-3 Snow Properties Processsor</h3>
+<h3>SNAP Sentinel-3 Snow Properties Processsors</h3>
 
 <p class="i1">
-    The SNAP Sentinel-3 Snow Properties Processor provides the retrieval of various snow properties (such as planar and spherical
+    The SNAP Sentinel-3 Snow Properties Processors provides the retrieval of various snow properties (such as planar and spherical
     albedo for both spectral OLCI wavelengths and broadband ranges, snow grain diameter, snow pollution parameters, and
     others) from Sentinel-3 OLCI Level 1b input data.
 </p>
 
+<p class="i1">
+    There are two distinct processors available:
+</p>
+
+<ul class="i1">
+    <li>
+        The OLCI Snow Properties Processor, developed within the European Space Agency (ESA) Scientific
+        Exploitation of Operational Missions (SEOM) Sentinel-3 for Science, Land Study 1: Snow, 2016-1018 [1].
+    </li>
+    <li>
+        The OLCI SICE Snow Properties Processor, developed within the pre-operational Sentinel-3 snow and ice products
+        (SICE) project in 2019 [2], a direct evolution from the SEOM S3 for Snow project.
+    </li>
+</ul>
+
+<p class="i1">
+    The OLCI SICE Snow Properties Processor reflects the latest and most settled state of the algorithms being
+    developed in SICE. This processor is the recommended one for most users.
+    The OLCI Snow Properties Processor reflects the state of the algorithms being developed and tested
+    within SEOM S3 for Snow. This processor is, however, still of use for experienced users as it contains many
+    user options to change specific algoritnm parameters as well as to generate additional bands in the target product.
+</p>
+
 <p class="i1"><a href="S3SnowAlgorithmSpecification.html">Sentinel-3 Snow Properties Algorithm Specifications</a></p>
 
-<p class="i1"><a href="S3SnowProcessorDescription.html">Sentinel-3 Snow Properties Processor Descriptions</a></p>
+<p class="i1"><a href="OlciSnowPropertiesProcessorDescription.html">OLCI Snow Properties Processor Description</a></p>
+
+<p class="i1"><a href="OlciSiceSnowPropertiesProcessorDescription.html">OLCI SICE Snow Properties Processor Description</a></p>
 
 <p class="i1"><a href="S3SnowCommandLine.html">Processing from the Command Line</a></p>
 
@@ -56,14 +81,18 @@
         SEOM S3 for Snow project page</a><br><br>
 
     <b>[2]</b>
+    <a href="http://snow.geus.dk/">
+        Pre-operational Sentinel-3 snow and ice products (SICE)</a><br><br>
+
+    <b>[3]</b>
     Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
     Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 2.4, 11 January 2019.<br><br>
 
-    <b>[3]</b>
+    <b>[4]</b>
     <a href="https://www.eumetsat.int/website/wcm/idc/idcplg?IdcService=GET_FILE&dDocName=PDF_S3A_PN_OLCI_L2_REP&RevisionSelectionMethod=LatestReleased&Rendition=Web">
         Sentinel-3A Product Notice: OLCI Level-2 Ocean Colour</a><br><br>
 
-    <b>[4]</b>
+    <b>[5]</b>
     Kokhanovsky, A., Lamare, M., Di Mauro, B., Picard, G., Arnaud, L., Dumont, M., Tuzet, F., Brockmann, C., and J.E. Box:
     On the reflectance spectroscopy of snow. The Cryosphere, 12, 2371-2382, 20 July 2018.<br><br>
 </p>

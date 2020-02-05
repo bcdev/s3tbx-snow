@@ -7,7 +7,7 @@
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
                 <attr name="operatorName" stringvalue="OLCI.SnowProperties"/>
                 <attr name="displayName" stringvalue="OLCI Snow Properties"/>
-                <attr name="dialogTitle" stringvalue="OLCI Snow Properties v3.0-SNAPSHOT"/>
+                <attr name="dialogTitle" stringvalue="OLCI Snow Properties v3.0"/>
                 <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
                 <attr name="targetProductNameSuffix" stringvalue="_snow"/>
                 <attr name="ShortDescription" stringvalue="Provides snow properties from OLCI measurements."/>
@@ -18,7 +18,7 @@
                 <attr name="delegate" methodvalue="org.esa.snap.core.gpf.ui.DefaultOperatorAction.create"/>
                 <attr name="operatorName" stringvalue="OLCI.SnowProperties.SICE"/>
                 <attr name="displayName" stringvalue="OLCI SICE Snow Properties"/>
-                <attr name="dialogTitle" stringvalue="OLCI SICE Snow Properties v3.0-SNAPSHOT"/>
+                <attr name="dialogTitle" stringvalue="OLCI SICE Snow Properties v1.0"/>
                 <attr name="helpId" stringvalue="s3SnowDoc"/>  <!--The helpId if help contents is provided-->
                 <attr name="targetProductNameSuffix" stringvalue="_sice"/>
                 <attr name="ShortDescription" stringvalue="Provides SICE snow properties from OLCI measurements."/>

@@ -47,7 +47,7 @@ import java.util.Map;
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
         copyright = "(c) 2019 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "3.0-SNAPSHOT")
+        version = "1.0")
 
 public class OlciSiceSnowPropertiesOp extends Operator {
 

@@ -9,7 +9,8 @@
             <tocitem text="Thematic Land Processing">
                 <tocitem text="Sentinel-3 Toolbox Snow Properties Processor" target="s3SnowDoc">
                     <tocitem text="Algorithm Specifications" target="s3SnowAlgorithmSpecification"/>
-                    <tocitem text="Processor Description" target="s3SnowProcessorDescription"/>
+                    <tocitem text="OLCI Snow Properties Processor Description" target="s3SnowProcessorDescription"/>
+                    <tocitem text="OLCI SICE Snow Properties Processor Description" target="s3SiceSnowProcessorDescription"/>
                     <tocitem text="Command Line Processing" target="s3SnowCommandLine"/>
                 </tocitem>
             </tocitem>

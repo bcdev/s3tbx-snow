@@ -46,9 +46,9 @@ import java.util.Map;
 @OperatorMetadata(alias = "OLCI.SnowProperties",
         description = "Computes snow properties from OLCI L1b data products.",
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
-        copyright = "(c) 2017, 2018 by ESA, Brockmann Consult",
+        copyright = "(c) 2017-2019 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "3.0-SNAPSHOT")
+        version = "3.0")
 
 public class OlciSnowPropertiesOp extends Operator {
 

@@ -26,7 +26,7 @@
 <table class="header">
     <tr class="header">
         <td class="header">&nbsp;
-            SNAP Data Processors - Sentinel-3 Snow Properties Processor Description
+            SNAP Data Processors - OLCI Snow Properties Processor Description
         </td>
         <td class="header" align="right"><a
                 href="nbdocs://org.esa.snap.snap.help/org/esa/snap/snap/help/docs/general/overview/SnapOverview.html"><img
@@ -40,7 +40,7 @@
 
 <h4>I/O Parameters Tab</h4>
 
-<p align="center"><img src="../images/s3snow_io.png"></p>
+<p align="center"><img src="../images/s3snow_io_v30.png"></p>
 
 <h4>Source Product Group</h4>
 
@@ -49,8 +49,8 @@
     Used to select the OLCI L1b source product. The user can specify either an original L1b product, or a product which
     has been Rayleigh corrected in a preprocessing step using the SNAP Rayleigh Correction processor. Using a Rayleigh
     corrected product as input will save significant computation time for the snow property retrieval, but note that
-    the Rayleigh correction product MUST contain Rayleigh corrected reflectances for spectral bands 1, 5, 17
-    and 21 (400, 510, 865 and 1020nm), and in addition for all manually selected spectral wavelengths (see processing
+    the Rayleigh correction product MUST contain Rayleigh corrected reflectances for spectral bands 1, 6, 17
+    and 21 (400, 560, 865 and 1020nm), and in addition for all manually selected spectral wavelengths (see processing
     parameter descriptions below). - If an original L1b product is set as input product, all required
     Rayleigh corrected reflectances will be computed from an internal call of the SNAP
     Rayleigh Correction processor.
@@ -61,11 +61,13 @@
 
 <p class="i1">
     <b>Cloud mask product (optional): </b>
-    Used to select an optional source product providing a cloud mask. Usually this product should have been generated
-    in a preprocessing step using the IdePix pixel classification tool in the specific version provided
-    within the SEOM S3 Snow project [1], but in principle this could be any kind
-    of product containing a mask with values 1.0 indicating cloudy pixels and 0.0 otherwise. A mandatory condition
-    to use this option is that the cloud mask product has been generated on the same raster (i.e. the same OLCI L1b
+    Used to select an optional source product providing a cloud mask. This product must have been generated
+    in a preprocessing step using the IdePix pixel classification tool in the specific version for OLCI
+    provided as separate processor plugin through the SNAP Desktop plugin manager (see corresponding SNAP help
+    documentation for more information).
+    Mandatory conditions for this optional cloud mask product are the presence of the classification flag band named
+    'pixel_classif_flags',
+    and that the product has been generated on the same raster (i.e. the same OLCI L1b
     product) which is considered for the snow properties retrieval.
 </p>
 
@@ -91,7 +93,7 @@
 
 <h3>The Processing Parameters</h3>
 
-<p align="center"><img src="../images/s3snow_procparms.png"></p>
+<p align="center"><img src="../images/s3snow_procparms_v30.png"></p>
 
 <p class="i1">
     <b>Select OLCI wavelengths for spectral snow quantities: </b><br>
@@ -99,14 +101,6 @@
     the computed spectral snow quantities (i.e. spectral snow albedo, see description of processor output below)
     will be written as corresponding band into the target product. If no band is selected, only broadband snow
     quantities and other selected wavelength-independent quantities are written to the target product.
-</p>
-
-<p class="i1">
-    <b>Name of binary mask band in cloud mask product (if present): </b><br>
-    The name of the binary mask band in cloud mask product (in case a cloud product was specified).
-    If the IdePix pixel classification tool has been used to generate this product (the usual case), the cloud mask
-    band has the default name 'cloud_over_snow'. If no cloud mask product was specified, this processing
-    parameter has no effect.
 </p>
 
 <p class="i1">
@@ -285,7 +279,7 @@
 </p>
 
 
-<h4>Additional processor output for default processing parameters</h4>
+<h4>Example for extended processor output with modified processing parameters</h4>
 
 <p class="i1">
 The following case shows the processor output bands if 2 OLCI spectral wavelengths (bands 7 and 9, 620 and 673.75nm)
@@ -296,7 +290,7 @@ were selected, and all boolean processing parameters explained above set to 'tru
 <p class="i1">
     <b>rBRR_<i>n</i>: </b><br>
     The Rayleigh corrected reflectances for band <i>n</i>. We have band 7 and 9, and in addition the bands
-    1, 5, 17 and 21 which are mandatory for the snow properties retrieval.
+    1, 6, 17 and 21 which are mandatory for the snow properties retrieval.
 </p>
 
 <p class="i1">
@@ -382,16 +376,21 @@ were selected, and all boolean processing parameters explained above set to 'tru
         SEOM S3 for Snow project page</a><br><br>
 
     <b>[2]</b>
+    <a href="http://snow.geus.dk/">
+        Pre-operational Sentinel-3 snow and ice products (SICE)</a><br><br>
+
+    <b>[3]</b>
     Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
     Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 2.4, 11 January 2019.<br><br>
 
-    <b>[3]</b>
-    <a href="https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwjWg7ChtOrcAhXPfFAKHeIZCp4QFjAAegQICRAC&url=https%3A%2F%2Fwww.eumetsat.int%2Fwebsite%2Fwcm%2Fidc%2Fidcplg%3FIdcService%3DGET_FILE%26dDocName%3DPDF_S3A_PN_OLCI_L2%26RevisionSelectionMethod%3DLatestReleased%26Rendition%3DWeb&usg=AOvVaw3kklxm9qc0TSptA6fX1MOa">
+    <b>[4]</b>
+    <a href="https://www.eumetsat.int/website/wcm/idc/idcplg?IdcService=GET_FILE&dDocName=PDF_S3A_PN_OLCI_L2_REP&RevisionSelectionMethod=LatestReleased&Rendition=Web">
         Sentinel-3A Product Notice: OLCI Level-2 Ocean Colour</a><br><br>
 
-    <b>[4]</b>
+    <b>[5]</b>
     Kokhanovsky, A., Lamare, M., Di Mauro, B., Picard, G., Arnaud, L., Dumont, M., Tuzet, F., Brockmann, C., and J.E. Box:
     On the reflectance spectroscopy of snow. The Cryosphere, 12, 2371-2382, 20 July 2018.<br><br>
+
 </p>
 <br>
 

@@ -22,7 +22,7 @@
 
     <groupId>org.esa.s3tbx</groupId>
     <artifactId>s3tbx-snow</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>3.0</version>
     <packaging>nbm</packaging>
     <name>S3TBX Snow Properties Processor</name>
     <description>Provides snow properties from OLCI measurements.</description>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
             <artifactId>s3tbx-olci-radiometry</artifactId>
-            <version>7.0.0-SNAPSHOT</version>
+            <version>${snap.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.s3tbx</groupId>
@@ -99,13 +99,13 @@
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/releases/</url>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-releases/</url>
             <uniqueVersion>false</uniqueVersion>
         </repository>
         <snapshotRepository>
             <id>snap-repo-public</id>
             <name>Public Maven Snapshot Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/snapshots/</url>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-snapshot/</url>
             <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
@@ -114,6 +114,19 @@
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>bc-nexus-repo</id>
+            <name>Public Nexus Repository for BC</name>
             <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
@@ -130,7 +143,7 @@
         <pluginRepository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <url>https://snap-build-server.tilaa.cloud/nexus/repository/snap-maven-public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -141,7 +154,6 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
     <build>
         <resources>
             <resource>

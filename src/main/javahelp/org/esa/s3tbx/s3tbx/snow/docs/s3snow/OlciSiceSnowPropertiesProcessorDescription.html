@@ -1,0 +1,350 @@
+<!--
+  ~ Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<html>
+<head>
+    <title>SNAP Data Processors - Sentinel-3 Snow Properties Processor Description</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+
+<body>
+
+<table class="header">
+    <tr class="header">
+        <td class="header">&nbsp;
+            SNAP Data Processors - OLCI SICE Snow Properties Processor Description
+        </td>
+        <td class="header" align="right"><a
+                href="nbdocs://org.esa.snap.snap.help/org/esa/snap/snap/help/docs/general/overview/SnapOverview.html"><img
+                src="../images/snap_header.jpg"
+                border=0></a>
+        </td>
+    </tr>
+</table>
+
+<h3>Processor Description</h3>
+
+<h4>I/O Parameters Tab</h4>
+
+<p align="center"><img src="../images/s3sice_io_v10.png"></p>
+
+<h4>Source Product Group</h4>
+
+<p class="i1">
+    <b>OLCI L1b radiance product: </b>
+    Used to select the OLCI L1b source product.
+</p>
+<p class="i1">
+    <b>OLCI L1b or Rayleigh corrected product: </b>
+    Used to select the corresponding OLCI Rayleigh correction source product.  This product is the result from
+    a Rayleigh correction of the L1b radiance product in a preprocessing step using the SNAP Rayleigh Correction processor.
+    This Rayleigh correction product is also a mandatory input for the OLCI SICE snow properties retrieval.
+    It MUST contain Rayleigh corrected reflectances for spectral bands 1, 6, 10, 11, 17
+    and 21 (400, 560, 681, 708, 865 and 1020nm), and in addition for all manually selected spectral wavelengths (see processing
+    parameter descriptions below).
+    Providing this Rayleigh
+    corrected product as input will save significant computation time for the snow property retrieval itself.
+</p>
+
+<p class="i1">
+    <b>Cloud mask product (optional): </b>
+    Used to select an optional source product providing a cloud mask. This product must have been generated
+    in a preprocessing step using the IdePix pixel classification tool in the specific version for OLCI
+    provided as separate processor plugin through the SNAP Desktop plugin manager (see corresponding SNAP help
+    documentation for more information).
+    Mandatory conditions for this optional cloud mask product are the presence of the classification flag band named
+    'pixel_classif_flags',
+    and that the product has been generated on the same raster (i.e. the same OLCI L1b
+    product) which is considered for the snow properties retrieval.
+</p>
+
+<p class="i1">
+    Use the <b>...</b> button to open a data product currently not opened in the Sentinel Toolbox.
+</p>
+
+<h4>Target Product Group</h4>
+
+<p class="i1">
+    <b>Name:</b>
+    Used to specify the name of the target product.
+</p>
+
+<p class="i1">
+    <b>Save to:</b>
+    Used to specify whether the target product should be saved to the file system. The
+    combo box presents a list of file formats.
+</p>
+
+<p class="i1">
+    <b>Open in SNAP:</b>
+    Used to specify whether the target product should be opened in the Sentinel Toolbox.
+    When the target product is not saved, it is opened in the Sentinel Toolbox automatically.
+</p>
+
+
+<h3>The Processing Parameters</h3>
+
+<p align="center"><img src="../images/s3sice_procparms_v10.png"></p>
+
+<p class="i1">
+    <b>Select OLCI wavelengths for spectral snow quantities: </b><br>
+    The OLCI wavelengths considered for the retrieval of spectral snow quantities. For the selected wavelengths,
+    the computed spectral snow quantities (i.e. spectral snow albedo, see description of processor output below)
+    will be written as corresponding band into the target product. If no band is selected, only broadband snow
+    quantities and other selected wavelength-independent quantities are written to the target product.
+</p>
+
+<p class="i1">
+    <b>Consider NDSI snow mask: </b><br>
+    If selected, an NDSI value will be computed from Rayleigh reflectances at wavelengths 865 and 1020nm:<br><br>
+
+    &emsp;&emsp; NDSI = (brr865 - brr1020) / (brr865 + brr1020) <br><br>
+
+    The considered pixel will be interpreted as snow pixel if
+</p>
+
+<ul class="i1">
+    <li>
+        the NDSI exceeds a threshold which is given in the
+        parameter below.
+    </li>
+    <li>
+        the Rayleigh reflectance at OLCI band 1 (400nm) is greater than 0.5.
+    </li>
+</ul>
+
+<p class="i1">
+    The default is 'false'.
+</p>
+
+<p class="i1">
+    <b>NDSI threshold for snow identification: </b><br>
+    If an NDSI snow mask is considered (previous parameter), the considered pixel will be interpreted as snow pixel if
+    the NDSI exceeds the threshold specified here, and if the Rayleigh reflectance at OLCI band 1 (400nm) is greater
+    than 0.5. The default number is 0.03.
+</p>
+
+
+<h3>The Processor Output</h3>
+
+<p class="i1">
+    The processor provides a variable number of output bands, depending on the settings of the processing parameters.
+</p>
+
+<h4>Processor Output for default processing parameters</h4>
+
+<p align="center"><img src="../images/sice_product_defaultbands.png"></p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_vis: </b><br>
+    Spherical albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_nir: </b><br>
+    Spherical albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_sw: </b><br>
+    Spherical albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_vis: </b><br>
+    Planar albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_nir: </b><br>
+    Planar albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_sw: </b><br>
+    Planar albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>grain diameter: </b><br>
+    Diameter of snow grains in millimeters.
+</p>
+
+<p class="i1">
+    <b>snow_specific_area: </b><br>
+    The 'snow specific area' in square metres. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>scattering_angle: </b><br>
+    The scattering angle. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>concentration_of_pollutants: </b><br>
+    The concentration of pollutants. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>ndbi: </b><br>
+    The NDBI ratio. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>ndsi: </b><br>
+    The NDSI ratio. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>sice_pollution_type_flags: </b><br>
+    The SICE pollution type flags. Snow can be either clean or polluted by soot, dust, algae, or uncertain matter.
+</p>
+
+<p class="i1">
+    <b>ice_ground_type_flags: </b><br>
+    The SICE ground type flags. Ground type can be uncertaiin, snow, or bare ice which in return can be clean or polluted.
+</p>
+
+<p class="i1">
+    <b>quality_flags: </b><br>
+    The quality flags band from the OLCI L1b product.
+</p>
+
+
+<h4>Extended processor output containing spectral albedos</h4>
+
+<p class="i1">
+The following case shows the processor output bands if 2 OLCI spectral wavelengths (bands 7 and 9, 620 and 673.75nm)
+were selected.
+
+<p align="center"><img src="../images/sice_product_extendedbands.png"></p>
+
+<p class="i1">
+    <b>albedo_spectral_spherical_<i>nnnn</i>: </b><br>
+    The spectral spherical albedo for the selected OLCI wavelengths <i>nnnn</i>.
+</p>
+
+<p class="i1">
+    <b>albedo_spectral_planar_<i>nnnn</i>: </b><br>
+    The spectral planar albedo for the selected OLCI wavelengths <i>nnnn</i>.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_vis: </b><br>
+    Spherical albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_nir: </b><br>
+    Spherical albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_spherical_sw: </b><br>
+    Spherical albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_vis: </b><br>
+    Planar albedo in broadband visible range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_nir: </b><br>
+    Planar albedo in broadband near infrared range.
+</p>
+
+<p class="i1">
+    <b>albedo_bb_planar_sw: </b><br>
+    Planar albedo in broadband shortwave range.
+</p>
+
+<p class="i1">
+    <b>grain diameter: </b><br>
+    Diameter of snow grains in millimeters.
+</p>
+
+<p class="i1">
+    <b>snow_specific_area: </b><br>
+    The 'snow specific area' in square metres. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>scattering_angle: </b><br>
+    The scattering angle. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>concentration_of_pollutants: </b><br>
+    The concentration of pollutants. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>ndbi: </b><br>
+    The NDBI ratio. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>ndsi: </b><br>
+    The NDSI ratio. See the ATBD [3] for more details.
+</p>
+
+<p class="i1">
+    <b>sice_pollution_type_flags: </b><br>
+    The SICE pollution type flags. Snow can be either clean or polluted by soot, dust, algae, or uncertain matter.
+</p>
+
+<p class="i1">
+    <b>ice_ground_type_flags: </b><br>
+    The SICE ground type flags. Ground type can be uncertaiin, snow, or bare ice which in return can be clean or polluted.
+</p>
+
+<p class="i1">
+    <b>quality_flags: </b><br>
+    The quality flags band from the OLCI L1b product.
+</p>
+
+
+<h3>References</h3>
+
+<p class="i1">
+
+    <b>[1]</b>
+    <a href="http://seom.esa.int/page_project032.php">
+        SEOM S3 for Snow project page</a><br><br>
+
+    <b>[2]</b>
+    <a href="http://snow.geus.dk/">
+        Pre-operational Sentinel-3 snow and ice products (SICE)</a><br><br>
+
+    <b>[3]</b>
+    Kokhanovsky, A., Box, J.E., Lamare, M., Dumont, M., Picard, G., Danne, O., and C. Brockmann:
+    Algorithm Theoretical Basis Document: Snow Properties Retrieval from Sentinel-3. Version 2.4, 11 January 2019.<br><br>
+
+    <b>[4]</b>
+    <a href="https://www.eumetsat.int/website/wcm/idc/idcplg?IdcService=GET_FILE&dDocName=PDF_S3A_PN_OLCI_L2_REP&RevisionSelectionMethod=LatestReleased&Rendition=Web">
+        Sentinel-3A Product Notice: OLCI Level-2 Ocean Colour</a><br><br>
+
+    <b>[5]</b>
+    Kokhanovsky, A., Lamare, M., Di Mauro, B., Picard, G., Arnaud, L., Dumont, M., Tuzet, F., Brockmann, C., and J.E. Box:
+    On the reflectance spectroscopy of snow. The Cryosphere, 12, 2371-2382, 20 July 2018.<br><br>
+</p>
+<br>
+
+<hr>
+</body>
+</html>
