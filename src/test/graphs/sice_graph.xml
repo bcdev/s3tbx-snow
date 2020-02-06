@@ -1,0 +1,24 @@
+<!--
+call with:
+ /f/olafd/snap-snapshots/release_7.0.0/snap/bin/gpt.exe sice_graph.xml 
+ -SsourceProduct=./subset_0_of_S3A_OL_1_EFR____20160822T133617_20160822T133917_20160823T192250_0179_008_010_1799_LN1_O_NT_002.dim
+ -SbrrProduct=./subset_0_of_S3A_OL_1_EFR____20160822T133617_20160822T133917_20160823T192250_0179_008_010_1799_LN1_O_NT_002_rayleigh.dim 
+ -ScloudMaskProduct=./subset_0_of_S3A_OL_1_EFR____20160822T133617_20160822T133917_20160823T192250_0179_008_010_1799_LN1_O_NT_002_idepix.dim 
+ -t ./s3snow_out.dim
+-->
+
+<graph id="SiceSnowPropertiesTest">
+	<version>1.0</version>
+	<node id="slope">
+		<operator>OLCI.SnowProperties.SICE</operator>
+		<sources>
+			<sourceProduct>${sourceProduct}</sourceProduct>
+			<brrProduct>${brrProduct}</brrProduct>
+			<cloudMaskProduct>${cloudMaskProduct}</cloudMaskProduct>
+		</sources>
+		<parameters>
+			<ndsiThresh>0.04</ndsiThresh>
+			<considerNdsiSnowMask>true</considerNdsiSnowMask>
+		</parameters>
+	</node>
+</graph>

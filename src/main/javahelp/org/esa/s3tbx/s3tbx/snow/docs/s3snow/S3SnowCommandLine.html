@@ -55,7 +55,7 @@ To obtain general help on the graph processing, use the command
 </ul>
 
 <p class="i1">
-Specific help on the Sentinel-3 Snow Properties processor can be obtained with
+Specific help on the OLCI Snow Properties processor can be obtained with
 </p>
 <ul class="i1">
     <li>
@@ -64,12 +64,21 @@ Specific help on the Sentinel-3 Snow Properties processor can be obtained with
 </ul>
 
 <p class="i1">
-In this case, information on the usage and a list of all available parameters are given.
+    Specific help on the OLCI SICE Snow Properties processor can be obtained with
+</p>
+<ul class="i1">
+    <li>
+        ${S3TBX-INSTALL-DIR}/bin/gpt -h OLCI.SnowProperties.SICE
+    </li>
+</ul>
+
+<p class="i1">
+From these commands, information on the usage and a list of all available parameters are given.
 </p>
 
 <p class="i1">
-The Snow Properties processor parameters can also be specified via a graph xml file.
-A possible graph xml file could look like the following. (Note that in principle it is not necessary
+The processor parameters can also be specified via graph xml files, e.g. olci_snow_graph.xml or olci_sice_snow_graph.xml .
+These graph xml files could look like the following. (Note that in principle it is not necessary
 to explicitly set parameters if default values shall be used).
 </p>
 <pre>
@@ -80,11 +89,10 @@ to explicitly set parameters if default values shall be used).
             &lt;operator&gt;OLCI.SnowProperties&lt;/operator&gt;
             &lt;sources&gt;
                 &lt;sourceProduct&gt;${sourceProduct}&lt;/sourceProduct&gt;
+                &lt;cloudMaskProduct&gt;${cloudMaskProduct}&lt;/cloudMaskProduct&gt;
             &lt;/sources&gt;
             &lt;parameters&gt;
                 &lt;ndsiThresh&gt;0.04&lt;/ndsiThresh&gt;
-            &lt;/parameters&gt;
-            &lt;parameters&gt;
                 &lt;computePPA&gt;true&lt;/computePPA&gt;
             &lt;/parameters&gt;
         &lt;/node&gt;
@@ -92,11 +100,41 @@ to explicitly set parameters if default values shall be used).
 
 </pre>
 
+<pre>
+
+    &lt;graph id="SiceSnowPropertiesTest"&gt;
+        &lt;version&gt;1.0&lt;/version&gt;
+        &lt;node id="slope"&gt;
+            &lt;operator&gt;OLCI.SnowProperties.SICE&lt;/operator&gt;
+            &lt;sources&gt;
+                &lt;sourceProduct&gt;${sourceProduct}&lt;/sourceProduct&gt;
+                &lt;brrProduct&gt;${brrProduct}&lt;/brrProduct&gt;
+                &lt;cloudMaskProduct&gt;${cloudMaskProduct}&lt;/cloudMaskProduct&gt;
+            &lt;/sources&gt;
+            &lt;parameters&gt;
+                &lt;ndsiThresh&gt;0.04&lt;/ndsiThresh&gt;
+                &lt;considerNdsiSnowMask&gt;true&lt;/considerNdsiSnowMask&gt;
+            &lt;/parameters&gt;
+        &lt;/node&gt;
+    &lt;/graph&gt;
+
+</pre>
+
+
 <p class="i1">
-This graph can be invoked by the following call on the command line:
+The graph for the OLCI Snow Properties processor can be invoked by the following call on the command line:
 </p>
 <pre>
-    gpt &lt;graph-file.xml&gt; -SsourceProduct=&lt;path-to-source-file&gt;
+    gpt &lt;olci_snow_graph.xml&gt; -SsourceProduct=&lt;path-to-source-file&gt;
+    -ScloudMaskProduct=&lt;path-to-cloudmask-file&gt;
+</pre>
+
+<p class="i1">
+    The call for the graph for the OLCI SICE Snow Properties processor would look like:
+</p>
+<pre>
+    gpt &lt;olci_sice_snow_graph.xml&gt; -SsourceProduct=&lt;path-to-source-file&gt;
+     -SbrrProduct=&lt;path-to-brr-file&gt; -ScloudMaskProduct=&lt;path-to-cloudmask-file&gt;
 </pre>
 
 </body>
