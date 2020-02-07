@@ -12,13 +12,14 @@ The SNAP S3-SNOW Processors
 Overview
 ========
 
-The key goal of the S3-SNOW project regarding software development, production and dissemination was to
+The key goal of the S3-SNOW project and its successor SICE regarding software development,
+production and dissemination was to
 implement the proposed algorithms for several  key  snow  parameters from  Sentinel-3 OLCI data in free and easily
 accessible open source toolboxes, notably and foremost ESA’s SNAP toolbox.
 During the implementation process, all processing software was distributed within the consortium in frequent cycles
 for the purpose of a comprehensive validation from an appropriate OLCI database containing products covering a variety of
 selected snow-covered areas. All SNAP
-S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
+S3-SNOW and SICE processors are available as SNAP plugins and can be run within SNAP on any supported platform
 (Windows, Linux, MacOS). The :underline:`procedure` for installation and operation is described in this chapter.
 
 .. index:: Theoretical Background Summary
@@ -35,7 +36,7 @@ The underlying algorithms are described in detail in the corresponding project A
 Processing Environment
 ======================
 
-As said, the S3-SNOW processors are available as SNAP plugins and can be run within SNAP on any supported platform
+As said, the S3-SNOW and SICE processors are available as SNAP plugins and can be run within SNAP on any supported platform
 (Windows, Linux, MacOS).
 The chapter :doc:`s3snow_installation` describes in more detail how to install the plugins in SNAP.
 
@@ -46,17 +47,21 @@ Processing Components
 
 The SNAP S3-SNOW processing software consists of the following components and auxiliary datasets:
 
-- *snap-core* module
-- *snap-gpf* module
-- *s3tbx-idepix-olci* plugin (specific version for S3-SNOW)
-- *s3tbx-olci-o2corr* plugin
-- *s3tbx-snow* plugin
-- *snap-slope* plugin
+- *SNAP Sentinel-3 toolbox* (current version including latest updates is 7.0.2)
+- *snap-slope* processor  (comes with the SNAP Sentinel-3 toolbox)
+- *s3tbx-olci-o2corr* processor (comes with the SNAP Sentinel-3 toolbox)
+- lookup tables for OLCI O2 correction (come with the SNAP Sentinel-3 toolbox)
+- *s3tbx-snow* plugin (current version is 3.0)
+- *idepix-core* plugin (current version is 7.0.1)
+- *idepix-olci* plugin (current version is 7.0.1)
 - GIMP Digital Elevation Model for Greenland
-- lookup tables for OLCI O2 correction
-
 
 These components are described in more detail in the following subsections.
+Note that, compared to the previous version of this SUM, the software package looks a bit different due to
+the further SNAP evolution during 2019 towards current version 7.0.2.
+I.e., the O2 correction processor (described in more detail later) is now
+an internal part of the Sentinel-3 toolbox, whereas the IdePix pixel classification modules are now
+provided as separate plugins.
 
 The Sentinel Application Platform (SNAP)
 ----------------------------------------
@@ -106,6 +111,20 @@ Optionally, an IdePix pixel classification product (see below) can be provided a
 snow properties of interest, defined by the user via processing parameters. This is described in detail in
 the chapter :doc:`s3snow_usage`.
 
+The OLCI SICE Snow Properties Processor
+----------------------------------
+
+The SICE Snow Properties Processor (SICE SPP) is the most recent processor provided for the retrieval of snow properties.
+As it contains various improvements compared to the SPP, this processor is the recommended one for most users.
+However, the SPP is still a useful alternative for experienced users as it contains many user options to change
+specific algoritnm parameters as well as to generate additional bands in the final snow product.
+These underlying algorithms are described in detail in the latest version of [`2 <intro.html#References>`_].
+
+As input, the SICE processor requires both an OLCI L1b product AND a corresponding Rayleigh corrected product from
+a preprocessing step.
+As for the SPP, an IdePix pixel classification product (see below) can be optionally provided as additional input.
+The output is again a set of snow properties of interest, described in detail in the chapter :doc:`s3snow_usage`.
+
 The IdePix OLCI Pixel Classification Processor
 ----------------------------------------------
 
@@ -114,14 +133,14 @@ and has been used for a variety of projects. It was transferred to SNAP and is c
 developed.
 
 Among the supported sensors is OLCI, which made IdePix the most appropriate candidate for cloud and snow identification in
-the S3-SNOW project.
+the S3-SNOW and SICE projects.
 
 Originally, IdePix has been developed as an internal component of the SNAP Sentinel-3 toolbox. To increase flexibility,
 the sub-processors for the various sensors were recently extracted to make them available as separate plugins.
-One of these plugins is the IdePix Sentinel-3 OLCI processor.
-The processor described here is a special version of this plugin, being adapted for the specific needs for a pixel
-classification within S3-SNOW. This allows to more easily provide special user options which are ultimately not
-needed in other projects than S3-Snow, and in return leave out other options which are not relevant for S3-Snow.
+One of these plugins is the IdePix Sentinel-3 OLCI processor which can now be used in its standard version
+as it has been further improved during 2019 and provides now all the needs for S3-SNOW and SICE,
+i.e. the distiction of cloud and snow/ice which now works reasonably well.
+(It is no longer necessary to use a 'special version' of Idepix OLCI, as described in previous SUM versions.)
 
 The IdePix classification algorithm for Sentinel-3 OLCI is based on a neural network approach. A common neural net
 is used for both land and water pixels. As input for the neural net, the square roots of the OLCI TOA reflectances
@@ -129,16 +148,8 @@ is used for both land and water pixels. As input for the neural net, the square 
 finally provides per pixel one of the properties 'cloud sure', 'cloud ambiguous', 'cloud'
 (which means sure OR ambiguous), or 'snow/ice'.
 
-Although the IdePix classification for OLCI has been tested and successively improved
-within various activities, some limitations and weaknesses in cloud detection (most of them well
-known from other existing cloud masking approaches) could not be solved to 100%. Among these is the distiction of
-cloud and snow/ice, which is very important for the usage for S3-SNOW, and which has shown to be often rather poor.
-Therefore, a new approach to detect clouds over snow/ice has been introduced in the IdePix OLCI version for S3-SNOW
-which makes use of the O2 correction algorithm provided by R.Preusker (Spectral Earth, Berlin), and which has been
-implemented in the OLCI O2 Correction Processor (see next section). As additional output, a binary band 'cloud_over_snow'
-is provided.
-
-The pixel classification with IdePix is an optional processing step in S3-SNOW (although recommended in most cases),
+The pixel classification with IdePix is an optional processing step in S3-SNOW as well as in SICE
+(although recommended in most cases),
 applied on the same OLCI L1b products which are being considered for the snow properties retrieval.
 
 The OLCI O2 Correction Processor
@@ -150,6 +161,9 @@ nominal bandwidth. The corresponding algorithm was provided by R.Preusker (Spect
 in detail in [`2 <intro.html#References>`_]. Among various outputs, the processor provides the rectified and desmiled
 transmission for OLCI waveband 13 (761.25nm) which is used by the IdePix classification for the detection of clouds
 over snow (previous subsection).
+
+This processor has now become a part of the current Sentinel-3 toolbox, therefor it is no longer needed to install
+it from a separate plugin.
 
 The SNAP Slope Processor
 ------------------------
@@ -200,18 +214,31 @@ The overall processing flow and the interaction of the S3-SNOW components are il
 
    Processing flow of the S3-SNOW processors. See text for details.
 
-The colour and arrow scheme in the diagram has the following meaning:
+The same is illustrated for SICE in :numref:`processing_flow_sice`. The main difference to S3-SNOW is that the
+Rayleigh corrected product is needed as mandatory input for the SICE Snow properties processor, thus it needs
+to be generated in a pre-processing step.
 
-- **red** : The standard processing flow for snow properties retrieval. The red boxes indicate the mandatory input products
-  and processing modules: An OLCI L1b radiances product is used as input product for the SPP.
-  Internally, BRRs are computed from a call of the SNAP Rayleigh Correction Processor, which in return are used for the
-  retrieval of the various snow properties.
-- **orange** : Alternative processing flow for snow properties retrieval: An OLCI BRR product is used as input product
+.. _processing_flow_sice:
+.. figure::  pix/processing_flow_sice.png
+   :align:   center
+   :scale: 80 %
+
+   Processing flow for SICE. See text for details.
+
+The colour and arrow schemes in the diagrams have the following meaning:
+
+- **red** : The standard processing flow for snow properties retrieval. The red boxes indicate the mandatory input
+  products and processing modules: An OLCI L1b radiances product is used as input product for the SPP.
+  If not provided as pre-processed product, BRRs are computed from an internal call of the SNAP Rayleigh Correction
+  Processor, which in return are used for the retrieval of the various snow properties. In opposite to SPP, SICE needs
+  the BRR product as mandatory input from pre-processing.
+- **orange** : Alternative processing flow in SPP for snow properties retrieval:
+  An OLCI BRR product is used as input product
   for the SPP. This BRR product has been computed independently in a preprocessing step, directly
   using the Rayleigh Correction Processor.
 - **green** : Optional processing, i.e. cloud classification: An OLCI L1b radiances product is used as input product
   for the IdePix Pixel Classification Processor. The IdePix output product can then be used as optional second input
-  product for the SPP. Internally, IdePix calls the O2 Correction Processor to obtain the
+  product for the SPP or SICE. Internally, IdePix calls the O2 Correction Processor to obtain the
   O2 waveband transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
   DEM product can be used as input for the O2 Correction Processor. If no DEM is specified by the user, the altitude band
   from the Olci L1b product is used.

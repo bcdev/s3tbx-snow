@@ -11,12 +11,12 @@ To install Sphinx run:
 To build the s3tbx-snow html documentation run:
 
      > cd ../s3tbx-snow/src/main/resources
-     > sphinx-build -E -a -b html doc doc/_build/html
+     > $SPHINXBUILD/sphinx-build -E -a -b html doc doc/_build/html
 
 Then find the html documentation in ./doc/_build/html
 
 Latex/pdf generation:
-     > sphinx-build -E -a -b latex doc doc/_build/latex
+     > $SPHINXBUILD/sphinx-build -E -a -b latex doc doc/_build/latex
      > cd doc/_build/latex
      > pdflatex SEOM_S3_SNOW_D2.3_SUM.tex
 

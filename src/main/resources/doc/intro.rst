@@ -19,19 +19,25 @@ ESA’s  Cryosphere  challenge  C3 : "Seasonal  snow,  lake/river  ice  and  lan
 climate  system,  water  resources, energy  and  carbon  cycles:  the  representa<on  of  terrestrial  cryosphere  
 in  land  surface,  atmosphere  and climate  models”. See [1] for details.
 
+As a successor of S3-SNOW, a new one-year project named SICE (Sentinel-3 snow and ice products) was established in 2019,
+with the particular goal to determine a dry/wet snow and clean/polluted bare ice spectral and broadband optical albedo
+1 km daily product for land ice (glaciers, ice caps, ice sheet). Within SICE, both algorithms and corresponding
+data processors and software were updated and further improved. The relevant changes of the processors and software
+will be described in this updated version of the SUM.
+
 Purpose and Scope
 =================
 
 This document is the User Manual for the SNAP processors written in 
 `Java <http://www.oracle.com/java>`_ which have been developed in the frame of the S3-SNOW
-project. Its purpose is to describe in detail how to obtain, install and operate these processors. Also, a
-comprehensive overview of the related data products (input as well as intermediate and final products) is provided.
+project and its successor SICE. Its purpose is to describe in detail how to obtain, install and operate these processors.
+Also, a comprehensive overview of the related data products (input as well as intermediate and final products) is provided.
 
 The explicit structure of the document is as follows:
 
 * Chapter 1 is this introduction.
-* `Chapter 2 <s3snow_processing_system.html>`_ gives an overview of the SNAP S3-SNOW processors.
-* `Chapter 3 <s3snow_products.html>`_ describes all relevant S3-SNOW products.
+* `Chapter 2 <s3snow_processing_system.html>`_ gives an overview of the SNAP S3-SNOW and SICE processors.
+* `Chapter 3 <s3snow_products.html>`_ describes all relevant S3-SNOW and SICE products.
 * `Chapter 4 <s3snow_installation.html>`_ explains how to get and install the processing software.
 * `Chapter 5 <s3snow_usage.html>`_ explains how to run the processing software.
 
@@ -65,7 +71,11 @@ References
 9.  Sentinel-3A Product Notice: OLCI Level-2 Ocean Colour,
     available at: https://www.eumetsat.int/website/wcm/idc/idcplg?IdcService=GET_FILE&dDocName=PDF_S3A_PN_OLCI_L2_REP&RevisionSelectionMethod=LatestReleased&Rendition=Web
 
+10. Pre-operational Sentinel-3 snow and ice products (SICE) web site.
+    available at: http://snow.geus.dk
 
+11. Kokhanovsky, A., Lamare, M., Di Mauro, B., Picard, G., Arnaud, L., Dumont, M., Tuzet, F., Brockmann, C., and J.E. Box:
+    On the reflectance spectroscopy of snow. The Cryosphere, 12, 2371-2382, 20 July 2018
 
 
 Acronyms and Abbreviations
@@ -117,6 +127,8 @@ OLCI                     Ocean and Land Colour Instrument
 PPA                      Probability of Photon Absorption
 -----------------------  ---------------------------------------------------------------------------------------------
 SEOM                     Scientific Exploitation of Operational Missions
+-----------------------  ---------------------------------------------------------------------------------------------
+SICE                     Sentinel-3 Snow and Ice
 -----------------------  ---------------------------------------------------------------------------------------------
 SNAP                     Sentinel Application Platform
 -----------------------  ---------------------------------------------------------------------------------------------
