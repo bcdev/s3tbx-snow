@@ -50,7 +50,7 @@ The SNAP S3-SNOW processing software consists of the following components and au
 - *SNAP Sentinel-3 toolbox* (current version including latest updates is 7.0.2)
 - *snap-slope* processor  (comes with the SNAP Sentinel-3 toolbox)
 - *s3tbx-olci-o2corr* processor (comes with the SNAP Sentinel-3 toolbox)
-- lookup tables for OLCI O2 correction (come with the SNAP Sentinel-3 toolbox)
+- lookup tables for OLCI O2 harmonisation (come with the SNAP Sentinel-3 toolbox)
 - *s3tbx-snow* plugin (current version is 3.0)
 - *idepix-core* plugin (current version is 7.0.1)
 - *idepix-olci* plugin (current version is 7.0.1)
@@ -59,7 +59,7 @@ The SNAP S3-SNOW processing software consists of the following components and au
 These components are described in more detail in the following subsections.
 Note that, compared to the previous version of this SUM, the software package looks a bit different due to
 the further SNAP evolution during 2019 towards current version 7.0.2.
-I.e., the O2 correction processor (described in more detail later) is now
+I.e., the O2 harmonisation processor (described in more detail later) is now
 an internal part of the Sentinel-3 toolbox, whereas the IdePix pixel classification modules are now
 provided as separate plugins.
 
@@ -152,10 +152,10 @@ The pixel classification with IdePix is an optional processing step in S3-SNOW a
 (although recommended in most cases),
 applied on the same OLCI L1b products which are being considered for the snow properties retrieval.
 
-The OLCI O2 Correction Processor
+The OLCI O2 Harmonisation Processor
 --------------------------------
 
-The OLCI O2 Correction Processor provides a 'harmonisation' of O2 wavebands, which means a modification of the effective
+The OLCI O2 harmonisation Processor provides a 'harmonisation' of O2 wavebands, which means a modification of the effective
 transmittances in O2A wavebands 13, 14 and 15 to their values which would be measured at their mean wavelengths and with
 nominal bandwidth. The corresponding algorithm was provided by R.Preusker (Spectral Earth, Berlin) and is described
 in detail in [`2 <intro.html#References>`_]. Among various outputs, the processor provides the rectified and desmiled
@@ -179,7 +179,7 @@ The GIMP Digital Elevation Model for Greenland
 
 A Digital Elevation Model for Greenland has been generated within the GIMP project. This product has been post-processed
 by BC and is provided in GeoTIFF format with a resolution of ~90m. As only layer in this product, the DEM altitude
-given in metres is provided. The altitude is e.g. used as input by the OLCI O2 Correction Processor.
+given in metres is provided. The altitude is e.g. used as input by the OLCI O2 Harmonisation Processor.
 The GIMP DEM product is illustrated in :numref:`gimp_dem`.
 
 .. _gimp_dem:
@@ -195,10 +195,10 @@ Using the SNAP Slope Processor, this product can be used as input to derive the 
 Lookup Tables
 -------------
 
-Various lookup tables are used for the OLCI O2 correction, which in return is part of the IdePix OLCI
+Various lookup tables are used for the OLCI O2 harmonisation, which in return is part of the IdePix OLCI
 pixel classification, all described in more detail in
 [`2 <intro.html#References>`_]. These lookup tables are not provided separately, but as an internal part of the
-OLCI O2 correction processor plugin.
+OLCI O2 Harmonisation processor.
 
 .. index:: Processing Flow
 
@@ -238,11 +238,11 @@ The colour and arrow schemes in the diagrams have the following meaning:
   using the Rayleigh Correction Processor.
 - **green** : Optional processing, i.e. cloud classification: An OLCI L1b radiances product is used as input product
   for the IdePix Pixel Classification Processor. The IdePix output product can then be used as optional second input
-  product for the SPP or SICE. Internally, IdePix calls the O2 Correction Processor to obtain the
+  product for the SPP or SICE. Internally, IdePix calls the O2 Harmonisation Processor to obtain the
   O2 waveband transmissions being used to generate the improved cloud classification band 'cloud_over_snow'. An optional
-  DEM product can be used as input for the O2 Correction Processor. If no DEM is specified by the user, the altitude band
+  DEM product can be used as input for the O2 Harmonisation Processor. If no DEM is specified by the user, the altitude band
   from the Olci L1b product is used.
-- **grey** : Additional processing options, not directly used in the snow properties retrieval. I.e., O2 correction
+- **grey** : Additional processing options, not directly used in the snow properties retrieval. I.e., O2 harmonisation
   and slope/aspect computation, as outlined above.
 - **solid arrows** : indicate input/output to/from a processing module
 - **dashed arrows** : indicate internal calls of one processing module into another

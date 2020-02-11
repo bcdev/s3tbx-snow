@@ -20,14 +20,8 @@ Usage Requirements
 General Requirements
 --------------------
 
-In general, all S3-SNOW processors require SNAP in the latest snapshot version (v7.0.0-SNAPSHOT), which comes with
-the S3-SNOW software delivery for all platforms (Windows, Linux, MacOS). [#f1]_
-
-.. rubric:: Footnotes
-
-.. [#f1] This snapshot version can be replaced by the next official release (v7.0.0) when available. This will be announced
-         on the SNAP website.
-
+The S3-SNOW and SICE processors require SNAP in the latest release version (v7.0.0), which is available
+for all platforms (Windows, Linux, MacOS) from the SNAP website (step.esa.int).
 
 Operating System
 ----------------
@@ -37,7 +31,7 @@ The S3-SNOW software can be run on any operating system which is suppported by S
 Hardware Requirements
 ---------------------
 
-The S3-SNOW processing system is a complex piece of software. Although the algorithms for the snow properties
+The S3-SNOW / SICE processing system is a complex piece of software. Although the algorithms for the snow properties
 retrieval are mostly relatively simple, the effort for data input/output is fairly high in case of full resolution
 OLCI products.
 Therefore, up-to-date and  sufficiently powerful and
@@ -45,31 +39,18 @@ dimensioned hardware is strongly recommended for reliable and convenient process
 
 .. index:: Contents of Software Bundle
 
-Contents of the Processing Software Bundle
-==========================================
+Contents of the S3-SNOW / SICE Processing Software Bundle
+=========================================================
 
-The S3-SNOW processing software consists of the following components:
+The S3-SNOW / SICE processing software consists of the following components:
 
-- *snap-core* module: part of the SNAP installation package
-- *snap-gpf* module:  part of the SNAP installation package
-- *s3tbx-idepix-olci*: nbm plugin file
-- *s3tbx-olci-o2corr*: nbm plugin file
-- *s3tbx-snow*: nbm plugin file
-- *snap-slope*: nbm plugin file
+- *s3tbx-snow-3.0.nbm*: nbm plugin file
+- *snap-slope-1.0.nbm*: nbm plugin file
 - GIMP Digital Elevation Model for Greenland: GeoTIFF auxiliary file
 
-See listing of files in :numref:`sw_bundle`.
-
-.. _sw_bundle:
-.. figure::  pix/sw_bundle.png
-   :align:   center
-   :scale: 80 %
-
-   Contents of the S3-SNOW software bundle.
-
-
-The processor versions were frequently incremented during the iterative development process.
-E.g., the current version of the Snow Properties Processor at S3-Snow project end is v2.1.
+Processors for Rayleigh correction and for IdePix pixel classification are included in the SNAP software. The
+Rayleigh correction processor is installed automatically as part of the SNAP installation, the IdePix processor for
+OLCI needs to be installed from the plugin manager in SNAP Desktop (described in more detail below).
 
 .. index:: How to get the Software
 
@@ -116,7 +97,11 @@ in the SNAP Desktop application. This is illustrated in the figure sequence :num
    :align:   center
    :scale: 80 %
 
-   Selection of plugins to be installed.
+   Selection of plugins to be installed. (Note that the IdePix OLCI plugin is shipped with SNAP and is listed under
+   'Available Plugins', whereas the plugin for S3-SNOW / SICE needs to be accessed through the 'Download' tab from
+   the local disk after download from S3-SNOW ftp site. Also note that the 'IdePix core' plugin needs to be installed
+   in addition to the 'IdePix OLCI'.)
+
 
 .. _add_plugins_confirm:
 .. figure::  pix/add_plugins_confirm.png

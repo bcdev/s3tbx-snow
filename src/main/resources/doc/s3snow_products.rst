@@ -304,16 +304,16 @@ The IdePix OLCI classification flag coding is given in Table 3.7.
     +------------+------------------------+-------------------------------------------------------------+
 
 
-O2 Correction Product
----------------------
+O2 Harmonisation Product
+------------------------
 
-The O2 correction step is done as part of the IdePix pixel classification. The results of this step are
+The O2 harmonisation step is done as part of the IdePix pixel classification. The results of this step are
 used by IdePix internally, and no separate products are written in the S3-SNOW processing flow. However, as the
-O2 correction is also available as a standalone SNAP plugin with a separate target product, its default
+O2 harmonisation is also available as a standalone SNAP plugin with a separate target product, its default
 contents are listed in Table 3.8 for completeness.
 
 .. _o2corr_bands:
-.. table:: Bands in O2 Correction target product
+.. table:: Bands in O2 Harmonisation target product
 
     +-------------------------+---------------------+------------+-------------------------------------------------+
     |     **Name in product** |       **Unit**      |   **Type** |        **Description**                          |
