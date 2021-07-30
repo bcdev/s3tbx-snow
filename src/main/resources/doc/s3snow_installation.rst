@@ -57,15 +57,15 @@ OLCI needs to be installed from the plugin manager in SNAP Desktop (described in
 How to get the Software
 =======================
 
-The S3-SNOW processing software bundle can be obtained from the S3-SNOW ftp site hosted at BC with the
-following configuration:
+The S3-SNOW processing software bundle can be obtained from the S3-SNOW ftp site hosted at BC.
+As web browsers have dropped the support for FTP, it is suggested to use an FTP Client, like FileZilla or WinSCP.
+Use the following configuration:
 
-- FTP, Port 21
+- SFTP @ Port 22; FTP @ Port 21
 - ftp.brockmann-consult.de
 - username: s3snow
 - password: $3Sn0W@bc
-- subdirectory: software
-
+- subdirectory: software/s3snow_sice
 
 .. index:: Installation Process
 
