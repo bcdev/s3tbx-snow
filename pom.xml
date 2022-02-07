@@ -22,14 +22,14 @@
 
     <groupId>org.esa.s3tbx</groupId>
     <artifactId>s3tbx-snow</artifactId>
-    <version>3.0</version>
+    <version>3.1</version>
     <packaging>nbm</packaging>
     <name>S3TBX Snow Properties Processor</name>
     <description>Provides snow properties from OLCI measurements.</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <snap.version>7.0.0</snap.version>
+        <snap.version>8.0.5</snap.version>
     </properties>
 
     <dependencies>

@@ -45,9 +45,9 @@ import java.util.Map;
 @OperatorMetadata(alias = "OLCI.SnowProperties.SICE",
         description = "Computes snow properties from OLCI L1b data products, using new SICE algorithm.",
         authors = "Olaf Danne (Brockmann Consult), Alexander Kokhanovsky (Vitrociset)",
-        copyright = "(c) 2019 by ESA, Brockmann Consult",
+        copyright = "(c) 2019-2022 by ESA, Brockmann Consult",
         category = "Optical/Thematic Land Processing",
-        version = "1.0")
+        version = "1.1")
 
 public class OlciSiceSnowPropertiesOp extends Operator {
 
@@ -259,10 +259,12 @@ public class OlciSiceSnowPropertiesOp extends Operator {
                     final boolean pixelIsValid = l1Valid && !isCloud;
 
                     if (pixelIsValid) {
-                        double ndsi = (rtoa865 - rtoa1020) / (rtoa865 + rtoa1020);
+//                        double ndsi = (rtoa865 - rtoa1020) / (rtoa865 + rtoa1020);
+                        double ndsi = (brr865 - brr1020) / (brr865 + brr1020);
                         boolean validNdsi = true;
                         if (considerNdsiSnowMask) {
-                            if (ndsi <= ndsiThresh || rtoa400 <= 0.5) {
+//                            if (ndsi <= ndsiThresh || rtoa400 <= 0.5) {
+                            if (ndsi <= ndsiThresh || brr400 <= 0.5) {
                                 validNdsi = false;
                             }
                         }
